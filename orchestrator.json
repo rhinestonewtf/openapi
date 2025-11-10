@@ -30,28 +30,52 @@
                     "description": "The ID of the target blockchain",
                     "example": 8453
                   },
-                  "tokenTransfers": {
+                  "tokenRequests": {
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "tokenAddress": {
-                          "type": "string",
-                          "description": "The address of the token to be transferred",
-                          "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "tokenAddress": {
+                              "type": "string",
+                              "description": "The address of the requested token",
+                              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                            },
+                            "amount": {
+                              "type": "integer",
+                              "format": "int64",
+                              "description": "The amount of the requested token (in the smallest unit)",
+                              "example": "1000000"
+                            }
+                          },
+                          "required": [
+                            "tokenAddress",
+                            "amount"
+                          ]
                         },
-                        "amount": {
-                          "type": "integer",
-                          "format": "int64",
-                          "description": "The amount of the token to be transferred (in smallest unit)",
-                          "example": "1000000"
+                        {
+                          "type": "object",
+                          "properties": {
+                            "tokenAddress": {
+                              "type": "string",
+                              "description": "The address of the requested token",
+                              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                            },
+                            "amount": {
+                              "type": "integer",
+                              "format": "int64",
+                              "description": "The amount of the requested token (in the smallest unit)",
+                              "example": "1000000"
+                            }
+                          },
+                          "required": [
+                            "tokenAddress"
+                          ]
                         }
-                      },
-                      "required": [
-                        "tokenAddress"
                       ]
                     },
-                    "description": "A list of token transfers"
+                    "description": "A list of token requested on the target chain"
                   },
                   "account": {
                     "type": "object",
@@ -93,7 +117,7 @@
                             "data"
                           ]
                         },
-                        "description": "Setup operations for the smart account"
+                        "description": "Setup operations for the smart account. Only used if the account is not deployed"
                       },
                       "emissaryConfig": {
                         "type": "object",
@@ -135,7 +159,19 @@
                                 "description": "Nonce",
                                 "example": "0"
                               },
-                              "allChainIds": {},
+                              "allChainIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                },
+                                "description": "All chain IDs",
+                                "example": [
+                                  1,
+                                  10,
+                                  137
+                                ]
+                              },
                               "chainIndex": {
                                 "type": "integer",
                                 "format": "int64",
@@ -229,14 +265,13 @@
                             "contract"
                           ]
                         },
-                        "description": "Per-chain specific map to delegated contract address for 7702 delegations. Chain 0 means its default fallback"
+                        "description": "Per-chain specific map to delegated contract address for 7702 delegations. Use `0` to indicate cross-chain delegation"
                       }
                     },
                     "required": [
-                      "address",
-                      "accountType"
+                      "address"
                     ],
-                    "description": "Smart account type and optional init data if account is not deployed"
+                    "description": "Account details"
                   },
                   "destinationExecutions": {
                     "type": "array",
@@ -267,16 +302,134 @@
                         "data"
                       ]
                     },
-                    "description": "Execution calls on the target chain. Cannot be used with userOp"
+                    "description": "Execution calls on the target chain."
                   },
                   "destinationGasUnits": {
                     "type": "integer",
                     "format": "int64",
-                    "description": "The gas units for the target chain",
+                    "description": "The gas limit for the target chain executions",
                     "example": "100000"
                   },
                   "accountAccessList": {
                     "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "chainIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "number",
+                              "minimum": 0
+                            }
+                          },
+                          "tokens": {
+                            "type": "array",
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ETH",
+                                    "WETH",
+                                    "USDC",
+                                    "POL",
+                                    "WPOL",
+                                    "S",
+                                    "WS"
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "chainTokens": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "array",
+                              "items": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "ETH",
+                                      "WETH",
+                                      "USDC",
+                                      "POL",
+                                      "WPOL",
+                                      "S",
+                                      "WS"
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "exclude": {
+                            "type": "object",
+                            "properties": {
+                              "chainIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "number",
+                                  "minimum": 0
+                                }
+                              },
+                              "tokens": {
+                                "type": "array",
+                                "items": {
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "ETH",
+                                        "WETH",
+                                        "USDC",
+                                        "POL",
+                                        "WPOL",
+                                        "S",
+                                        "WS"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              "chainTokens": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "oneOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "ETH",
+                                          "WETH",
+                                          "USDC",
+                                          "POL",
+                                          "WPOL",
+                                          "S",
+                                          "WS"
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
                       {
                         "type": "array",
                         "items": {
@@ -295,63 +448,205 @@
                             "tokenAddress"
                           ]
                         }
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "chainIds": {
-                            "type": "array",
-                            "items": {
-                              "type": "number",
-                              "minimum": 0
-                            }
-                          },
-                          "tokens": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "chainTokens": {
-                            "type": "object",
-                            "additionalProperties": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            }
-                          },
-                          "exclude": {
-                            "type": "object",
-                            "properties": {
-                              "chainIds": {
-                                "type": "array",
-                                "items": {
-                                  "type": "number",
-                                  "minimum": 0
-                                }
-                              },
-                              "tokens": {
-                                "type": "array",
-                                "items": {
-                                  "type": "string"
-                                }
-                              },
-                              "chainTokens": {
-                                "type": "object",
-                                "additionalProperties": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                }
-                              }
-                            }
-                          }
-                        }
                       }
                     ],
                     "description": "Account access list specifying which chains and tokens an account may access"
+                  },
+                  "recipient": {
+                    "type": "object",
+                    "properties": {
+                      "address": {
+                        "type": "string",
+                        "description": "Account address",
+                        "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                      },
+                      "accountType": {
+                        "type": "string",
+                        "enum": [
+                          "smartAccount",
+                          "GENERIC",
+                          "EOA",
+                          "ERC7579"
+                        ],
+                        "description": "Account type"
+                      },
+                      "setupOps": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "to": {
+                              "type": "string",
+                              "description": "Account deployment factory address",
+                              "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                            },
+                            "data": {
+                              "type": "string",
+                              "pattern": "^0x[a-fA-F0-9]*$",
+                              "description": "Account deployment data",
+                              "example": "0x..."
+                            }
+                          },
+                          "required": [
+                            "to",
+                            "data"
+                          ]
+                        },
+                        "description": "Setup operations for the smart account. Only used if the account is not deployed"
+                      },
+                      "emissaryConfig": {
+                        "type": "object",
+                        "properties": {
+                          "validatorAddress": {
+                            "type": "string",
+                            "description": "Address of the validator contract",
+                            "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                          },
+                          "emissaryAddress": {
+                            "type": "string",
+                            "description": "Address of the emissary contract",
+                            "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                          },
+                          "emissaryEnable": {
+                            "type": "object",
+                            "properties": {
+                              "allocatorSig": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "Signature of the allocator",
+                                "example": "0x..."
+                              },
+                              "userSig": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "Signature of the user",
+                                "example": "0x..."
+                              },
+                              "expires": {
+                                "type": "integer",
+                                "format": "int64",
+                                "description": "Expiration timestamp",
+                                "example": "1733493192"
+                              },
+                              "nonce": {
+                                "type": "integer",
+                                "format": "int64",
+                                "description": "Nonce",
+                                "example": "0"
+                              },
+                              "allChainIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                },
+                                "description": "All chain IDs",
+                                "example": [
+                                  1,
+                                  10,
+                                  137
+                                ]
+                              },
+                              "chainIndex": {
+                                "type": "integer",
+                                "format": "int64",
+                                "description": "Chain index",
+                                "example": "0"
+                              }
+                            },
+                            "required": [
+                              "allocatorSig",
+                              "userSig",
+                              "expires",
+                              "nonce",
+                              "allChainIds",
+                              "chainIndex"
+                            ],
+                            "description": "Emissary enable data",
+                            "example": {
+                              "allocatorSig": "0x...",
+                              "userSig": "0x..."
+                            }
+                          },
+                          "settings": {
+                            "type": "object",
+                            "properties": {
+                              "configId": {
+                                "type": "number",
+                                "maximum": 255,
+                                "description": "Unique identifier for the emissary configuration",
+                                "example": "42"
+                              },
+                              "allocator": {
+                                "default": "0x1fcaa96c3aa5bbb0af8d89211cc8954c170d5903",
+                                "type": "string",
+                                "description": "Address of the allocator",
+                                "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                              },
+                              "scope": {
+                                "default": 0,
+                                "type": "number",
+                                "description": "Scope of the emissary",
+                                "example": 1
+                              },
+                              "resetPeriod": {
+                                "default": 6,
+                                "type": "number",
+                                "description": "Reset period of the emissary",
+                                "example": 1
+                              },
+                              "validator": {
+                                "type": "string",
+                                "description": "Address of the validator",
+                                "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                              },
+                              "validatorConfig": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "Validator configuration",
+                                "example": "0x..."
+                              }
+                            },
+                            "required": [
+                              "configId",
+                              "validator",
+                              "validatorConfig"
+                            ],
+                            "description": "Emissary configuration",
+                            "example": {
+                              "allocator": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                            }
+                          }
+                        },
+                        "required": [
+                          "validatorAddress",
+                          "emissaryAddress",
+                          "emissaryEnable",
+                          "settings"
+                        ],
+                        "description": "Emissary configuration for using resource locking"
+                      },
+                      "delegations": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "properties": {
+                            "contract": {
+                              "type": "string",
+                              "description": "address of contract to which delegation on behalf of sponsor will be assumed for given chain ID"
+                            }
+                          },
+                          "required": [
+                            "contract"
+                          ]
+                        },
+                        "description": "Per-chain specific map to delegated contract address for 7702 delegations. Use `0` to indicate cross-chain delegation"
+                      }
+                    },
+                    "required": [
+                      "address"
+                    ],
+                    "description": "Account details"
                   },
                   "options": {
                     "type": "object",
@@ -410,21 +705,32 @@
                           "ETH",
                           "WETH",
                           "USDC",
-                          "USDT",
                           "POL",
                           "WPOL",
                           "S",
                           "WS"
                         ]
                       }
+                    },
+                    "description": "Intent options",
+                    "example": {
+                      "topupCompact": true,
+                      "settlementLayers": [
+                        "ECO"
+                      ],
+                      "sponsorSettings": {
+                        "gasSponsored": true,
+                        "bridgeFeesSponsored": true,
+                        "swapFeesSponsored": true
+                      },
+                      "feeToken": "USDC"
                     }
                   }
                 },
                 "required": [
                   "destinationChainId",
-                  "tokenTransfers",
-                  "account",
-                  "options"
+                  "tokenRequests",
+                  "account"
                 ]
               }
             }
@@ -468,7 +774,8 @@
                                 "unlocked"
                               ]
                             }
-                          }
+                          },
+                          "description": "Tokens spent in the transaction"
                         },
                         "tokensReceived": {
                           "type": "array",
@@ -501,13 +808,35 @@
                               "fee",
                               "hasFulfilled"
                             ]
-                          }
+                          },
+                          "description": "Tokens received in the transaction"
+                        },
+                        "sponsorFee": {
+                          "type": "object",
+                          "properties": {
+                            "relayer": {
+                              "type": "number",
+                              "description": "Fee charged by relayer",
+                              "example": 0.0009
+                            },
+                            "protocol": {
+                              "type": "number",
+                              "description": "Fee charged by Rhinestone",
+                              "example": 0
+                            }
+                          },
+                          "required": [
+                            "relayer",
+                            "protocol"
+                          ],
+                          "description": "Transaction fees"
                         }
                       },
                       "required": [
                         "hasFulfilledAll",
                         "tokensSpent",
-                        "tokensReceived"
+                        "tokensReceived",
+                        "sponsorFee"
                       ]
                     },
                     {
@@ -597,14 +926,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "nullable": true,
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
                       "type": "string",
-                      "description": "Error message for invalid request parameters",
-                      "example": "Invalid user address format"
+                      "description": "Trace ID",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
                     }
                   },
                   "required": [
-                    "error"
+                    "errors",
+                    "traceId"
                   ],
                   "description": "Invalid request parameters"
                 }
@@ -664,29 +1014,52 @@
                     "description": "The ID of the target blockchain",
                     "example": 8453
                   },
-                  "tokenTransfers": {
+                  "tokenRequests": {
                     "type": "array",
                     "items": {
-                      "type": "object",
-                      "properties": {
-                        "tokenAddress": {
-                          "type": "string",
-                          "description": "The address of the token to be transferred",
-                          "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                      "oneOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "tokenAddress": {
+                              "type": "string",
+                              "description": "The address of the requested token",
+                              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                            },
+                            "amount": {
+                              "type": "integer",
+                              "format": "int64",
+                              "description": "The amount of the requested token (in the smallest unit)",
+                              "example": "1000000"
+                            }
+                          },
+                          "required": [
+                            "tokenAddress",
+                            "amount"
+                          ]
                         },
-                        "amount": {
-                          "type": "integer",
-                          "format": "int64",
-                          "description": "The amount of the token to be transferred (in smallest unit)",
-                          "example": "1000000"
+                        {
+                          "type": "object",
+                          "properties": {
+                            "tokenAddress": {
+                              "type": "string",
+                              "description": "The address of the requested token",
+                              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                            },
+                            "amount": {
+                              "type": "integer",
+                              "format": "int64",
+                              "description": "The amount of the requested token (in the smallest unit)",
+                              "example": "1000000"
+                            }
+                          },
+                          "required": [
+                            "tokenAddress"
+                          ]
                         }
-                      },
-                      "required": [
-                        "tokenAddress",
-                        "amount"
                       ]
                     },
-                    "description": "A list of token transfers"
+                    "description": "A list of token requested on the target chain"
                   },
                   "account": {
                     "type": "object",
@@ -728,7 +1101,7 @@
                             "data"
                           ]
                         },
-                        "description": "Setup operations for the smart account"
+                        "description": "Setup operations for the smart account. Only used if the account is not deployed"
                       },
                       "emissaryConfig": {
                         "type": "object",
@@ -770,7 +1143,19 @@
                                 "description": "Nonce",
                                 "example": "0"
                               },
-                              "allChainIds": {},
+                              "allChainIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                },
+                                "description": "All chain IDs",
+                                "example": [
+                                  1,
+                                  10,
+                                  137
+                                ]
+                              },
                               "chainIndex": {
                                 "type": "integer",
                                 "format": "int64",
@@ -864,14 +1249,13 @@
                             "contract"
                           ]
                         },
-                        "description": "Per-chain specific map to delegated contract address for 7702 delegations. Chain 0 means its default fallback"
+                        "description": "Per-chain specific map to delegated contract address for 7702 delegations. Use `0` to indicate cross-chain delegation"
                       }
                     },
                     "required": [
-                      "address",
-                      "accountType"
+                      "address"
                     ],
-                    "description": "Smart account type and optional init data if account is not deployed"
+                    "description": "Account details"
                   },
                   "destinationExecutions": {
                     "type": "array",
@@ -902,16 +1286,134 @@
                         "data"
                       ]
                     },
-                    "description": "Execution calls on the target chain. Cannot be used with userOp"
+                    "description": "Execution calls on the target chain."
                   },
                   "destinationGasUnits": {
                     "type": "integer",
                     "format": "int64",
-                    "description": "The gas units for the target chain",
+                    "description": "The gas limit for the target chain executions",
                     "example": "100000"
                   },
                   "accountAccessList": {
                     "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "chainIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "number",
+                              "minimum": 0
+                            }
+                          },
+                          "tokens": {
+                            "type": "array",
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ETH",
+                                    "WETH",
+                                    "USDC",
+                                    "POL",
+                                    "WPOL",
+                                    "S",
+                                    "WS"
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "chainTokens": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "array",
+                              "items": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "ETH",
+                                      "WETH",
+                                      "USDC",
+                                      "POL",
+                                      "WPOL",
+                                      "S",
+                                      "WS"
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "exclude": {
+                            "type": "object",
+                            "properties": {
+                              "chainIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "number",
+                                  "minimum": 0
+                                }
+                              },
+                              "tokens": {
+                                "type": "array",
+                                "items": {
+                                  "oneOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "string",
+                                      "enum": [
+                                        "ETH",
+                                        "WETH",
+                                        "USDC",
+                                        "POL",
+                                        "WPOL",
+                                        "S",
+                                        "WS"
+                                      ]
+                                    }
+                                  ]
+                                }
+                              },
+                              "chainTokens": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "array",
+                                  "items": {
+                                    "oneOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "ETH",
+                                          "WETH",
+                                          "USDC",
+                                          "POL",
+                                          "WPOL",
+                                          "S",
+                                          "WS"
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
                       {
                         "type": "array",
                         "items": {
@@ -929,60 +1431,6 @@
                             "chainId",
                             "tokenAddress"
                           ]
-                        }
-                      },
-                      {
-                        "type": "object",
-                        "properties": {
-                          "chainIds": {
-                            "type": "array",
-                            "items": {
-                              "type": "number",
-                              "minimum": 0
-                            }
-                          },
-                          "tokens": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "chainTokens": {
-                            "type": "object",
-                            "additionalProperties": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            }
-                          },
-                          "exclude": {
-                            "type": "object",
-                            "properties": {
-                              "chainIds": {
-                                "type": "array",
-                                "items": {
-                                  "type": "number",
-                                  "minimum": 0
-                                }
-                              },
-                              "tokens": {
-                                "type": "array",
-                                "items": {
-                                  "type": "string"
-                                }
-                              },
-                              "chainTokens": {
-                                "type": "object",
-                                "additionalProperties": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "string"
-                                  }
-                                }
-                              }
-                            }
-                          }
                         }
                       }
                     ],
@@ -1028,7 +1476,7 @@
                             "data"
                           ]
                         },
-                        "description": "Setup operations for the smart account"
+                        "description": "Setup operations for the smart account. Only used if the account is not deployed"
                       },
                       "emissaryConfig": {
                         "type": "object",
@@ -1070,7 +1518,19 @@
                                 "description": "Nonce",
                                 "example": "0"
                               },
-                              "allChainIds": {},
+                              "allChainIds": {
+                                "type": "array",
+                                "items": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                },
+                                "description": "All chain IDs",
+                                "example": [
+                                  1,
+                                  10,
+                                  137
+                                ]
+                              },
                               "chainIndex": {
                                 "type": "integer",
                                 "format": "int64",
@@ -1164,14 +1624,13 @@
                             "contract"
                           ]
                         },
-                        "description": "Per-chain specific map to delegated contract address for 7702 delegations. Chain 0 means its default fallback"
+                        "description": "Per-chain specific map to delegated contract address for 7702 delegations. Use `0` to indicate cross-chain delegation"
                       }
                     },
                     "required": [
-                      "address",
-                      "accountType"
+                      "address"
                     ],
-                    "description": "Smart account type and optional init data if account is not deployed"
+                    "description": "Account details"
                   },
                   "options": {
                     "type": "object",
@@ -1230,7 +1689,6 @@
                           "ETH",
                           "WETH",
                           "USDC",
-                          "USDT",
                           "POL",
                           "WPOL",
                           "S",
@@ -1255,7 +1713,7 @@
                 },
                 "required": [
                   "destinationChainId",
-                  "tokenTransfers",
+                  "tokenRequests",
                   "account"
                 ]
               }
@@ -1357,7 +1815,7 @@
                                     "type": "integer",
                                     "format": "int64",
                                     "description": "Target chain ID for the mandate",
-                                    "example": 8453
+                                    "example": "8453"
                                   },
                                   "fillDeadline": {
                                     "type": "integer",
@@ -1375,43 +1833,181 @@
                                     "type": "object",
                                     "properties": {
                                       "settlementContext": {
-                                        "type": "object",
-                                        "properties": {
-                                          "settlementLayer": {
-                                            "type": "string",
-                                            "enum": [
-                                              "INTENT_EXECUTOR",
-                                              "SAME_CHAIN",
-                                              "ACROSS",
-                                              "ECO",
-                                              "RELAY"
-                                            ],
-                                            "description": "Settlement layer for the qualifier",
-                                            "example": "ACROSS"
-                                          },
-                                          "using7579": {
-                                            "type": "boolean",
-                                            "description": "Whether to use 7579 for the qualifier. Only valid for ACROSS",
-                                            "example": true
-                                          },
-                                          "requestId": {
-                                            "type": "string",
-                                            "description": "Relay settlement layer metadata to be broadcasted"
-                                          },
-                                          "fundingMethod": {
-                                            "type": "string",
-                                            "enum": [
-                                              "COMPACT",
-                                              "PERMIT2",
-                                              "NO_FUNDING"
-                                            ],
-                                            "description": "The method of funding the intent",
-                                            "example": "PERMIT2"
-                                          }
+                                        "discriminator": {
+                                          "propertyName": "settlementLayer"
                                         },
-                                        "required": [
-                                          "settlementLayer",
-                                          "fundingMethod"
+                                        "oneOf": [
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "settlementLayer": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "INTENT_EXECUTOR"
+                                                ],
+                                                "description": "Settlement layer for the qualifier",
+                                                "example": "INTENT_EXECUTOR"
+                                              },
+                                              "using7579": {
+                                                "type": "boolean",
+                                                "enum": [
+                                                  true
+                                                ],
+                                                "description": "Must be true for INTENT_EXECUTOR",
+                                                "example": true
+                                              },
+                                              "fundingMethod": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "NO_FUNDING"
+                                                ],
+                                                "description": "Must be NO_FUNDING for INTENT_EXECUTOR",
+                                                "example": "NO_FUNDING"
+                                              }
+                                            },
+                                            "required": [
+                                              "settlementLayer",
+                                              "using7579",
+                                              "fundingMethod"
+                                            ]
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "settlementLayer": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "SAME_CHAIN"
+                                                ],
+                                                "description": "Settlement layer for the qualifier",
+                                                "example": "SAME_CHAIN"
+                                              },
+                                              "using7579": {
+                                                "type": "boolean",
+                                                "description": "Whether to use 7579",
+                                                "example": false
+                                              },
+                                              "fundingMethod": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "COMPACT",
+                                                  "PERMIT2",
+                                                  "NO_FUNDING"
+                                                ],
+                                                "description": "The method of funding the intent",
+                                                "example": "PERMIT2"
+                                              }
+                                            },
+                                            "required": [
+                                              "settlementLayer",
+                                              "using7579",
+                                              "fundingMethod"
+                                            ]
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "settlementLayer": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "ACROSS"
+                                                ],
+                                                "description": "Settlement layer for the qualifier",
+                                                "example": "ACROSS"
+                                              },
+                                              "using7579": {
+                                                "type": "boolean",
+                                                "description": "Whether to use 7579",
+                                                "example": false
+                                              },
+                                              "fundingMethod": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "COMPACT",
+                                                  "PERMIT2",
+                                                  "NO_FUNDING"
+                                                ],
+                                                "description": "The method of funding the intent",
+                                                "example": "PERMIT2"
+                                              }
+                                            },
+                                            "required": [
+                                              "settlementLayer",
+                                              "using7579",
+                                              "fundingMethod"
+                                            ]
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "settlementLayer": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "ECO"
+                                                ],
+                                                "description": "Settlement layer for the qualifier",
+                                                "example": "ECO"
+                                              },
+                                              "using7579": {
+                                                "type": "boolean",
+                                                "description": "Whether to use 7579",
+                                                "example": false
+                                              },
+                                              "fundingMethod": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "COMPACT",
+                                                  "PERMIT2",
+                                                  "NO_FUNDING"
+                                                ],
+                                                "description": "The method of funding the intent",
+                                                "example": "PERMIT2"
+                                              }
+                                            },
+                                            "required": [
+                                              "settlementLayer",
+                                              "using7579",
+                                              "fundingMethod"
+                                            ]
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "settlementLayer": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "RELAY"
+                                                ],
+                                                "description": "Settlement layer for the qualifier",
+                                                "example": "RELAY"
+                                              },
+                                              "using7579": {
+                                                "type": "boolean",
+                                                "description": "Whether to use 7579",
+                                                "example": false
+                                              },
+                                              "fundingMethod": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "COMPACT",
+                                                  "PERMIT2",
+                                                  "NO_FUNDING"
+                                                ],
+                                                "description": "The method of funding the intent",
+                                                "example": "PERMIT2"
+                                              },
+                                              "requestId": {
+                                                "type": "string",
+                                                "description": "Relay settlement layer metadata to be broadcasted"
+                                              }
+                                            },
+                                            "required": [
+                                              "settlementLayer",
+                                              "using7579",
+                                              "fundingMethod",
+                                              "requestId"
+                                            ]
+                                          }
                                         ]
                                       },
                                       "encodedVal": {
@@ -1429,12 +2025,14 @@
                                   },
                                   "v": {
                                     "type": "number",
-                                    "description": "Validation mode identifier"
+                                    "description": "Validation mode identifier",
+                                    "example": 4
                                   },
                                   "minGas": {
                                     "type": "integer",
                                     "format": "int64",
-                                    "description": "Mininimum gas for preclaim ops"
+                                    "description": "Mininimum gas for preclaim ops",
+                                    "example": "0"
                                   }
                                 },
                                 "required": [
@@ -1470,47 +2068,40 @@
                         "signedMetadata": {
                           "type": "object",
                           "properties": {
-                            "fees": {
-                              "type": "object",
-                              "properties": {
-                                "protocolFees": {
-                                  "type": "object",
-                                  "additionalProperties": {
-                                    "type": "integer",
-                                    "format": "int64"
-                                  },
-                                  "description": "Protocol fees for the intent",
-                                  "example": {
-                                    "0x8a310b9085faF5d9464D84C3d9a7BE3b28c94531": 1000000000000000000
-                                  }
-                                },
-                                "sponsorFee": {
-                                  "type": "object",
-                                  "properties": {
-                                    "relayer": {
-                                      "type": "number",
-                                      "description": "Relayer fee for the intent",
-                                      "example": 0.01
-                                    },
-                                    "protocol": {
-                                      "type": "number",
-                                      "description": "Protocol fee for the intent",
-                                      "example": 0.01
-                                    }
-                                  },
-                                  "description": "Sponsor fee for the intent",
-                                  "example": {
-                                    "relayer": 0.01,
-                                    "protocol": 0.01
-                                  }
-                                }
-                              }
-                            },
                             "tokenPrices": {
                               "type": "object",
-                              "additionalProperties": {
-                                "type": "number"
+                              "properties": {
+                                "ETH": {
+                                  "type": "number"
+                                },
+                                "WETH": {
+                                  "type": "number"
+                                },
+                                "USDC": {
+                                  "type": "number"
+                                },
+                                "POL": {
+                                  "type": "number"
+                                },
+                                "WPOL": {
+                                  "type": "number"
+                                },
+                                "S": {
+                                  "type": "number"
+                                },
+                                "WS": {
+                                  "type": "number"
+                                }
                               },
+                              "required": [
+                                "ETH",
+                                "WETH",
+                                "USDC",
+                                "POL",
+                                "WPOL",
+                                "S",
+                                "WS"
+                              ],
                               "description": "Token prices in USD",
                               "example": {
                                 "USDC": 1,
@@ -1530,7 +2121,39 @@
                               }
                             },
                             "opGasParams": {
-                              "nullable": true,
+                              "type": "object",
+                              "properties": {
+                                "estimatedCalldataSize": {
+                                  "type": "number"
+                                }
+                              },
+                              "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                  "l1BaseFee": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "l1BlobBaseFee": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "baseFeeScalar": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "blobFeeScalar": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  }
+                                },
+                                "required": [
+                                  "l1BaseFee",
+                                  "l1BlobBaseFee",
+                                  "baseFeeScalar",
+                                  "blobFeeScalar"
+                                ]
+                              },
                               "description": "Optimism network gas parameters per chain",
                               "example": {
                                 "10": {
@@ -1540,6 +2163,13 @@
                                   "blobFeeScalar": "100"
                                 }
                               }
+                            },
+                            "quotes": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "nullable": true
+                              },
+                              "description": "Swap quotes per token address"
                             },
                             "account": {
                               "type": "object",
@@ -1581,7 +2211,7 @@
                                       "data"
                                     ]
                                   },
-                                  "description": "Setup operations for the smart account"
+                                  "description": "Setup operations for the smart account. Only used if the account is not deployed"
                                 },
                                 "emissaryConfig": {
                                   "type": "object",
@@ -1623,7 +2253,19 @@
                                           "description": "Nonce",
                                           "example": "0"
                                         },
-                                        "allChainIds": {},
+                                        "allChainIds": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                          },
+                                          "description": "All chain IDs",
+                                          "example": [
+                                            1,
+                                            10,
+                                            137
+                                          ]
+                                        },
                                         "chainIndex": {
                                           "type": "integer",
                                           "format": "int64",
@@ -1794,7 +2436,6 @@
                               },
                               "required": [
                                 "address",
-                                "accountType",
                                 "accountContext"
                               ]
                             },
@@ -1838,7 +2479,7 @@
                                       "data"
                                     ]
                                   },
-                                  "description": "Setup operations for the smart account"
+                                  "description": "Setup operations for the smart account. Only used if the account is not deployed"
                                 },
                                 "emissaryConfig": {
                                   "type": "object",
@@ -1880,7 +2521,19 @@
                                           "description": "Nonce",
                                           "example": "0"
                                         },
-                                        "allChainIds": {},
+                                        "allChainIds": {
+                                          "type": "array",
+                                          "items": {
+                                            "type": "integer",
+                                            "format": "int64"
+                                          },
+                                          "description": "All chain IDs",
+                                          "example": [
+                                            1,
+                                            10,
+                                            137
+                                          ]
+                                        },
                                         "chainIndex": {
                                           "type": "integer",
                                           "format": "int64",
@@ -2051,17 +2704,40 @@
                               },
                               "required": [
                                 "address",
-                                "accountType",
                                 "accountContext"
                               ]
                             },
-                            "quotes": {
-                              "nullable": true
+                            "fees": {
+                              "type": "object",
+                              "properties": {
+                                "sponsorFee": {
+                                  "type": "object",
+                                  "properties": {
+                                    "relayer": {
+                                      "type": "number",
+                                      "description": "Fee charged by relayer",
+                                      "example": 0.0009
+                                    },
+                                    "protocol": {
+                                      "type": "number",
+                                      "description": "Fee charged by Rhinestone",
+                                      "example": 0
+                                    }
+                                  },
+                                  "required": [
+                                    "relayer",
+                                    "protocol"
+                                  ],
+                                  "description": "Transaction fees"
+                                }
+                              }
                             }
                           },
                           "required": [
                             "tokenPrices",
                             "gasPrices",
+                            "opGasParams",
+                            "quotes",
                             "account"
                           ],
                           "description": "Signed metadata containing prices, fees, and gas parameters"
@@ -2127,72 +2803,178 @@
                       "description": "The order bundle containing multi-chain execution details with pricing metadata"
                     },
                     "intentCost": {
-                      "type": "object",
-                      "properties": {
-                        "tokensSpent": {
+                      "oneOf": [
+                        {
                           "type": "object",
-                          "additionalProperties": {
-                            "type": "object",
-                            "additionalProperties": {
+                          "properties": {
+                            "hasFulfilledAll": {
+                              "type": "boolean",
+                              "enum": [
+                                true
+                              ],
+                              "description": "Indicates that all tokens have been fulfilled"
+                            },
+                            "tokensSpent": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "object",
+                                  "properties": {
+                                    "locked": {
+                                      "type": "integer",
+                                      "format": "int64"
+                                    },
+                                    "unlocked": {
+                                      "type": "integer",
+                                      "format": "int64"
+                                    }
+                                  },
+                                  "required": [
+                                    "locked",
+                                    "unlocked"
+                                  ]
+                                }
+                              },
+                              "description": "Tokens spent in the transaction"
+                            },
+                            "tokensReceived": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "tokenAddress": {
+                                    "type": "string"
+                                  },
+                                  "amountSpent": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "targetAmount": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "fee": {
+                                    "type": "integer",
+                                    "format": "int64"
+                                  },
+                                  "hasFulfilled": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "tokenAddress",
+                                  "amountSpent",
+                                  "targetAmount",
+                                  "fee",
+                                  "hasFulfilled"
+                                ]
+                              },
+                              "description": "Tokens received in the transaction"
+                            },
+                            "sponsorFee": {
                               "type": "object",
                               "properties": {
-                                "locked": {
-                                  "type": "integer",
-                                  "format": "int64"
+                                "relayer": {
+                                  "type": "number",
+                                  "description": "Fee charged by relayer",
+                                  "example": 0.0009
                                 },
-                                "unlocked": {
-                                  "type": "integer",
-                                  "format": "int64"
+                                "protocol": {
+                                  "type": "number",
+                                  "description": "Fee charged by Rhinestone",
+                                  "example": 0
                                 }
                               },
                               "required": [
-                                "locked",
-                                "unlocked"
-                              ]
+                                "relayer",
+                                "protocol"
+                              ],
+                              "description": "Transaction fees"
                             }
                           },
-                          "description": "Tokens spent in the transaction"
+                          "required": [
+                            "hasFulfilledAll",
+                            "tokensSpent",
+                            "tokensReceived",
+                            "sponsorFee"
+                          ]
                         },
-                        "tokensReceived": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "tokenAddress": {
-                                "type": "string"
-                              },
-                              "amountSpent": {
-                                "type": "integer",
-                                "format": "int64"
-                              },
-                              "targetAmount": {
-                                "type": "integer",
-                                "format": "int64"
-                              },
-                              "fee": {
-                                "type": "integer",
-                                "format": "int64"
-                              },
-                              "hasFulfilled": {
-                                "type": "boolean"
-                              }
+                        {
+                          "type": "object",
+                          "properties": {
+                            "hasFulfilledAll": {
+                              "type": "boolean",
+                              "enum": [
+                                false
+                              ],
+                              "description": "Indicates that not all tokens have been fulfilled"
                             },
-                            "required": [
-                              "tokenAddress",
-                              "amountSpent",
-                              "targetAmount",
-                              "fee",
-                              "hasFulfilled"
-                            ]
+                            "tokenShortfall": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "tokenAddress": {
+                                    "type": "string",
+                                    "description": "Address of the token that has not been fulfilled",
+                                    "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                                  },
+                                  "destinationAmount": {
+                                    "type": "integer",
+                                    "format": "int64",
+                                    "description": "Target amount of the token that has not been fulfilled",
+                                    "example": "1000000"
+                                  },
+                                  "amountSpent": {
+                                    "type": "integer",
+                                    "format": "int64",
+                                    "description": "Amount spent on the token that has not been fulfilled",
+                                    "example": "500000"
+                                  },
+                                  "fee": {
+                                    "type": "integer",
+                                    "format": "int64",
+                                    "description": "Fee associated with the token that has not been fulfilled",
+                                    "example": "10000"
+                                  },
+                                  "tokenSymbol": {
+                                    "type": "string",
+                                    "description": "Symbol of the token that has not been fulfilled",
+                                    "example": "USDC"
+                                  },
+                                  "tokenDecimals": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "description": "Number of decimal places for the token",
+                                    "example": 6
+                                  }
+                                },
+                                "required": [
+                                  "tokenAddress",
+                                  "destinationAmount",
+                                  "amountSpent",
+                                  "fee",
+                                  "tokenSymbol",
+                                  "tokenDecimals"
+                                ]
+                              },
+                              "description": "List of tokens that have not been fulfilled"
+                            },
+                            "totalTokenShortfallInUSD": {
+                              "type": "number",
+                              "minimum": 0,
+                              "description": "Total shortfall of tokens in USD",
+                              "example": 500
+                            }
                           },
-                          "description": "Tokens received in the transaction"
+                          "required": [
+                            "hasFulfilledAll",
+                            "tokenShortfall",
+                            "totalTokenShortfallInUSD"
+                          ]
                         }
-                      },
-                      "required": [
-                        "tokensSpent",
-                        "tokensReceived"
-                      ],
-                      "description": "Cost breakdown for the intent"
+                      ]
                     },
                     "tokenRequirements": {
                       "type": "object",
@@ -2264,14 +3046,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "nullable": true,
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
                       "type": "string",
-                      "description": "Error message for invalid request parameters",
-                      "example": "Invalid user address format"
+                      "description": "Trace ID",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
                     }
                   },
                   "required": [
-                    "error"
+                    "errors",
+                    "traceId"
                   ],
                   "description": "Invalid request parameters"
                 }
@@ -2412,7 +3215,7 @@
                                   "type": "integer",
                                   "format": "int64",
                                   "description": "Target chain ID for the mandate",
-                                  "example": 8453
+                                  "example": "8453"
                                 },
                                 "fillDeadline": {
                                   "type": "integer",
@@ -2430,43 +3233,181 @@
                                   "type": "object",
                                   "properties": {
                                     "settlementContext": {
-                                      "type": "object",
-                                      "properties": {
-                                        "settlementLayer": {
-                                          "type": "string",
-                                          "enum": [
-                                            "INTENT_EXECUTOR",
-                                            "SAME_CHAIN",
-                                            "ACROSS",
-                                            "ECO",
-                                            "RELAY"
-                                          ],
-                                          "description": "Settlement layer for the qualifier",
-                                          "example": "ACROSS"
-                                        },
-                                        "using7579": {
-                                          "type": "boolean",
-                                          "description": "Whether to use 7579 for the qualifier. Only valid for ACROSS",
-                                          "example": true
-                                        },
-                                        "requestId": {
-                                          "type": "string",
-                                          "description": "Relay settlement layer metadata to be broadcasted"
-                                        },
-                                        "fundingMethod": {
-                                          "type": "string",
-                                          "enum": [
-                                            "COMPACT",
-                                            "PERMIT2",
-                                            "NO_FUNDING"
-                                          ],
-                                          "description": "The method of funding the intent",
-                                          "example": "PERMIT2"
-                                        }
+                                      "discriminator": {
+                                        "propertyName": "settlementLayer"
                                       },
-                                      "required": [
-                                        "settlementLayer",
-                                        "fundingMethod"
+                                      "oneOf": [
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "settlementLayer": {
+                                              "type": "string",
+                                              "enum": [
+                                                "INTENT_EXECUTOR"
+                                              ],
+                                              "description": "Settlement layer for the qualifier",
+                                              "example": "INTENT_EXECUTOR"
+                                            },
+                                            "using7579": {
+                                              "type": "boolean",
+                                              "enum": [
+                                                true
+                                              ],
+                                              "description": "Must be true for INTENT_EXECUTOR",
+                                              "example": true
+                                            },
+                                            "fundingMethod": {
+                                              "type": "string",
+                                              "enum": [
+                                                "NO_FUNDING"
+                                              ],
+                                              "description": "Must be NO_FUNDING for INTENT_EXECUTOR",
+                                              "example": "NO_FUNDING"
+                                            }
+                                          },
+                                          "required": [
+                                            "settlementLayer",
+                                            "using7579",
+                                            "fundingMethod"
+                                          ]
+                                        },
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "settlementLayer": {
+                                              "type": "string",
+                                              "enum": [
+                                                "SAME_CHAIN"
+                                              ],
+                                              "description": "Settlement layer for the qualifier",
+                                              "example": "SAME_CHAIN"
+                                            },
+                                            "using7579": {
+                                              "type": "boolean",
+                                              "description": "Whether to use 7579",
+                                              "example": false
+                                            },
+                                            "fundingMethod": {
+                                              "type": "string",
+                                              "enum": [
+                                                "COMPACT",
+                                                "PERMIT2",
+                                                "NO_FUNDING"
+                                              ],
+                                              "description": "The method of funding the intent",
+                                              "example": "PERMIT2"
+                                            }
+                                          },
+                                          "required": [
+                                            "settlementLayer",
+                                            "using7579",
+                                            "fundingMethod"
+                                          ]
+                                        },
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "settlementLayer": {
+                                              "type": "string",
+                                              "enum": [
+                                                "ACROSS"
+                                              ],
+                                              "description": "Settlement layer for the qualifier",
+                                              "example": "ACROSS"
+                                            },
+                                            "using7579": {
+                                              "type": "boolean",
+                                              "description": "Whether to use 7579",
+                                              "example": false
+                                            },
+                                            "fundingMethod": {
+                                              "type": "string",
+                                              "enum": [
+                                                "COMPACT",
+                                                "PERMIT2",
+                                                "NO_FUNDING"
+                                              ],
+                                              "description": "The method of funding the intent",
+                                              "example": "PERMIT2"
+                                            }
+                                          },
+                                          "required": [
+                                            "settlementLayer",
+                                            "using7579",
+                                            "fundingMethod"
+                                          ]
+                                        },
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "settlementLayer": {
+                                              "type": "string",
+                                              "enum": [
+                                                "ECO"
+                                              ],
+                                              "description": "Settlement layer for the qualifier",
+                                              "example": "ECO"
+                                            },
+                                            "using7579": {
+                                              "type": "boolean",
+                                              "description": "Whether to use 7579",
+                                              "example": false
+                                            },
+                                            "fundingMethod": {
+                                              "type": "string",
+                                              "enum": [
+                                                "COMPACT",
+                                                "PERMIT2",
+                                                "NO_FUNDING"
+                                              ],
+                                              "description": "The method of funding the intent",
+                                              "example": "PERMIT2"
+                                            }
+                                          },
+                                          "required": [
+                                            "settlementLayer",
+                                            "using7579",
+                                            "fundingMethod"
+                                          ]
+                                        },
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "settlementLayer": {
+                                              "type": "string",
+                                              "enum": [
+                                                "RELAY"
+                                              ],
+                                              "description": "Settlement layer for the qualifier",
+                                              "example": "RELAY"
+                                            },
+                                            "using7579": {
+                                              "type": "boolean",
+                                              "description": "Whether to use 7579",
+                                              "example": false
+                                            },
+                                            "fundingMethod": {
+                                              "type": "string",
+                                              "enum": [
+                                                "COMPACT",
+                                                "PERMIT2",
+                                                "NO_FUNDING"
+                                              ],
+                                              "description": "The method of funding the intent",
+                                              "example": "PERMIT2"
+                                            },
+                                            "requestId": {
+                                              "type": "string",
+                                              "description": "Relay settlement layer metadata to be broadcasted"
+                                            }
+                                          },
+                                          "required": [
+                                            "settlementLayer",
+                                            "using7579",
+                                            "fundingMethod",
+                                            "requestId"
+                                          ]
+                                        }
                                       ]
                                     },
                                     "encodedVal": {
@@ -2484,12 +3425,14 @@
                                 },
                                 "v": {
                                   "type": "number",
-                                  "description": "Validation mode identifier"
+                                  "description": "Validation mode identifier",
+                                  "example": 4
                                 },
                                 "minGas": {
                                   "type": "integer",
                                   "format": "int64",
-                                  "description": "Mininimum gas for preclaim ops"
+                                  "description": "Mininimum gas for preclaim ops",
+                                  "example": "0"
                                 }
                               },
                               "required": [
@@ -2525,47 +3468,40 @@
                       "signedMetadata": {
                         "type": "object",
                         "properties": {
-                          "fees": {
-                            "type": "object",
-                            "properties": {
-                              "protocolFees": {
-                                "type": "object",
-                                "additionalProperties": {
-                                  "type": "integer",
-                                  "format": "int64"
-                                },
-                                "description": "Protocol fees for the intent",
-                                "example": {
-                                  "0x8a310b9085faF5d9464D84C3d9a7BE3b28c94531": 1000000000000000000
-                                }
-                              },
-                              "sponsorFee": {
-                                "type": "object",
-                                "properties": {
-                                  "relayer": {
-                                    "type": "number",
-                                    "description": "Relayer fee for the intent",
-                                    "example": 0.01
-                                  },
-                                  "protocol": {
-                                    "type": "number",
-                                    "description": "Protocol fee for the intent",
-                                    "example": 0.01
-                                  }
-                                },
-                                "description": "Sponsor fee for the intent",
-                                "example": {
-                                  "relayer": 0.01,
-                                  "protocol": 0.01
-                                }
-                              }
-                            }
-                          },
                           "tokenPrices": {
                             "type": "object",
-                            "additionalProperties": {
-                              "type": "number"
+                            "properties": {
+                              "ETH": {
+                                "type": "number"
+                              },
+                              "WETH": {
+                                "type": "number"
+                              },
+                              "USDC": {
+                                "type": "number"
+                              },
+                              "POL": {
+                                "type": "number"
+                              },
+                              "WPOL": {
+                                "type": "number"
+                              },
+                              "S": {
+                                "type": "number"
+                              },
+                              "WS": {
+                                "type": "number"
+                              }
                             },
+                            "required": [
+                              "ETH",
+                              "WETH",
+                              "USDC",
+                              "POL",
+                              "WPOL",
+                              "S",
+                              "WS"
+                            ],
                             "description": "Token prices in USD",
                             "example": {
                               "USDC": 1,
@@ -2585,7 +3521,39 @@
                             }
                           },
                           "opGasParams": {
-                            "nullable": true,
+                            "type": "object",
+                            "properties": {
+                              "estimatedCalldataSize": {
+                                "type": "number"
+                              }
+                            },
+                            "additionalProperties": {
+                              "type": "object",
+                              "properties": {
+                                "l1BaseFee": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                },
+                                "l1BlobBaseFee": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                },
+                                "baseFeeScalar": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                },
+                                "blobFeeScalar": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                }
+                              },
+                              "required": [
+                                "l1BaseFee",
+                                "l1BlobBaseFee",
+                                "baseFeeScalar",
+                                "blobFeeScalar"
+                              ]
+                            },
                             "description": "Optimism network gas parameters per chain",
                             "example": {
                               "10": {
@@ -2595,6 +3563,13 @@
                                 "blobFeeScalar": "100"
                               }
                             }
+                          },
+                          "quotes": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "nullable": true
+                            },
+                            "description": "Swap quotes per token address"
                           },
                           "account": {
                             "type": "object",
@@ -2636,7 +3611,7 @@
                                     "data"
                                   ]
                                 },
-                                "description": "Setup operations for the smart account"
+                                "description": "Setup operations for the smart account. Only used if the account is not deployed"
                               },
                               "emissaryConfig": {
                                 "type": "object",
@@ -2678,7 +3653,19 @@
                                         "description": "Nonce",
                                         "example": "0"
                                       },
-                                      "allChainIds": {},
+                                      "allChainIds": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer",
+                                          "format": "int64"
+                                        },
+                                        "description": "All chain IDs",
+                                        "example": [
+                                          1,
+                                          10,
+                                          137
+                                        ]
+                                      },
                                       "chainIndex": {
                                         "type": "integer",
                                         "format": "int64",
@@ -2849,7 +3836,6 @@
                             },
                             "required": [
                               "address",
-                              "accountType",
                               "accountContext"
                             ]
                           },
@@ -2893,7 +3879,7 @@
                                     "data"
                                   ]
                                 },
-                                "description": "Setup operations for the smart account"
+                                "description": "Setup operations for the smart account. Only used if the account is not deployed"
                               },
                               "emissaryConfig": {
                                 "type": "object",
@@ -2935,7 +3921,19 @@
                                         "description": "Nonce",
                                         "example": "0"
                                       },
-                                      "allChainIds": {},
+                                      "allChainIds": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "integer",
+                                          "format": "int64"
+                                        },
+                                        "description": "All chain IDs",
+                                        "example": [
+                                          1,
+                                          10,
+                                          137
+                                        ]
+                                      },
                                       "chainIndex": {
                                         "type": "integer",
                                         "format": "int64",
@@ -3106,17 +4104,40 @@
                             },
                             "required": [
                               "address",
-                              "accountType",
                               "accountContext"
                             ]
                           },
-                          "quotes": {
-                            "nullable": true
+                          "fees": {
+                            "type": "object",
+                            "properties": {
+                              "sponsorFee": {
+                                "type": "object",
+                                "properties": {
+                                  "relayer": {
+                                    "type": "number",
+                                    "description": "Fee charged by relayer",
+                                    "example": 0.0009
+                                  },
+                                  "protocol": {
+                                    "type": "number",
+                                    "description": "Fee charged by Rhinestone",
+                                    "example": 0
+                                  }
+                                },
+                                "required": [
+                                  "relayer",
+                                  "protocol"
+                                ],
+                                "description": "Transaction fees"
+                              }
+                            }
                           }
                         },
                         "required": [
                           "tokenPrices",
                           "gasPrices",
+                          "opGasParams",
+                          "quotes",
                           "account"
                         ],
                         "description": "Signed metadata containing prices, fees, and gas parameters"
@@ -3173,7 +4194,7 @@
                       "destinationSignature": {
                         "type": "string",
                         "pattern": "^0x[a-fA-F0-9]*$",
-                        "description": "Target signature",
+                        "description": "Destination (target chain) signature",
                         "example": "0x..."
                       },
                       "originSignatures": {
@@ -3182,7 +4203,7 @@
                           "type": "string",
                           "pattern": "^0x[a-fA-F0-9]*$"
                         },
-                        "description": "Origin signatures",
+                        "description": "Origin (source chain) signatures",
                         "example": [
                           "0x...",
                           "0x..."
@@ -3192,7 +4213,9 @@
                         "type": "object",
                         "properties": {
                           "dryRun": {
-                            "type": "boolean"
+                            "type": "boolean",
+                            "description": "Whether to perform a dry run. For internal use only",
+                            "example": true
                           }
                         }
                       }
@@ -3232,14 +4255,15 @@
                             "id": {
                               "type": "integer",
                               "format": "int64",
-                              "description": "Nonce of the bundle, used as identifier"
+                              "description": "Unique identifier",
+                              "example": "6288024828617617176235460836311142252483529646664720691654196790232050827264"
                             },
                             "status": {
                               "type": "string",
                               "enum": [
                                 "PENDING"
                               ],
-                              "description": "Status of the intent operation"
+                              "description": "Status of the intent operations"
                             }
                           },
                           "required": [
@@ -3253,226 +4277,23 @@
                             "id": {
                               "type": "integer",
                               "format": "int64",
-                              "description": "Nonce of the bundle, used as identifier"
+                              "description": "Nonce of the intent operations, used as identifier"
                             },
                             "status": {
                               "type": "string",
                               "enum": [
                                 "FAILED"
                               ],
-                              "description": "Status of the intent operation"
-                            },
-                            "error": {
-                              "oneOf": [
-                                {
-                                  "type": "object",
-                                  "properties": {
-                                    "success": {
-                                      "type": "boolean",
-                                      "enum": [
-                                        true
-                                      ]
-                                    },
-                                    "chainId": {
-                                      "type": "number",
-                                      "minimum": 0
-                                    },
-                                    "gasEstimation": {
-                                      "type": "string"
-                                    }
-                                  },
-                                  "required": [
-                                    "success",
-                                    "chainId",
-                                    "gasEstimation"
-                                  ]
-                                },
-                                {
-                                  "type": "object",
-                                  "properties": {
-                                    "success": {
-                                      "type": "boolean",
-                                      "enum": [
-                                        false
-                                      ]
-                                    },
-                                    "call": {
-                                      "type": "object",
-                                      "properties": {
-                                        "to": {
-                                          "type": "string"
-                                        },
-                                        "value": {
-                                          "type": "integer",
-                                          "format": "int64"
-                                        },
-                                        "data": {
-                                          "type": "string",
-                                          "pattern": "^0x[a-fA-F0-9]*$"
-                                        },
-                                        "chainId": {
-                                          "type": "number",
-                                          "minimum": 0
-                                        }
-                                      },
-                                      "required": [
-                                        "to",
-                                        "value",
-                                        "data",
-                                        "chainId"
-                                      ]
-                                    },
-                                    "details": {
-                                      "type": "object",
-                                      "properties": {
-                                        "blockNumber": {
-                                          "type": "integer",
-                                          "format": "int64"
-                                        },
-                                        "relayer": {
-                                          "type": "string"
-                                        },
-                                        "simulationUrl": {
-                                          "type": "string"
-                                        }
-                                      },
-                                      "required": [
-                                        "blockNumber",
-                                        "relayer"
-                                      ]
-                                    }
-                                  },
-                                  "required": [
-                                    "success",
-                                    "call",
-                                    "details"
-                                  ]
-                                }
-                              ],
-                              "description": "Error details for failed bundles"
+                              "description": "Status of the intent operations"
                             }
                           },
                           "required": [
                             "id",
-                            "status",
-                            "error"
-                          ]
-                        },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "id": {
-                              "type": "integer",
-                              "format": "int64",
-                              "description": "Nonce of the bundle, used as identifier"
-                            },
-                            "status": {
-                              "type": "string",
-                              "enum": [
-                                "FAILED"
-                              ],
-                              "description": "Status of the intent operation"
-                            },
-                            "simulations": {
-                              "type": "array",
-                              "items": {
-                                "oneOf": [
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "success": {
-                                        "type": "boolean",
-                                        "enum": [
-                                          true
-                                        ]
-                                      },
-                                      "chainId": {
-                                        "type": "number",
-                                        "minimum": 0
-                                      },
-                                      "gasEstimation": {
-                                        "type": "string"
-                                      }
-                                    },
-                                    "required": [
-                                      "success",
-                                      "chainId",
-                                      "gasEstimation"
-                                    ]
-                                  },
-                                  {
-                                    "type": "object",
-                                    "properties": {
-                                      "success": {
-                                        "type": "boolean",
-                                        "enum": [
-                                          false
-                                        ]
-                                      },
-                                      "call": {
-                                        "type": "object",
-                                        "properties": {
-                                          "to": {
-                                            "type": "string"
-                                          },
-                                          "value": {
-                                            "type": "integer",
-                                            "format": "int64"
-                                          },
-                                          "data": {
-                                            "type": "string",
-                                            "pattern": "^0x[a-fA-F0-9]*$"
-                                          },
-                                          "chainId": {
-                                            "type": "number",
-                                            "minimum": 0
-                                          }
-                                        },
-                                        "required": [
-                                          "to",
-                                          "value",
-                                          "data",
-                                          "chainId"
-                                        ]
-                                      },
-                                      "details": {
-                                        "type": "object",
-                                        "properties": {
-                                          "blockNumber": {
-                                            "type": "integer",
-                                            "format": "int64"
-                                          },
-                                          "relayer": {
-                                            "type": "string"
-                                          },
-                                          "simulationUrl": {
-                                            "type": "string"
-                                          }
-                                        },
-                                        "required": [
-                                          "blockNumber",
-                                          "relayer"
-                                        ]
-                                      }
-                                    },
-                                    "required": [
-                                      "success",
-                                      "call",
-                                      "details"
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          },
-                          "required": [
-                            "id",
-                            "status",
-                            "simulations"
+                            "status"
                           ]
                         }
                       ],
-                      "description": "Results of bundle submissions"
+                      "description": "Intent operation submission results"
                     }
                   },
                   "required": [
@@ -3490,14 +4311,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "nullable": true,
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
                       "type": "string",
-                      "description": "Error message for invalid request parameters",
-                      "example": "Invalid bundle format"
+                      "description": "Trace ID",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
                     }
                   },
                   "required": [
-                    "error"
+                    "errors",
+                    "traceId"
                   ],
                   "description": "Invalid request parameters"
                 }
@@ -3557,8 +4399,10 @@
           {
             "name": "full",
             "in": "query",
+            "description": "Whether to include intent operation details",
             "schema": {
-              "type": "boolean"
+              "type": "boolean",
+              "example": "true"
             }
           }
         ],
@@ -3581,7 +4425,8 @@
                         "FAILED",
                         "EXPIRED"
                       ],
-                      "description": "Overall status of the intent operation"
+                      "description": "Overall status of the intent operation",
+                      "example": "COMPLETED"
                     },
                     "fillTimestamp": {
                       "type": "number",
@@ -3592,6 +4437,17 @@
                       "type": "string",
                       "description": "Transaction hash of the fill transaction",
                       "example": "0xc1674f4671accbceec3f22c2c9cfa4f7aead7183f48df90c239e0d85d6c31e21"
+                    },
+                    "destinationChainId": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Chain ID of the fill transaction",
+                      "example": 8453
+                    },
+                    "userAddress": {
+                      "type": "string",
+                      "description": "User address",
+                      "example": "0x3672e268a79bd4acc5ee646bdda652547c7a435c"
                     },
                     "claims": {
                       "type": "array",
@@ -3612,8 +4468,8 @@
                               "COMPLETED",
                               "FAILED"
                             ],
-                            "description": "Status of individual claim",
-                            "example": "PENDING"
+                            "description": "Status of the claim",
+                            "example": "COMPLETED"
                           },
                           "claimTimestamp": {
                             "type": "number",
@@ -3634,6 +4490,8 @@
                   },
                   "required": [
                     "status",
+                    "destinationChainId",
+                    "userAddress",
                     "claims"
                   ],
                   "description": "Successfully retrieved intent operation status"
@@ -3648,16 +4506,79 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "nullable": true,
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
                       "type": "string",
-                      "description": "Error message for invalid intent ID format",
-                      "example": "Intent ID must be numeric"
+                      "description": "Trace ID",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
                     }
                   },
                   "required": [
-                    "error"
+                    "errors",
+                    "traceId"
                   ],
-                  "description": "Invalid ntent ID"
+                  "description": "Invalid intent ID"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "nullable": true,
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ],
+                  "description": "Intent ID not found"
                 }
               }
             }
@@ -3757,8 +4678,8 @@
                         "properties": {
                           "tokenName": {
                             "type": "string",
-                            "description": "Name of the token",
-                            "example": "USD Coin"
+                            "description": "Short name (symbol) of the token",
+                            "example": "USDC"
                           },
                           "tokenDecimals": {
                             "type": "number",
@@ -3856,7 +4777,7 @@
                       "portfolio": [
                         {
                           "tokenName": "USDC",
-                          "tokenDecimals": 16,
+                          "tokenDecimals": 6,
                           "balance": {
                             "locked": "1000000000000000000",
                             "unlocked": "1000000000000000000"
@@ -3881,33 +4802,53 @@
                       "portfolio": [
                         {
                           "tokenName": "USDC",
-                          "balance": "2000000000000000000",
+                          "tokenDecimals": 6,
+                          "balance": {
+                            "locked": "2000000",
+                            "unlocked": "5000000"
+                          },
                           "tokenChainBalance": [
                             {
                               "chainId": 10,
                               "tokenAddress": "0x0b2c639c533813f4aa9d7837caf62653d097ff85",
-                              "balance": "1000000000000000000"
+                              "balance": {
+                                "locked": "1000000",
+                                "unlocked": "2000000"
+                              }
                             },
                             {
                               "chainId": 8453,
                               "tokenAddress": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-                              "balance": "1000000000000000000"
+                              "balance": {
+                                "locked": "1000000",
+                                "unlocked": "3000000"
+                              }
                             }
                           ]
                         },
                         {
                           "tokenName": "WETH",
-                          "balance": "2000000",
+                          "tokenDecimals": 18,
+                          "balance": {
+                            "locked": "2000000000000000000",
+                            "unlocked": "3000000000000000000"
+                          },
                           "tokenChainBalance": [
                             {
                               "chainId": 10,
                               "tokenAddress": "0x4200000000000000000000000000000000000006",
-                              "balance": "1000000"
+                              "balance": {
+                                "locked": "1000000000000000000",
+                                "unlocked": "2000000000000000000"
+                              }
                             },
                             {
                               "chainId": 8453,
                               "tokenAddress": "0x4200000000000000000000000000000000000006",
-                              "balance": "1000000"
+                              "balance": {
+                                "locked": "1000000000000000000",
+                                "unlocked": "1000000000000000000"
+                              }
                             }
                           ]
                         }
@@ -3925,14 +4866,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "nullable": true,
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
                       "type": "string",
-                      "description": "Error message for invalid request parameters",
-                      "example": "Invalid user address format"
+                      "description": "Trace ID",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
                     }
                   },
                   "required": [
-                    "error"
+                    "errors",
+                    "traceId"
                   ],
                   "description": "Invalid request parameters"
                 }
@@ -4088,14 +5050,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "nullable": true,
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
                       "type": "string",
-                      "description": "Error message for invalid request parameters",
-                      "example": "Invalid user address format"
+                      "description": "Trace ID",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
                     }
                   },
                   "required": [
-                    "error"
+                    "errors",
+                    "traceId"
                   ],
                   "description": "Invalid request parameters"
                 }
@@ -4273,14 +5256,35 @@
                 "schema": {
                   "type": "object",
                   "properties": {
-                    "error": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "nullable": true,
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
                       "type": "string",
-                      "description": "Error message for invalid request parameters",
-                      "example": "Invalid user address format"
+                      "description": "Trace ID",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
                     }
                   },
                   "required": [
-                    "error"
+                    "errors",
+                    "traceId"
                   ],
                   "description": "Invalid request parameters"
                 }
