@@ -333,12 +333,13 @@
                                   "type": "string",
                                   "enum": [
                                     "ETH",
-                                    "WETH",
                                     "USDC",
+                                    "WETH",
                                     "POL",
                                     "WPOL",
-                                    "S",
-                                    "WS"
+                                    "XPL",
+                                    "USDT",
+                                    "WXPL"
                                   ]
                                 }
                               ]
@@ -357,12 +358,13 @@
                                     "type": "string",
                                     "enum": [
                                       "ETH",
-                                      "WETH",
                                       "USDC",
+                                      "WETH",
                                       "POL",
                                       "WPOL",
-                                      "S",
-                                      "WS"
+                                      "XPL",
+                                      "USDT",
+                                      "WXPL"
                                     ]
                                   }
                                 ]
@@ -390,12 +392,13 @@
                                       "type": "string",
                                       "enum": [
                                         "ETH",
-                                        "WETH",
                                         "USDC",
+                                        "WETH",
                                         "POL",
                                         "WPOL",
-                                        "S",
-                                        "WS"
+                                        "XPL",
+                                        "USDT",
+                                        "WXPL"
                                       ]
                                     }
                                   ]
@@ -414,12 +417,13 @@
                                         "type": "string",
                                         "enum": [
                                           "ETH",
-                                          "WETH",
                                           "USDC",
+                                          "WETH",
                                           "POL",
                                           "WPOL",
-                                          "S",
-                                          "WS"
+                                          "XPL",
+                                          "USDT",
+                                          "WXPL"
                                         ]
                                       }
                                     ]
@@ -703,12 +707,13 @@
                         "type": "string",
                         "enum": [
                           "ETH",
-                          "WETH",
                           "USDC",
+                          "WETH",
                           "POL",
                           "WPOL",
-                          "S",
-                          "WS"
+                          "XPL",
+                          "USDT",
+                          "WXPL"
                         ]
                       }
                     },
@@ -1317,12 +1322,13 @@
                                   "type": "string",
                                   "enum": [
                                     "ETH",
-                                    "WETH",
                                     "USDC",
+                                    "WETH",
                                     "POL",
                                     "WPOL",
-                                    "S",
-                                    "WS"
+                                    "XPL",
+                                    "USDT",
+                                    "WXPL"
                                   ]
                                 }
                               ]
@@ -1341,12 +1347,13 @@
                                     "type": "string",
                                     "enum": [
                                       "ETH",
-                                      "WETH",
                                       "USDC",
+                                      "WETH",
                                       "POL",
                                       "WPOL",
-                                      "S",
-                                      "WS"
+                                      "XPL",
+                                      "USDT",
+                                      "WXPL"
                                     ]
                                   }
                                 ]
@@ -1374,12 +1381,13 @@
                                       "type": "string",
                                       "enum": [
                                         "ETH",
-                                        "WETH",
                                         "USDC",
+                                        "WETH",
                                         "POL",
                                         "WPOL",
-                                        "S",
-                                        "WS"
+                                        "XPL",
+                                        "USDT",
+                                        "WXPL"
                                       ]
                                     }
                                   ]
@@ -1398,12 +1406,13 @@
                                         "type": "string",
                                         "enum": [
                                           "ETH",
-                                          "WETH",
                                           "USDC",
+                                          "WETH",
                                           "POL",
                                           "WPOL",
-                                          "S",
-                                          "WS"
+                                          "XPL",
+                                          "USDT",
+                                          "WXPL"
                                         ]
                                       }
                                     ]
@@ -1687,12 +1696,13 @@
                         "type": "string",
                         "enum": [
                           "ETH",
-                          "WETH",
                           "USDC",
+                          "WETH",
                           "POL",
                           "WPOL",
-                          "S",
-                          "WS"
+                          "XPL",
+                          "USDT",
+                          "WXPL"
                         ]
                       }
                     },
@@ -2074,10 +2084,10 @@
                                 "ETH": {
                                   "type": "number"
                                 },
-                                "WETH": {
+                                "USDC": {
                                   "type": "number"
                                 },
-                                "USDC": {
+                                "WETH": {
                                   "type": "number"
                                 },
                                 "POL": {
@@ -2086,21 +2096,25 @@
                                 "WPOL": {
                                   "type": "number"
                                 },
-                                "S": {
+                                "XPL": {
                                   "type": "number"
                                 },
-                                "WS": {
+                                "USDT": {
+                                  "type": "number"
+                                },
+                                "WXPL": {
                                   "type": "number"
                                 }
                               },
                               "required": [
                                 "ETH",
-                                "WETH",
                                 "USDC",
+                                "WETH",
                                 "POL",
                                 "WPOL",
-                                "S",
-                                "WS"
+                                "XPL",
+                                "USDT",
+                                "WXPL"
                               ],
                               "description": "Token prices in USD",
                               "example": {
@@ -3474,10 +3488,10 @@
                               "ETH": {
                                 "type": "number"
                               },
-                              "WETH": {
+                              "USDC": {
                                 "type": "number"
                               },
-                              "USDC": {
+                              "WETH": {
                                 "type": "number"
                               },
                               "POL": {
@@ -3486,21 +3500,25 @@
                               "WPOL": {
                                 "type": "number"
                               },
-                              "S": {
+                              "XPL": {
                                 "type": "number"
                               },
-                              "WS": {
+                              "USDT": {
+                                "type": "number"
+                              },
+                              "WXPL": {
                                 "type": "number"
                               }
                             },
                             "required": [
                               "ETH",
-                              "WETH",
                               "USDC",
+                              "WETH",
                               "POL",
                               "WPOL",
-                              "S",
-                              "WS"
+                              "XPL",
+                              "USDT",
+                              "WXPL"
                             ],
                             "description": "Token prices in USD",
                             "example": {
