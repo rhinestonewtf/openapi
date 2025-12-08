@@ -333,12 +333,15 @@
                                   "type": "string",
                                   "enum": [
                                     "ETH",
-                                    "WETH",
                                     "USDC",
+                                    "WETH",
+                                    "USDT0",
+                                    "XDAI",
                                     "POL",
                                     "WPOL",
-                                    "S",
-                                    "WS"
+                                    "USDT",
+                                    "XPL",
+                                    "WXPL"
                                   ]
                                 }
                               ]
@@ -357,12 +360,15 @@
                                     "type": "string",
                                     "enum": [
                                       "ETH",
-                                      "WETH",
                                       "USDC",
+                                      "WETH",
+                                      "USDT0",
+                                      "XDAI",
                                       "POL",
                                       "WPOL",
-                                      "S",
-                                      "WS"
+                                      "USDT",
+                                      "XPL",
+                                      "WXPL"
                                     ]
                                   }
                                 ]
@@ -390,12 +396,15 @@
                                       "type": "string",
                                       "enum": [
                                         "ETH",
-                                        "WETH",
                                         "USDC",
+                                        "WETH",
+                                        "USDT0",
+                                        "XDAI",
                                         "POL",
                                         "WPOL",
-                                        "S",
-                                        "WS"
+                                        "USDT",
+                                        "XPL",
+                                        "WXPL"
                                       ]
                                     }
                                   ]
@@ -414,12 +423,15 @@
                                         "type": "string",
                                         "enum": [
                                           "ETH",
-                                          "WETH",
                                           "USDC",
+                                          "WETH",
+                                          "USDT0",
+                                          "XDAI",
                                           "POL",
                                           "WPOL",
-                                          "S",
-                                          "WS"
+                                          "USDT",
+                                          "XPL",
+                                          "WXPL"
                                         ]
                                       }
                                     ]
@@ -703,12 +715,15 @@
                         "type": "string",
                         "enum": [
                           "ETH",
-                          "WETH",
                           "USDC",
+                          "WETH",
+                          "USDT0",
+                          "XDAI",
                           "POL",
                           "WPOL",
-                          "S",
-                          "WS"
+                          "USDT",
+                          "XPL",
+                          "WXPL"
                         ]
                       }
                     },
@@ -1317,12 +1332,15 @@
                                   "type": "string",
                                   "enum": [
                                     "ETH",
-                                    "WETH",
                                     "USDC",
+                                    "WETH",
+                                    "USDT0",
+                                    "XDAI",
                                     "POL",
                                     "WPOL",
-                                    "S",
-                                    "WS"
+                                    "USDT",
+                                    "XPL",
+                                    "WXPL"
                                   ]
                                 }
                               ]
@@ -1341,12 +1359,15 @@
                                     "type": "string",
                                     "enum": [
                                       "ETH",
-                                      "WETH",
                                       "USDC",
+                                      "WETH",
+                                      "USDT0",
+                                      "XDAI",
                                       "POL",
                                       "WPOL",
-                                      "S",
-                                      "WS"
+                                      "USDT",
+                                      "XPL",
+                                      "WXPL"
                                     ]
                                   }
                                 ]
@@ -1374,12 +1395,15 @@
                                       "type": "string",
                                       "enum": [
                                         "ETH",
-                                        "WETH",
                                         "USDC",
+                                        "WETH",
+                                        "USDT0",
+                                        "XDAI",
                                         "POL",
                                         "WPOL",
-                                        "S",
-                                        "WS"
+                                        "USDT",
+                                        "XPL",
+                                        "WXPL"
                                       ]
                                     }
                                   ]
@@ -1398,12 +1422,15 @@
                                         "type": "string",
                                         "enum": [
                                           "ETH",
-                                          "WETH",
                                           "USDC",
+                                          "WETH",
+                                          "USDT0",
+                                          "XDAI",
                                           "POL",
                                           "WPOL",
-                                          "S",
-                                          "WS"
+                                          "USDT",
+                                          "XPL",
+                                          "WXPL"
                                         ]
                                       }
                                     ]
@@ -1687,12 +1714,15 @@
                         "type": "string",
                         "enum": [
                           "ETH",
-                          "WETH",
                           "USDC",
+                          "WETH",
+                          "USDT0",
+                          "XDAI",
                           "POL",
                           "WPOL",
-                          "S",
-                          "WS"
+                          "USDT",
+                          "XPL",
+                          "WXPL"
                         ]
                       }
                     },
@@ -2074,10 +2104,16 @@
                                 "ETH": {
                                   "type": "number"
                                 },
+                                "USDC": {
+                                  "type": "number"
+                                },
                                 "WETH": {
                                   "type": "number"
                                 },
-                                "USDC": {
+                                "USDT0": {
+                                  "type": "number"
+                                },
+                                "XDAI": {
                                   "type": "number"
                                 },
                                 "POL": {
@@ -2086,21 +2122,27 @@
                                 "WPOL": {
                                   "type": "number"
                                 },
-                                "S": {
+                                "USDT": {
                                   "type": "number"
                                 },
-                                "WS": {
+                                "XPL": {
+                                  "type": "number"
+                                },
+                                "WXPL": {
                                   "type": "number"
                                 }
                               },
                               "required": [
                                 "ETH",
-                                "WETH",
                                 "USDC",
+                                "WETH",
+                                "USDT0",
+                                "XDAI",
                                 "POL",
                                 "WPOL",
-                                "S",
-                                "WS"
+                                "USDT",
+                                "XPL",
+                                "WXPL"
                               ],
                               "description": "Token prices in USD",
                               "example": {
@@ -2790,6 +2832,55 @@
                             ]
                           },
                           "description": "List of 7702 authorizations signed by EOA matching sponsor"
+                        },
+                        "recipientSignedAuthorizations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "chainId": {
+                                "type": "number",
+                                "description": "Chain ID for EIP-7702 delegation, 0 means it can be applied to any chain",
+                                "example": 8453
+                              },
+                              "address": {
+                                "type": "string",
+                                "description": "Address of the delegate for EIP-7702 delegation",
+                                "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                              },
+                              "nonce": {
+                                "type": "number",
+                                "description": "Nonce for EIP-7702 delegation",
+                                "example": "0"
+                              },
+                              "yParity": {
+                                "type": "number",
+                                "description": "Y parity for EIP-7702 delegation",
+                                "example": 27
+                              },
+                              "r": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "R value for EIP-7702 delegation",
+                                "example": "0x..."
+                              },
+                              "s": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "S value for EIP-7702 delegation",
+                                "example": "0x..."
+                              }
+                            },
+                            "required": [
+                              "chainId",
+                              "address",
+                              "nonce",
+                              "yParity",
+                              "r",
+                              "s"
+                            ]
+                          },
+                          "description": "List of 7702 authorizations signed by EOA matching recipient account (if present)"
                         }
                       },
                       "required": [
@@ -3474,10 +3565,16 @@
                               "ETH": {
                                 "type": "number"
                               },
+                              "USDC": {
+                                "type": "number"
+                              },
                               "WETH": {
                                 "type": "number"
                               },
-                              "USDC": {
+                              "USDT0": {
+                                "type": "number"
+                              },
+                              "XDAI": {
                                 "type": "number"
                               },
                               "POL": {
@@ -3486,21 +3583,27 @@
                               "WPOL": {
                                 "type": "number"
                               },
-                              "S": {
+                              "USDT": {
                                 "type": "number"
                               },
-                              "WS": {
+                              "XPL": {
+                                "type": "number"
+                              },
+                              "WXPL": {
                                 "type": "number"
                               }
                             },
                             "required": [
                               "ETH",
-                              "WETH",
                               "USDC",
+                              "WETH",
+                              "USDT0",
+                              "XDAI",
                               "POL",
                               "WPOL",
-                              "S",
-                              "WS"
+                              "USDT",
+                              "XPL",
+                              "WXPL"
                             ],
                             "description": "Token prices in USD",
                             "example": {
@@ -4190,6 +4293,55 @@
                           ]
                         },
                         "description": "List of 7702 authorizations signed by EOA matching sponsor"
+                      },
+                      "recipientSignedAuthorizations": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "chainId": {
+                              "type": "number",
+                              "description": "Chain ID for EIP-7702 delegation, 0 means it can be applied to any chain",
+                              "example": 8453
+                            },
+                            "address": {
+                              "type": "string",
+                              "description": "Address of the delegate for EIP-7702 delegation",
+                              "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
+                            },
+                            "nonce": {
+                              "type": "number",
+                              "description": "Nonce for EIP-7702 delegation",
+                              "example": "0"
+                            },
+                            "yParity": {
+                              "type": "number",
+                              "description": "Y parity for EIP-7702 delegation",
+                              "example": 27
+                            },
+                            "r": {
+                              "type": "string",
+                              "pattern": "^0x[a-fA-F0-9]*$",
+                              "description": "R value for EIP-7702 delegation",
+                              "example": "0x..."
+                            },
+                            "s": {
+                              "type": "string",
+                              "pattern": "^0x[a-fA-F0-9]*$",
+                              "description": "S value for EIP-7702 delegation",
+                              "example": "0x..."
+                            }
+                          },
+                          "required": [
+                            "chainId",
+                            "address",
+                            "nonce",
+                            "yParity",
+                            "r",
+                            "s"
+                          ]
+                        },
+                        "description": "List of 7702 authorizations signed by EOA matching recipient account (if present)"
                       },
                       "destinationSignature": {
                         "type": "string",
