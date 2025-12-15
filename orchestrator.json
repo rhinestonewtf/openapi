@@ -2793,7 +2793,6 @@
                             "tokenPrices",
                             "gasPrices",
                             "opGasParams",
-                            "quotes",
                             "account"
                           ],
                           "description": "Signed metadata containing prices, fees, and gas parameters"
@@ -4258,7 +4257,6 @@
                           "tokenPrices",
                           "gasPrices",
                           "opGasParams",
-                          "quotes",
                           "account"
                         ],
                         "description": "Signed metadata containing prices, fees, and gas parameters"
@@ -5544,12 +5542,16 @@
                             "decimals"
                           ]
                         }
+                      },
+                      "supportsSwaps": {
+                        "type": "boolean"
                       }
                     },
                     "required": [
                       "name",
                       "settlementLayers",
-                      "supportedTokens"
+                      "supportedTokens",
+                      "supportsSwaps"
                     ]
                   },
                   "description": "The supported chains and tokens with additional metadata"
