@@ -680,7 +680,8 @@
                           "enum": [
                             "ACROSS",
                             "ECO",
-                            "RELAY"
+                            "RELAY",
+                            "OFT"
                           ]
                         },
                         "description": "The settlement layer to be used to settle intents",
@@ -897,6 +898,17 @@
                                 "description": "Fee associated with the token that has not been fulfilled",
                                 "example": "10000"
                               },
+                              "feesByToken": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "integer",
+                                  "format": "int64"
+                                },
+                                "description": "Fees in different tokens (e.g., native ETH fees for USDT0 transfers)",
+                                "example": {
+                                  "0x0000000000000000000000000000000000000000": "100000000000000"
+                                }
+                              },
                               "tokenSymbol": {
                                 "type": "string",
                                 "description": "Symbol of the token that has not been fulfilled",
@@ -914,6 +926,7 @@
                               "destinationAmount",
                               "amountSpent",
                               "fee",
+                              "feesByToken",
                               "tokenSymbol",
                               "tokenDecimals"
                             ]
@@ -1684,7 +1697,8 @@
                           "enum": [
                             "ACROSS",
                             "ECO",
-                            "RELAY"
+                            "RELAY",
+                            "OFT"
                           ]
                         },
                         "description": "The settlement layer to be used to settle intents",
@@ -1864,10 +1878,10 @@
                                     "example": "1733493192"
                                   },
                                   "preClaimOps": {
-                                    "description": "Array of executions to perform before claiming"
+                                    "description": "Executions to perform before claiming"
                                   },
                                   "destinationOps": {
-                                    "description": "Array of executions to perform on the target chain"
+                                    "description": "Executions to perform on the target chain"
                                   },
                                   "qualifier": {
                                     "type": "object",
@@ -1903,6 +1917,58 @@
                                                 ],
                                                 "description": "Must be NO_FUNDING for INTENT_EXECUTOR",
                                                 "example": "NO_FUNDING"
+                                              },
+                                              "bridge": {
+                                                "discriminator": {
+                                                  "propertyName": "type"
+                                                },
+                                                "oneOf": [
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "OFT"
+                                                        ]
+                                                      },
+                                                      "oftToken": {
+                                                        "type": "string",
+                                                        "description": "OFT token symbol (e.g., USDT0)",
+                                                        "example": "USDT0"
+                                                      },
+                                                      "dstChainId": {
+                                                        "type": "number",
+                                                        "description": "Destination chain id (where tokens are delivered)",
+                                                        "example": 8453
+                                                      },
+                                                      "dstEid": {
+                                                        "type": "number",
+                                                        "description": "LayerZero destination endpoint id",
+                                                        "example": 30383
+                                                      },
+                                                      "minAmountLD": {
+                                                        "type": "integer",
+                                                        "format": "int64",
+                                                        "description": "Minimum amount on destination (LD units)",
+                                                        "example": "990000"
+                                                      },
+                                                      "adapter": {
+                                                        "type": "string",
+                                                        "description": "OFT adapter contract on origin chain"
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "type",
+                                                      "oftToken",
+                                                      "dstChainId",
+                                                      "dstEid",
+                                                      "minAmountLD",
+                                                      "adapter"
+                                                    ]
+                                                  }
+                                                ],
+                                                "description": "Optional metadata when INTENT_EXECUTOR is used as flow but settlement is via another mechanism (e.g. OFT/LayerZero)."
                                               }
                                             },
                                             "required": [
@@ -2039,6 +2105,10 @@
                                               "requestId": {
                                                 "type": "string",
                                                 "description": "Relay settlement layer metadata to be broadcasted"
+                                              },
+                                              "subsidizedAmount": {
+                                                "type": "string",
+                                                "description": "Relay settlement layer subsidized amount on the intent (denomination in USDC)"
                                               }
                                             },
                                             "required": [
@@ -2046,6 +2116,57 @@
                                               "using7579",
                                               "fundingMethod",
                                               "requestId"
+                                            ]
+                                          },
+                                          {
+                                            "type": "object",
+                                            "properties": {
+                                              "settlementLayer": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "OFT"
+                                                ],
+                                                "description": "Settlement layer for LayerZero OFT bridging (supports USDT0, etc.)",
+                                                "example": "OFT"
+                                              },
+                                              "using7579": {
+                                                "type": "boolean",
+                                                "description": "Whether to use 7579",
+                                                "example": false
+                                              },
+                                              "fundingMethod": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "COMPACT",
+                                                  "PERMIT2",
+                                                  "NO_FUNDING"
+                                                ],
+                                                "description": "The method of funding the intent",
+                                                "example": "PERMIT2"
+                                              },
+                                              "oftToken": {
+                                                "type": "string",
+                                                "description": "OFT token symbol (e.g., USDT0)",
+                                                "example": "USDT0"
+                                              },
+                                              "dstEid": {
+                                                "type": "number",
+                                                "description": "LayerZero endpoint ID for the destination chain",
+                                                "example": 30383
+                                              },
+                                              "guid": {
+                                                "type": "string",
+                                                "pattern": "^0x[a-fA-F0-9]*$",
+                                                "description": "LayerZero message GUID (set after send)",
+                                                "example": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                                              }
+                                            },
+                                            "required": [
+                                              "settlementLayer",
+                                              "using7579",
+                                              "fundingMethod",
+                                              "oftToken",
+                                              "dstEid"
                                             ]
                                           }
                                         ]
@@ -2063,11 +2184,6 @@
                                     ],
                                     "description": "Qualification data for the mandate"
                                   },
-                                  "v": {
-                                    "type": "number",
-                                    "description": "Validation mode identifier",
-                                    "example": 4
-                                  },
                                   "minGas": {
                                     "type": "integer",
                                     "format": "int64",
@@ -2083,7 +2199,6 @@
                                   "preClaimOps",
                                   "destinationOps",
                                   "qualifier",
-                                  "v",
                                   "minGas"
                                 ],
                                 "description": "Mandate containing execution details"
@@ -2793,7 +2908,6 @@
                             "tokenPrices",
                             "gasPrices",
                             "opGasParams",
-                            "quotes",
                             "account"
                           ],
                           "description": "Signed metadata containing prices, fees, and gas parameters"
@@ -3043,6 +3157,17 @@
                                     "description": "Fee associated with the token that has not been fulfilled",
                                     "example": "10000"
                                   },
+                                  "feesByToken": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                      "type": "integer",
+                                      "format": "int64"
+                                    },
+                                    "description": "Fees in different tokens (e.g., native ETH fees for USDT0 transfers)",
+                                    "example": {
+                                      "0x0000000000000000000000000000000000000000": "100000000000000"
+                                    }
+                                  },
                                   "tokenSymbol": {
                                     "type": "string",
                                     "description": "Symbol of the token that has not been fulfilled",
@@ -3060,6 +3185,7 @@
                                   "destinationAmount",
                                   "amountSpent",
                                   "fee",
+                                  "feesByToken",
                                   "tokenSymbol",
                                   "tokenDecimals"
                                 ]
@@ -3329,10 +3455,10 @@
                                   "example": "1733493192"
                                 },
                                 "preClaimOps": {
-                                  "description": "Array of executions to perform before claiming"
+                                  "description": "Executions to perform before claiming"
                                 },
                                 "destinationOps": {
-                                  "description": "Array of executions to perform on the target chain"
+                                  "description": "Executions to perform on the target chain"
                                 },
                                 "qualifier": {
                                   "type": "object",
@@ -3368,6 +3494,58 @@
                                               ],
                                               "description": "Must be NO_FUNDING for INTENT_EXECUTOR",
                                               "example": "NO_FUNDING"
+                                            },
+                                            "bridge": {
+                                              "discriminator": {
+                                                "propertyName": "type"
+                                              },
+                                              "oneOf": [
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "type": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "OFT"
+                                                      ]
+                                                    },
+                                                    "oftToken": {
+                                                      "type": "string",
+                                                      "description": "OFT token symbol (e.g., USDT0)",
+                                                      "example": "USDT0"
+                                                    },
+                                                    "dstChainId": {
+                                                      "type": "number",
+                                                      "description": "Destination chain id (where tokens are delivered)",
+                                                      "example": 8453
+                                                    },
+                                                    "dstEid": {
+                                                      "type": "number",
+                                                      "description": "LayerZero destination endpoint id",
+                                                      "example": 30383
+                                                    },
+                                                    "minAmountLD": {
+                                                      "type": "integer",
+                                                      "format": "int64",
+                                                      "description": "Minimum amount on destination (LD units)",
+                                                      "example": "990000"
+                                                    },
+                                                    "adapter": {
+                                                      "type": "string",
+                                                      "description": "OFT adapter contract on origin chain"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "type",
+                                                    "oftToken",
+                                                    "dstChainId",
+                                                    "dstEid",
+                                                    "minAmountLD",
+                                                    "adapter"
+                                                  ]
+                                                }
+                                              ],
+                                              "description": "Optional metadata when INTENT_EXECUTOR is used as flow but settlement is via another mechanism (e.g. OFT/LayerZero)."
                                             }
                                           },
                                           "required": [
@@ -3504,6 +3682,10 @@
                                             "requestId": {
                                               "type": "string",
                                               "description": "Relay settlement layer metadata to be broadcasted"
+                                            },
+                                            "subsidizedAmount": {
+                                              "type": "string",
+                                              "description": "Relay settlement layer subsidized amount on the intent (denomination in USDC)"
                                             }
                                           },
                                           "required": [
@@ -3511,6 +3693,57 @@
                                             "using7579",
                                             "fundingMethod",
                                             "requestId"
+                                          ]
+                                        },
+                                        {
+                                          "type": "object",
+                                          "properties": {
+                                            "settlementLayer": {
+                                              "type": "string",
+                                              "enum": [
+                                                "OFT"
+                                              ],
+                                              "description": "Settlement layer for LayerZero OFT bridging (supports USDT0, etc.)",
+                                              "example": "OFT"
+                                            },
+                                            "using7579": {
+                                              "type": "boolean",
+                                              "description": "Whether to use 7579",
+                                              "example": false
+                                            },
+                                            "fundingMethod": {
+                                              "type": "string",
+                                              "enum": [
+                                                "COMPACT",
+                                                "PERMIT2",
+                                                "NO_FUNDING"
+                                              ],
+                                              "description": "The method of funding the intent",
+                                              "example": "PERMIT2"
+                                            },
+                                            "oftToken": {
+                                              "type": "string",
+                                              "description": "OFT token symbol (e.g., USDT0)",
+                                              "example": "USDT0"
+                                            },
+                                            "dstEid": {
+                                              "type": "number",
+                                              "description": "LayerZero endpoint ID for the destination chain",
+                                              "example": 30383
+                                            },
+                                            "guid": {
+                                              "type": "string",
+                                              "pattern": "^0x[a-fA-F0-9]*$",
+                                              "description": "LayerZero message GUID (set after send)",
+                                              "example": "0x0000000000000000000000000000000000000000000000000000000000000000"
+                                            }
+                                          },
+                                          "required": [
+                                            "settlementLayer",
+                                            "using7579",
+                                            "fundingMethod",
+                                            "oftToken",
+                                            "dstEid"
                                           ]
                                         }
                                       ]
@@ -3528,11 +3761,6 @@
                                   ],
                                   "description": "Qualification data for the mandate"
                                 },
-                                "v": {
-                                  "type": "number",
-                                  "description": "Validation mode identifier",
-                                  "example": 4
-                                },
                                 "minGas": {
                                   "type": "integer",
                                   "format": "int64",
@@ -3548,7 +3776,6 @@
                                 "preClaimOps",
                                 "destinationOps",
                                 "qualifier",
-                                "v",
                                 "minGas"
                               ],
                               "description": "Mandate containing execution details"
@@ -4258,7 +4485,6 @@
                           "tokenPrices",
                           "gasPrices",
                           "opGasParams",
-                          "quotes",
                           "account"
                         ],
                         "description": "Signed metadata containing prices, fees, and gas parameters"
@@ -5517,7 +5743,8 @@
                             "SAME_CHAIN",
                             "ACROSS",
                             "ECO",
-                            "RELAY"
+                            "RELAY",
+                            "OFT"
                           ],
                           "description": "Settlement layers supported by the chain",
                           "example": "ACROSS"
@@ -5544,12 +5771,16 @@
                             "decimals"
                           ]
                         }
+                      },
+                      "supportsSwaps": {
+                        "type": "boolean"
                       }
                     },
                     "required": [
                       "name",
                       "settlementLayers",
-                      "supportedTokens"
+                      "supportedTokens",
+                      "supportsSwaps"
                     ]
                   },
                   "description": "The supported chains and tokens with additional metadata"
