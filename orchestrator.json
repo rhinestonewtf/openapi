@@ -457,6 +457,10 @@
                             },
                             "tokenAddress": {
                               "type": "string"
+                            },
+                            "amount": {
+                              "type": "integer",
+                              "format": "int64"
                             }
                           },
                           "required": [
@@ -1495,6 +1499,10 @@
                             },
                             "tokenAddress": {
                               "type": "string"
+                            },
+                            "amount": {
+                              "type": "integer",
+                              "format": "int64"
                             }
                           },
                           "required": [
