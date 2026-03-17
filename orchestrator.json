@@ -251,6 +251,11 @@
                         ],
                         "description": "Emissary configuration for using resource locking"
                       },
+                      "mockSignature": {
+                        "type": "string",
+                        "pattern": "^0x[a-fA-F0-9]*$",
+                        "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
+                      },
                       "delegations": {
                         "type": "object",
                         "additionalProperties": {
@@ -340,6 +345,7 @@
                                     "BNB",
                                     "WBNB",
                                     "XDAI",
+                                    "WXDAI",
                                     "POL",
                                     "WPOL",
                                     "S",
@@ -374,6 +380,7 @@
                                       "BNB",
                                       "WBNB",
                                       "XDAI",
+                                      "WXDAI",
                                       "POL",
                                       "WPOL",
                                       "S",
@@ -417,6 +424,7 @@
                                         "BNB",
                                         "WBNB",
                                         "XDAI",
+                                        "WXDAI",
                                         "POL",
                                         "WPOL",
                                         "S",
@@ -451,6 +459,7 @@
                                           "BNB",
                                           "WBNB",
                                           "XDAI",
+                                          "WXDAI",
                                           "POL",
                                           "WPOL",
                                           "S",
@@ -670,6 +679,11 @@
                         ],
                         "description": "Emissary configuration for using resource locking"
                       },
+                      "mockSignature": {
+                        "type": "string",
+                        "pattern": "^0x[a-fA-F0-9]*$",
+                        "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
+                      },
                       "delegations": {
                         "type": "object",
                         "additionalProperties": {
@@ -776,6 +790,7 @@
                           "BNB",
                           "WBNB",
                           "XDAI",
+                          "WXDAI",
                           "POL",
                           "WPOL",
                           "S",
@@ -1172,6 +1187,11 @@
                                               "multicallData": {
                                                 "type": "string",
                                                 "description": "ABI-encoded params for IRelayRouterV3.multicall, used for origin swaps via Relay contracts"
+                                              },
+                                              "preClaimValidationGas": {
+                                                "type": "integer",
+                                                "format": "int64",
+                                                "description": "Estimated pre-claim validation gas used for originGasOverhead and preClaimGasStipend"
                                               }
                                             },
                                             "required": [
@@ -1431,6 +1451,9 @@
                                 "XDAI": {
                                   "type": "number"
                                 },
+                                "WXDAI": {
+                                  "type": "number"
+                                },
                                 "POL": {
                                   "type": "number"
                                 },
@@ -1468,6 +1491,7 @@
                                 "BNB",
                                 "WBNB",
                                 "XDAI",
+                                "WXDAI",
                                 "POL",
                                 "WPOL",
                                 "S",
@@ -1713,6 +1737,11 @@
                                     "settings"
                                   ],
                                   "description": "Emissary configuration for using resource locking"
+                                },
+                                "mockSignature": {
+                                  "type": "string",
+                                  "pattern": "^0x[a-fA-F0-9]*$",
+                                  "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
                                 },
                                 "accountContext": {
                                   "type": "object",
@@ -1981,6 +2010,11 @@
                                     "settings"
                                   ],
                                   "description": "Emissary configuration for using resource locking"
+                                },
+                                "mockSignature": {
+                                  "type": "string",
+                                  "pattern": "^0x[a-fA-F0-9]*$",
+                                  "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
                                 },
                                 "accountContext": {
                                   "type": "object",
@@ -3186,6 +3220,11 @@
                                             "multicallData": {
                                               "type": "string",
                                               "description": "ABI-encoded params for IRelayRouterV3.multicall, used for origin swaps via Relay contracts"
+                                            },
+                                            "preClaimValidationGas": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Estimated pre-claim validation gas used for originGasOverhead and preClaimGasStipend"
                                             }
                                           },
                                           "required": [
@@ -3445,6 +3484,9 @@
                               "XDAI": {
                                 "type": "number"
                               },
+                              "WXDAI": {
+                                "type": "number"
+                              },
                               "POL": {
                                 "type": "number"
                               },
@@ -3482,6 +3524,7 @@
                               "BNB",
                               "WBNB",
                               "XDAI",
+                              "WXDAI",
                               "POL",
                               "WPOL",
                               "S",
@@ -3727,6 +3770,11 @@
                                   "settings"
                                 ],
                                 "description": "Emissary configuration for using resource locking"
+                              },
+                              "mockSignature": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
                               },
                               "accountContext": {
                                 "type": "object",
@@ -3995,6 +4043,11 @@
                                   "settings"
                                 ],
                                 "description": "Emissary configuration for using resource locking"
+                              },
+                              "mockSignature": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
                               },
                               "accountContext": {
                                 "type": "object",
