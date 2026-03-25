@@ -15,6 +15,13 @@
               "type": "string",
               "description": "Rhinestone API key"
             }
+          },
+          {
+            "name": "x-feature-flags",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -251,6 +258,11 @@
                         ],
                         "description": "Emissary configuration for using resource locking"
                       },
+                      "mockSignature": {
+                        "type": "string",
+                        "pattern": "^0x[a-fA-F0-9]*$",
+                        "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
+                      },
                       "delegations": {
                         "type": "object",
                         "additionalProperties": {
@@ -340,6 +352,7 @@
                                     "BNB",
                                     "WBNB",
                                     "XDAI",
+                                    "WXDAI",
                                     "POL",
                                     "WPOL",
                                     "S",
@@ -374,6 +387,7 @@
                                       "BNB",
                                       "WBNB",
                                       "XDAI",
+                                      "WXDAI",
                                       "POL",
                                       "WPOL",
                                       "S",
@@ -417,6 +431,7 @@
                                         "BNB",
                                         "WBNB",
                                         "XDAI",
+                                        "WXDAI",
                                         "POL",
                                         "WPOL",
                                         "S",
@@ -451,6 +466,7 @@
                                           "BNB",
                                           "WBNB",
                                           "XDAI",
+                                          "WXDAI",
                                           "POL",
                                           "WPOL",
                                           "S",
@@ -670,6 +686,11 @@
                         ],
                         "description": "Emissary configuration for using resource locking"
                       },
+                      "mockSignature": {
+                        "type": "string",
+                        "pattern": "^0x[a-fA-F0-9]*$",
+                        "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
+                      },
                       "delegations": {
                         "type": "object",
                         "additionalProperties": {
@@ -776,6 +797,7 @@
                           "BNB",
                           "WBNB",
                           "XDAI",
+                          "WXDAI",
                           "POL",
                           "WPOL",
                           "S",
@@ -1172,6 +1194,11 @@
                                               "multicallData": {
                                                 "type": "string",
                                                 "description": "ABI-encoded params for IRelayRouterV3.multicall, used for origin swaps via Relay contracts"
+                                              },
+                                              "preClaimValidationGas": {
+                                                "type": "integer",
+                                                "format": "int64",
+                                                "description": "Estimated pre-claim validation gas used for originGasOverhead and preClaimGasStipend"
                                               }
                                             },
                                             "required": [
@@ -1431,6 +1458,9 @@
                                 "XDAI": {
                                   "type": "number"
                                 },
+                                "WXDAI": {
+                                  "type": "number"
+                                },
                                 "POL": {
                                   "type": "number"
                                 },
@@ -1468,6 +1498,7 @@
                                 "BNB",
                                 "WBNB",
                                 "XDAI",
+                                "WXDAI",
                                 "POL",
                                 "WPOL",
                                 "S",
@@ -1713,6 +1744,11 @@
                                     "settings"
                                   ],
                                   "description": "Emissary configuration for using resource locking"
+                                },
+                                "mockSignature": {
+                                  "type": "string",
+                                  "pattern": "^0x[a-fA-F0-9]*$",
+                                  "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
                                 },
                                 "accountContext": {
                                   "type": "object",
@@ -1981,6 +2017,11 @@
                                     "settings"
                                   ],
                                   "description": "Emissary configuration for using resource locking"
+                                },
+                                "mockSignature": {
+                                  "type": "string",
+                                  "pattern": "^0x[a-fA-F0-9]*$",
+                                  "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
                                 },
                                 "accountContext": {
                                   "type": "object",
@@ -2296,6 +2337,124 @@
                                     "type": "integer",
                                     "format": "int64"
                                   },
+                                  "feeBreakdown": {
+                                    "type": "object",
+                                    "properties": {
+                                      "gasFee": {
+                                        "type": "integer",
+                                        "format": "int64",
+                                        "description": "Combined gas fees: destination fill, destination swap execution, and origin chain gas",
+                                        "example": "5000"
+                                      },
+                                      "bridgeFee": {
+                                        "type": "integer",
+                                        "format": "int64",
+                                        "description": "Cross-chain bridge commission charged by the relayer",
+                                        "example": "2000"
+                                      },
+                                      "protocolFee": {
+                                        "type": "integer",
+                                        "format": "int64",
+                                        "description": "Protocol fee charged by Rhinestone",
+                                        "example": "0"
+                                      },
+                                      "swapFee": {
+                                        "type": "integer",
+                                        "format": "int64",
+                                        "description": "Solver swap commission for cross-token conversions",
+                                        "example": "50000"
+                                      },
+                                      "settlementFee": {
+                                        "type": "integer",
+                                        "format": "int64",
+                                        "description": "Settlement layer fee (e.g. Relay, Across)",
+                                        "example": "1000"
+                                      }
+                                    },
+                                    "required": [
+                                      "gasFee",
+                                      "bridgeFee",
+                                      "protocolFee",
+                                      "swapFee",
+                                      "settlementFee"
+                                    ],
+                                    "description": "Per-category breakdown of fees in token units (BPS-derived computed values)"
+                                  },
+                                  "feesByToken": {
+                                    "type": "object",
+                                    "additionalProperties": {
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "integer",
+                                          "format": "int64",
+                                          "description": "Fee amount in this token",
+                                          "example": "19989"
+                                        },
+                                        "breakdown": {
+                                          "type": "object",
+                                          "properties": {
+                                            "gasFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Combined gas fees: destination fill, destination swap execution, and origin chain gas",
+                                              "example": "5000"
+                                            },
+                                            "bridgeFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Cross-chain bridge commission charged by the relayer",
+                                              "example": "2000"
+                                            },
+                                            "protocolFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Protocol fee charged by Rhinestone",
+                                              "example": "0"
+                                            },
+                                            "swapFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Solver swap commission for cross-token conversions",
+                                              "example": "50000"
+                                            },
+                                            "settlementFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Settlement layer fee (e.g. Relay, Across)",
+                                              "example": "1000"
+                                            }
+                                          },
+                                          "required": [
+                                            "gasFee",
+                                            "bridgeFee",
+                                            "protocolFee",
+                                            "swapFee",
+                                            "settlementFee"
+                                          ],
+                                          "description": "Per-category breakdown of fees in token units (BPS-derived computed values)"
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "breakdown"
+                                      ],
+                                      "description": "Fee entry for a specific token with per-category breakdown"
+                                    },
+                                    "description": "Fees paid in tokens other than the output token (e.g., settlement fees, origin gas in input token)",
+                                    "example": {
+                                      "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": {
+                                        "amount": "19989",
+                                        "breakdown": {
+                                          "gasFee": "19987",
+                                          "bridgeFee": "0",
+                                          "protocolFee": "0",
+                                          "swapFee": "0",
+                                          "settlementFee": "2"
+                                        }
+                                      }
+                                    }
+                                  },
                                   "hasFulfilled": {
                                     "type": "boolean"
                                   }
@@ -2305,6 +2464,8 @@
                                   "amountSpent",
                                   "targetAmount",
                                   "fee",
+                                  "feeBreakdown",
+                                  "feesByToken",
                                   "hasFulfilled"
                                 ]
                               },
@@ -2388,6 +2549,50 @@
                                 "totalUSD"
                               ],
                               "description": "Breakdown of gas costs across origin and destination chains"
+                            },
+                            "feeBreakdownUSD": {
+                              "type": "object",
+                              "properties": {
+                                "gasFeeUSD": {
+                                  "type": "number",
+                                  "description": "Total gas fees in USD (destination fill, swap execution, origin gas)",
+                                  "example": 0.029
+                                },
+                                "bridgeFeeUSD": {
+                                  "type": "number",
+                                  "description": "Total bridge commission in USD",
+                                  "example": 0.000015
+                                },
+                                "protocolFeeUSD": {
+                                  "type": "number",
+                                  "description": "Total protocol fee in USD",
+                                  "example": 0
+                                },
+                                "swapFeeUSD": {
+                                  "type": "number",
+                                  "description": "Total solver swap commission in USD",
+                                  "example": 0
+                                },
+                                "settlementFeeUSD": {
+                                  "type": "number",
+                                  "description": "Total settlement layer fee in USD",
+                                  "example": 0.000002
+                                },
+                                "totalFeeUSD": {
+                                  "type": "number",
+                                  "description": "Sum of all fees in USD (including sponsored)",
+                                  "example": 0.029017
+                                }
+                              },
+                              "required": [
+                                "gasFeeUSD",
+                                "bridgeFeeUSD",
+                                "protocolFeeUSD",
+                                "swapFeeUSD",
+                                "settlementFeeUSD",
+                                "totalFeeUSD"
+                              ],
+                              "description": "Aggregate fee breakdown in USD across all tokens and chains"
                             }
                           },
                           "required": [
@@ -2395,7 +2600,8 @@
                             "tokensSpent",
                             "tokensReceived",
                             "sponsorFee",
-                            "gasCost"
+                            "gasCost",
+                            "feeBreakdownUSD"
                           ]
                         },
                         {
@@ -2439,12 +2645,76 @@
                                   "feesByToken": {
                                     "type": "object",
                                     "additionalProperties": {
-                                      "type": "integer",
-                                      "format": "int64"
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "integer",
+                                          "format": "int64",
+                                          "description": "Fee amount in this token",
+                                          "example": "19989"
+                                        },
+                                        "breakdown": {
+                                          "type": "object",
+                                          "properties": {
+                                            "gasFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Combined gas fees: destination fill, destination swap execution, and origin chain gas",
+                                              "example": "5000"
+                                            },
+                                            "bridgeFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Cross-chain bridge commission charged by the relayer",
+                                              "example": "2000"
+                                            },
+                                            "protocolFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Protocol fee charged by Rhinestone",
+                                              "example": "0"
+                                            },
+                                            "swapFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Solver swap commission for cross-token conversions",
+                                              "example": "50000"
+                                            },
+                                            "settlementFee": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Settlement layer fee (e.g. Relay, Across)",
+                                              "example": "1000"
+                                            }
+                                          },
+                                          "required": [
+                                            "gasFee",
+                                            "bridgeFee",
+                                            "protocolFee",
+                                            "swapFee",
+                                            "settlementFee"
+                                          ],
+                                          "description": "Per-category breakdown of fees in token units (BPS-derived computed values)"
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "breakdown"
+                                      ],
+                                      "description": "Fee entry for a specific token with per-category breakdown"
                                     },
-                                    "description": "Fees in different tokens (e.g., native ETH fees for USDT0 transfers)",
+                                    "description": "Fees paid in tokens other than the output token (e.g., settlement fees, origin gas in input token)",
                                     "example": {
-                                      "0x0000000000000000000000000000000000000000": "100000000000000"
+                                      "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": {
+                                        "amount": "19989",
+                                        "breakdown": {
+                                          "gasFee": "19987",
+                                          "bridgeFee": "0",
+                                          "protocolFee": "0",
+                                          "swapFee": "0",
+                                          "settlementFee": "2"
+                                        }
+                                      }
                                     }
                                   },
                                   "tokenSymbol": {
@@ -3186,6 +3456,11 @@
                                             "multicallData": {
                                               "type": "string",
                                               "description": "ABI-encoded params for IRelayRouterV3.multicall, used for origin swaps via Relay contracts"
+                                            },
+                                            "preClaimValidationGas": {
+                                              "type": "integer",
+                                              "format": "int64",
+                                              "description": "Estimated pre-claim validation gas used for originGasOverhead and preClaimGasStipend"
                                             }
                                           },
                                           "required": [
@@ -3445,6 +3720,9 @@
                               "XDAI": {
                                 "type": "number"
                               },
+                              "WXDAI": {
+                                "type": "number"
+                              },
                               "POL": {
                                 "type": "number"
                               },
@@ -3482,6 +3760,7 @@
                               "BNB",
                               "WBNB",
                               "XDAI",
+                              "WXDAI",
                               "POL",
                               "WPOL",
                               "S",
@@ -3727,6 +4006,11 @@
                                   "settings"
                                 ],
                                 "description": "Emissary configuration for using resource locking"
+                              },
+                              "mockSignature": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
                               },
                               "accountContext": {
                                 "type": "object",
@@ -3995,6 +4279,11 @@
                                   "settings"
                                 ],
                                 "description": "Emissary configuration for using resource locking"
+                              },
+                              "mockSignature": {
+                                "type": "string",
+                                "pattern": "^0x[a-fA-F0-9]*$",
+                                "description": "Pre-encoded SSX enable payload with a dummy userSig for gas estimation. When present, the orchestrator etches the simulation emissary and uses this as emissaryData."
                               },
                               "accountContext": {
                                 "type": "object",
