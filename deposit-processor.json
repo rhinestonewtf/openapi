@@ -1,0 +1,1621 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Deposit Service API",
+    "version": "1.0.0",
+    "description": "Cross-chain deposit processing service with automatic token bridging and gas sponsorship"
+  },
+  "servers": [
+    {
+      "url": "https://v1.orchestrator.rhinestone.dev/deposit-processor"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "ChainsResponse": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "testnet": {
+              "type": "boolean"
+            },
+            "deposit": {
+              "type": "boolean"
+            },
+            "destination": {
+              "type": "boolean"
+            },
+            "supportedTokens": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "all"
+                  ]
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "symbol": {
+                        "type": "string"
+                      },
+                      "address": {
+                        "type": "string"
+                      },
+                      "decimals": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "symbol",
+                      "address",
+                      "decimals"
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "testnet",
+            "deposit",
+            "destination",
+            "supportedTokens"
+          ]
+        }
+      },
+      "CheckResponse": {
+        "type": "object",
+        "properties": {
+          "isRegistered": {
+            "type": "boolean"
+          },
+          "targetChain": {
+            "type": "string"
+          },
+          "targetToken": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "sourceChains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "isRegistered"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "SetupResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "SetupRequestBody": {
+        "type": "object",
+        "properties": {
+          "params": {
+            "$ref": "#/components/schemas/ClientInput"
+          }
+        },
+        "required": [
+          "params"
+        ]
+      },
+      "ClientInput": {
+        "type": "object",
+        "properties": {
+          "webhookUrl": {
+            "type": "string",
+            "nullable": true,
+            "format": "uri"
+          },
+          "webhookSecret": {
+            "type": "string",
+            "nullable": true
+          },
+          "sponsorship": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChainSponsorship"
+            }
+          },
+          "depositWhitelist": {
+            "$ref": "#/components/schemas/DepositWhitelist"
+          },
+          "maxPriceDeviationBps": {
+            "type": "integer",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 10000,
+            "description": "Maximum allowed price deviation in basis points for stablecoin-to-stablecoin bridges. Defaults to 200 (2%) if not set.",
+            "example": 200
+          }
+        }
+      },
+      "ChainSponsorship": {
+        "type": "object",
+        "properties": {
+          "gas": {
+            "type": "string",
+            "enum": [
+              "all",
+              "none",
+              "deployed"
+            ],
+            "description": "Gas sponsorship mode",
+            "example": "all"
+          },
+          "swap": {
+            "type": "string",
+            "enum": [
+              "all",
+              "none"
+            ],
+            "description": "Fee sponsorship mode",
+            "example": "all"
+          },
+          "bridging": {
+            "type": "string",
+            "enum": [
+              "all",
+              "none"
+            ],
+            "description": "Fee sponsorship mode",
+            "example": "all"
+          }
+        }
+      },
+      "DepositWhitelist": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minAmount": {
+                "type": "string",
+                "pattern": "^\\d+$",
+                "description": "Numeric string representing a bigint value",
+                "example": "1000000000000000000"
+              },
+              "maxAmount": {
+                "type": "string",
+                "pattern": "^\\d+$",
+                "description": "Numeric string representing a bigint value",
+                "example": "1000000000000000000"
+              }
+            },
+            "required": [
+              "token"
+            ]
+          }
+        },
+        "description": "Per-source-chain deposit allowlist keyed by CAIP-2 chain identifiers (for example \"eip155:8453\"). Each key maps to allowed source tokens and optional min/max amount limits in raw token units.",
+        "example": {
+          "eip155:8453": [
+            {
+              "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+              "minAmount": "1000000",
+              "maxAmount": "5000000000"
+            }
+          ]
+        }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "evmDepositAddress": {
+            "type": "string"
+          },
+          "solanaDepositAddress": {
+            "type": "string"
+          },
+          "tronDepositAddress": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "evmDepositAddress"
+        ]
+      },
+      "RegisterRequestBody": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/AccountInput"
+          }
+        },
+        "required": [
+          "account"
+        ]
+      },
+      "AccountInput": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "accountParams": {
+            "$ref": "#/components/schemas/AccountParams"
+          },
+          "target": {
+            "$ref": "#/components/schemas/Target"
+          }
+        },
+        "required": [
+          "address",
+          "accountParams",
+          "target"
+        ]
+      },
+      "AccountParams": {
+        "type": "object",
+        "properties": {
+          "factory": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "factoryData": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          },
+          "sessionDetails": {
+            "$ref": "#/components/schemas/EnableSessionDetails"
+          }
+        },
+        "required": [
+          "factory",
+          "factoryData",
+          "sessionDetails"
+        ]
+      },
+      "EnableSessionDetails": {
+        "type": "object",
+        "properties": {
+          "hashesAndChainIds": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "chainId": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true,
+                  "description": "Positive integer",
+                  "example": 1
+                },
+                "sessionDigest": {
+                  "type": "string",
+                  "pattern": "^0x[a-fA-F0-9]+$",
+                  "description": "Hex-encoded string (0x followed by hex characters)",
+                  "example": "0x1234abcd"
+                }
+              },
+              "required": [
+                "chainId",
+                "sessionDigest"
+              ]
+            }
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          }
+        },
+        "required": [
+          "hashesAndChainIds",
+          "signature"
+        ]
+      },
+      "Target": {
+        "type": "object",
+        "properties": {
+          "recipient": {
+            "type": "string"
+          },
+          "chain": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outputTokenRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutputTokenRule"
+            }
+          },
+          "rejectUnmapped": {
+            "type": "boolean"
+          },
+          "postBridgeActions": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "orderbook-swap"
+                      ]
+                    },
+                    "contract": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    },
+                    "outputToken": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "contract",
+                    "outputToken"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "chain",
+          "token"
+        ],
+        "description": "Destination target configuration. `chain` must be a CAIP-2 chain identifier such as \"eip155:8453\" or \"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp\". When `postBridgeActions` are present, `token` is the token bridged into the smart account before those actions execute, and the last action `outputToken` becomes the final token delivered to `recipient`.",
+        "example": {
+          "chain": "eip155:8453",
+          "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+          "outputTokenRules": [
+            {
+              "match": {
+                "symbol": "USDC"
+              },
+              "outputToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+            },
+            {
+              "match": {
+                "chain": "eip155:10",
+                "symbol": "ETH"
+              },
+              "outputToken": "0x0000000000000000000000000000000000000000"
+            }
+          ],
+          "rejectUnmapped": true,
+          "postBridgeActions": [
+            {
+              "type": "orderbook-swap",
+              "contract": "0xb6807116b3b1b321a390594e31ecd6e0076f6278",
+              "outputToken": "0x0000000000000000000000000000000000000001"
+            }
+          ]
+        }
+      },
+      "OutputTokenRule": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "$ref": "#/components/schemas/OutputTokenRuleMatch"
+          },
+          "outputToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "match",
+          "outputToken"
+        ],
+        "description": "Destination token routing rule. Matches deposits by source token attributes and selects the target-chain output token.",
+        "example": {
+          "match": {
+            "symbol": "USDC"
+          },
+          "outputToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        }
+      },
+      "OutputTokenRuleMatch": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "symbol": {
+            "type": "string"
+          }
+        },
+        "description": "Source-token match criteria. Rules may match by source chain, source token address, source symbol, or a combination.",
+        "example": {
+          "chain": "eip155:10",
+          "symbol": "USDC"
+        }
+      },
+      "SessionResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "SessionRequestBody": {
+        "type": "object",
+        "properties": {
+          "sessionDetails": {
+            "$ref": "#/components/schemas/EnableSessionDetails"
+          }
+        },
+        "required": [
+          "sessionDetails"
+        ]
+      },
+      "RetryDepositResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "deposits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "txHash": {
+                  "type": "string"
+                },
+                "chain": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "txHash",
+                "chain"
+              ]
+            }
+          }
+        },
+        "required": [
+          "message",
+          "deposits"
+        ]
+      },
+      "RetryDepositRequestBody": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          }
+        },
+        "required": [
+          "address"
+        ]
+      },
+      "ListDepositsResponse": {
+        "type": "object",
+        "properties": {
+          "deposits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepositListItem"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "deposits",
+          "nextCursor"
+        ]
+      },
+      "DepositListItem": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string"
+          },
+          "txHash": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "sender": {
+            "type": "string"
+          },
+          "account": {
+            "type": "string"
+          },
+          "targetChain": {
+            "type": "string"
+          },
+          "targetToken": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "completed",
+              "failed",
+              "refunded"
+            ]
+          },
+          "sourceTxHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "destinationTxHash": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceAmount": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "destinationAmount": {
+            "type": "string",
+            "nullable": true,
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isSpam": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "chain",
+          "txHash",
+          "token",
+          "amount",
+          "sender",
+          "account",
+          "targetChain",
+          "targetToken",
+          "status",
+          "sourceTxHash",
+          "destinationTxHash",
+          "sourceAmount",
+          "destinationAmount",
+          "createdAt",
+          "completedAt",
+          "errorCode",
+          "isSpam"
+        ]
+      },
+      "ManagedRegisterResponse": {
+        "type": "object",
+        "properties": {
+          "evmDepositAddress": {
+            "type": "string"
+          },
+          "solanaDepositAddress": {
+            "type": "string"
+          },
+          "tronDepositAddress": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "evmDepositAddress"
+        ]
+      },
+      "ManagedRegisterRequestBody": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "$ref": "#/components/schemas/ManagedAccountInput"
+          }
+        },
+        "required": [
+          "account"
+        ]
+      },
+      "ManagedAccountInput": {
+        "type": "object",
+        "properties": {
+          "salt": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          },
+          "target": {
+            "$ref": "#/components/schemas/ManagedTarget"
+          }
+        },
+        "required": [
+          "salt",
+          "target"
+        ]
+      },
+      "ManagedTarget": {
+        "type": "object",
+        "properties": {
+          "recipient": {
+            "type": "string",
+            "minLength": 1
+          },
+          "chain": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outputTokenRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutputTokenRule"
+            }
+          },
+          "rejectUnmapped": {
+            "type": "boolean"
+          },
+          "postBridgeActions": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "orderbook-swap"
+                      ]
+                    },
+                    "contract": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    },
+                    "outputToken": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "contract",
+                    "outputToken"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "required": [
+          "recipient",
+          "chain",
+          "token"
+        ],
+        "description": "Destination target configuration for managed accounts. `recipient` is required and specifies the address that receives the final tokens."
+      },
+      "WithdrawResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "txHash": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "WithdrawRequestBody": {
+        "type": "object",
+        "properties": {
+          "chainId": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$"
+              }
+            ],
+            "description": "Chain identifier as a positive integer or CAIP-2 string (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "safeAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "safeTransaction": {
+            "$ref": "#/components/schemas/SafeTransaction"
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          }
+        },
+        "required": [
+          "chainId",
+          "safeAddress",
+          "safeTransaction",
+          "signature"
+        ]
+      },
+      "SafeTransaction": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "data": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          },
+          "operation": {
+            "anyOf": [
+              {
+                "type": "number",
+                "enum": [
+                  0
+                ]
+              },
+              {
+                "type": "number",
+                "enum": [
+                  1
+                ]
+              }
+            ]
+          },
+          "safeTxGas": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "baseGas": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "gasPrice": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "gasToken": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "refundReceiver": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "nonce": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          }
+        },
+        "required": [
+          "to",
+          "value",
+          "data",
+          "operation",
+          "safeTxGas",
+          "baseGas",
+          "gasPrice",
+          "gasToken",
+          "refundReceiver",
+          "nonce"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/chains": {
+      "get": {
+        "tags": [
+          "Info"
+        ],
+        "summary": "List supported chains and tokens",
+        "description": "Returns all chains supported by the deposit service, with their tokens and whether they support deposits, bridging destinations, or both",
+        "responses": {
+          "200": {
+            "description": "Supported chains with their tokens",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChainsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/check/{address}": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Check if account is registered",
+        "description": "Check if an account is registered and return its target chain and token if registered",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "Ethereum address (0x followed by 40 hex characters)",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": true,
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "name": "address",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Account registration status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid address format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setup": {
+      "post": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Configure client settings",
+        "description": "Configure webhook URL, secret, sponsorship rules, and source-token whitelist rules for a client. Deposit whitelist keys must use CAIP-2 chain identifiers (for example \"eip155:8453\").",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Client updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Register a new account",
+        "description": "Register a new account with factory, factory data, session details, and target. `target.chain` must use a CAIP-2 chain identifier (for example \"eip155:8453\").",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid account data or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to register with Alchemy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/account/{address}/session": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Add session details to account",
+        "description": "Add session details (chain IDs, session digests, and signature) to an existing account",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "Ethereum address (0x followed by 40 hex characters)",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": true,
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "name": "address",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or account not registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized - API key does not belong to the client that registered the account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deposits/retry": {
+      "post": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "Retry failed deposits for an account",
+        "description": "Retry all failed deposits for a given account address. The API key must belong to the client that registered the account.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RetryDepositRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deposit retries initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RetryDepositResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or account not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized - API key does not belong to the client that registered the account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deposits": {
+      "get": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "List deposits for the authenticated client",
+        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "EVM address (0x...) or Solana base58 public key",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": false,
+            "description": "EVM address (0x...) or Solana base58 public key",
+            "name": "account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "processing",
+                "completed",
+                "failed",
+                "refunded"
+              ],
+              "description": "Filter by deposit status",
+              "example": "failed"
+            },
+            "required": false,
+            "description": "Filter by deposit status",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+              "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+              "example": "eip155:8453"
+            },
+            "required": false,
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+            "name": "chain",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]+$",
+              "description": "Filter by source transaction hash",
+              "example": "0xabc123..."
+            },
+            "required": false,
+            "description": "Filter by source transaction hash",
+            "name": "txHash",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Maximum number of deposits to return",
+              "example": 20
+            },
+            "required": false,
+            "description": "Maximum number of deposits to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Pagination cursor. Use the `nextCursor` returned by the previous page.",
+              "example": "123"
+            },
+            "required": false,
+            "description": "Pagination cursor. Use the `nextCursor` returned by the previous page.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "description": "When true, include spam-flagged deposits (tokens with no known price). Defaults to false.",
+              "example": false
+            },
+            "required": false,
+            "description": "When true, include spam-flagged deposits (tokens with no known price). Defaults to false.",
+            "name": "includeSpam",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client deposits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListDepositsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register-managed": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Register a server-managed account",
+        "description": "Register a server-owned smart account. Provide a salt for deterministic addressing and a target chain/token.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManagedRegisterRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Managed account registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ManagedRegisterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid parameters or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to register with webhook providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/safe/withdraw": {
+      "post": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "Relay a Safe withdrawal via shared Nexus relayer",
+        "description": "Relay a signed Safe execTransaction via a shared AWS-owned Nexus account with sponsored gas",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WithdrawRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal relayed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WithdrawResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Relay failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
