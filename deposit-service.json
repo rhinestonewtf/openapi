@@ -84,10 +84,7 @@
             "type": "string"
           },
           "recipient": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            "type": "string"
           },
           "sourceChains": {
             "type": "array",
@@ -275,6 +272,9 @@
           },
           "solanaDepositAddress": {
             "type": "string"
+          },
+          "tronDepositAddress": {
+            "type": "string"
           }
         },
         "required": [
@@ -383,10 +383,7 @@
         "type": "object",
         "properties": {
           "recipient": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            "type": "string"
           },
           "chain": {
             "type": "string",
@@ -396,9 +393,7 @@
           },
           "token": {
             "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            "minLength": 1
           },
           "outputTokenRules": {
             "type": "array",
@@ -449,7 +444,7 @@
           "chain",
           "token"
         ],
-        "description": "Destination target configuration. `chain` must be a CAIP-2 chain identifier such as \"eip155:8453\". When `postBridgeActions` are present, `token` is the token bridged into the smart account before those actions execute, and the last action `outputToken` becomes the final token delivered to `recipient`.",
+        "description": "Destination target configuration. `chain` must be a CAIP-2 chain identifier such as \"eip155:8453\" or \"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp\". When `postBridgeActions` are present, `token` is the token bridged into the smart account before those actions execute, and the last action `outputToken` becomes the final token delivered to `recipient`.",
         "example": {
           "chain": "eip155:8453",
           "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -486,9 +481,7 @@
           },
           "outputToken": {
             "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            "minLength": 1
           }
         },
         "required": [
@@ -514,9 +507,7 @@
           },
           "token": {
             "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            "minLength": 1
           },
           "symbol": {
             "type": "string"
@@ -649,7 +640,8 @@
               "pending",
               "processing",
               "completed",
-              "failed"
+              "failed",
+              "refunded"
             ]
           },
           "sourceTxHash": {
@@ -680,6 +672,13 @@
           "completedAt": {
             "type": "string",
             "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "isSpam": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -697,7 +696,9 @@
           "sourceAmount",
           "destinationAmount",
           "createdAt",
-          "completedAt"
+          "completedAt",
+          "errorCode",
+          "isSpam"
         ]
       },
       "ManagedRegisterResponse": {
@@ -707,6 +708,9 @@
             "type": "string"
           },
           "solanaDepositAddress": {
+            "type": "string"
+          },
+          "tronDepositAddress": {
             "type": "string"
           }
         },
@@ -744,46 +748,73 @@
         ]
       },
       "ManagedTarget": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/Target"
+        "type": "object",
+        "properties": {
+          "recipient": {
+            "type": "string",
+            "minLength": 1
           },
-          {
-            "type": "object",
-            "properties": {},
-            "required": [
-              "recipient"
-            ]
+          "chain": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outputTokenRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutputTokenRule"
+            }
+          },
+          "rejectUnmapped": {
+            "type": "boolean"
+          },
+          "postBridgeActions": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "orderbook-swap"
+                      ]
+                    },
+                    "contract": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    },
+                    "outputToken": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "contract",
+                    "outputToken"
+                  ]
+                }
+              ]
+            }
           }
+        },
+        "required": [
+          "recipient",
+          "chain",
+          "token"
         ],
-        "description": "Destination target configuration for managed accounts. `recipient` is required and specifies the address that receives the final tokens.",
-        "example": {
-          "chain": "eip155:8453",
-          "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
-          "outputTokenRules": [
-            {
-              "match": {
-                "symbol": "USDC"
-              },
-              "outputToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-            },
-            {
-              "match": {
-                "chain": "eip155:10",
-                "symbol": "ETH"
-              },
-              "outputToken": "0x0000000000000000000000000000000000000000"
-            }
-          ],
-          "rejectUnmapped": true,
-          "postBridgeActions": [
-            {
-              "type": "orderbook-swap",
-              "contract": "0xb6807116b3b1b321a390594e31ecd6e0076f6278",
-              "outputToken": "0x0000000000000000000000000000000000000001"
-            }
-          ]
-        }
+        "description": "Destination target configuration for managed accounts. `recipient` is required and specifies the address that receives the final tokens."
       },
       "WithdrawResponse": {
         "type": "object",
@@ -1308,17 +1339,16 @@
           "Processing"
         ],
         "summary": "List deposits for the authenticated client",
-        "description": "Returns the authenticated client’s deposits, newest first. Supports filtering by account, status, and source chain.",
+        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address).",
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "pattern": "^0x[a-fA-F0-9]{40}$",
-              "description": "Ethereum address (0x followed by 40 hex characters)",
+              "description": "EVM address (0x...) or Solana base58 public key",
               "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
             },
             "required": false,
-            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "description": "EVM address (0x...) or Solana base58 public key",
             "name": "account",
             "in": "query"
           },
@@ -1329,7 +1359,8 @@
                 "pending",
                 "processing",
                 "completed",
-                "failed"
+                "failed",
+                "refunded"
               ],
               "description": "Filter by deposit status",
               "example": "failed"
@@ -1349,6 +1380,18 @@
             "required": false,
             "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
             "name": "chain",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]+$",
+              "description": "Filter by source transaction hash",
+              "example": "0xabc123..."
+            },
+            "required": false,
+            "description": "Filter by source transaction hash",
+            "name": "txHash",
             "in": "query"
           },
           {
@@ -1375,6 +1418,17 @@
             "required": false,
             "description": "Pagination cursor. Use the `nextCursor` returned by the previous page.",
             "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "boolean",
+              "description": "When true, include spam-flagged deposits (tokens with no known price). Defaults to false.",
+              "example": false
+            },
+            "required": false,
+            "description": "When true, include spam-flagged deposits (tokens with no known price). Defaults to false.",
+            "name": "includeSpam",
             "in": "query"
           },
           {
