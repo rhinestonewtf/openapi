@@ -519,6 +519,23 @@
           "symbol": "USDC"
         }
       },
+      "DepositAddressesResponse": {
+        "type": "object",
+        "properties": {
+          "evmDepositAddress": {
+            "type": "string"
+          },
+          "solanaDepositAddress": {
+            "type": "string"
+          },
+          "tronDepositAddress": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "evmDepositAddress"
+        ]
+      },
       "SessionResponse": {
         "type": "object",
         "properties": {
@@ -583,6 +600,67 @@
         },
         "required": [
           "address"
+        ]
+      },
+      "RefundDepositResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "transactionHash": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "transactionHash",
+          "amount"
+        ]
+      },
+      "RefundDepositRequestBody": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier of the deposit (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "txHash": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Source transaction hash of the stuck deposit",
+            "example": "0xabc123..."
+          },
+          "account": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Managed account address that received the deposit (EVM address or Solana public key)",
+            "example": "0xde0fdf9c06b404cc5e20543cb84cac9067102f19"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Source token address. Use the zero address (0x000…000) for native transfers.",
+            "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+          },
+          "recipient": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Address to receive the refunded tokens (EVM address or Solana public key)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          }
+        },
+        "required": [
+          "chain",
+          "txHash",
+          "account",
+          "token",
+          "recipient"
         ]
       },
       "ListDepositsResponse": {
@@ -701,6 +779,38 @@
           "isSpam"
         ]
       },
+      "DepositStatsResponse": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "enum": [
+              "24h",
+              "7d",
+              "30d"
+            ],
+            "description": "Rolling time window for aggregated stats",
+            "example": "7d"
+          },
+          "totalDeposits": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "uniqueUsers": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "volumeUsd": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "period",
+          "totalDeposits",
+          "uniqueUsers",
+          "volumeUsd"
+        ]
+      },
       "ManagedRegisterResponse": {
         "type": "object",
         "properties": {
@@ -815,6 +925,292 @@
           "token"
         ],
         "description": "Destination target configuration for managed accounts. `recipient` is required and specifies the address that receives the final tokens."
+      },
+      "SetupAccountResponse": {
+        "type": "object",
+        "properties": {
+          "smartAccount": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "isRegistered": {
+            "type": "boolean"
+          },
+          "targetChain": {
+            "type": "string"
+          },
+          "targetToken": {
+            "type": "string"
+          },
+          "needsRegistration": {
+            "type": "boolean"
+          },
+          "solanaDepositAddress": {
+            "type": "string"
+          },
+          "accountParams": {
+            "type": "object",
+            "properties": {
+              "factory": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{40}$",
+                "description": "Ethereum address (0x followed by 40 hex characters)",
+                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+              },
+              "factoryData": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]+$",
+                "description": "Hex-encoded string (0x followed by hex characters)",
+                "example": "0x1234abcd"
+              }
+            },
+            "required": [
+              "factory",
+              "factoryData"
+            ]
+          },
+          "sessionDetailsUnsigned": {
+            "type": "object",
+            "properties": {
+              "hashesAndChainIds": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "chainId": {
+                      "type": "string"
+                    },
+                    "sessionDigest": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]+$",
+                      "description": "Hex-encoded string (0x followed by hex characters)",
+                      "example": "0x1234abcd"
+                    }
+                  },
+                  "required": [
+                    "chainId",
+                    "sessionDigest"
+                  ]
+                }
+              },
+              "data": {
+                "type": "object",
+                "additionalProperties": {
+                  "nullable": true
+                }
+              }
+            },
+            "required": [
+              "hashesAndChainIds",
+              "data"
+            ]
+          }
+        },
+        "required": [
+          "smartAccount",
+          "isRegistered",
+          "needsRegistration"
+        ]
+      },
+      "SetupAccountRequestBody": {
+        "type": "object",
+        "properties": {
+          "ownerAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "sessionOwnerAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "targetToken": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "targetChain": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              {
+                "type": "string",
+                "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$"
+              }
+            ],
+            "description": "Chain identifier as a positive integer or CAIP-2 string (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "recipient": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "postBridgeActions": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "orderbook-swap"
+                      ]
+                    },
+                    "contract": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    },
+                    "outputToken": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "contract",
+                    "outputToken"
+                  ]
+                }
+              ]
+            }
+          },
+          "outputTokenRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutputTokenRule"
+            }
+          },
+          "rejectUnmapped": {
+            "type": "boolean"
+          },
+          "signerAddress": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "sessionChainIds": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true
+            }
+          },
+          "forceRegister": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ownerAddress",
+          "sessionOwnerAddress",
+          "targetToken",
+          "targetChain"
+        ]
+      },
+      "PortfolioResponse": {
+        "type": "object",
+        "properties": {
+          "tokens": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "chainId": {
+                  "anyOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "address": {
+                  "type": "string"
+                },
+                "symbol": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "decimals": {
+                  "type": "number"
+                },
+                "balance": {
+                  "type": "string"
+                },
+                "balanceUsd": {
+                  "type": "number"
+                }
+              },
+              "required": [
+                "chainId",
+                "symbol",
+                "name",
+                "decimals",
+                "balance",
+                "balanceUsd"
+              ]
+            }
+          },
+          "totalUsd": {
+            "type": "number"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "tokens",
+          "totalUsd"
+        ]
+      },
+      "LiquidityResponse": {
+        "type": "object",
+        "properties": {
+          "hasLiquidity": {
+            "type": "boolean"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "decimals": {
+            "type": "number"
+          },
+          "unlimited": {
+            "type": "boolean"
+          },
+          "maxAmount": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "hasLiquidity",
+          "symbol",
+          "decimals",
+          "unlimited",
+          "maxAmount"
+        ]
       },
       "WithdrawResponse": {
         "type": "object",
@@ -1171,6 +1567,104 @@
         }
       }
     },
+    "/account/{address}/deposit-addresses": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Fetch or backfill deposit addresses for a registered account",
+        "description": "Return the EVM, Solana, and Tron deposit addresses for an already-registered account. Missing Solana and Tron deposit addresses are backfilled on first call (derivation and Rhino.fi mint as needed) without modifying the account config (session details, target). Idempotent on repeat.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "Ethereum address (0x followed by 40 hex characters)",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": true,
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "name": "address",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deposit addresses for the account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositAddressesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid API key or address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized - API key does not belong to the client that registered the account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account not registered",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to backfill deposit addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/account/{address}/session": {
       "post": {
         "tags": [
@@ -1333,6 +1827,79 @@
         }
       }
     },
+    "/deposits/refund": {
+      "post": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "Refund a failed deposit",
+        "description": "Transfer the funds from a failed deposit back to a user-provided address on the same chain.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundDepositRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deposit refunded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDepositResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, deposit not found, or not eligible for refund",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Unauthorized - API key does not own the account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Refund transfer failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/deposits": {
       "get": {
         "tags": [
@@ -1467,6 +2034,66 @@
         }
       }
     },
+    "/deposits/stats": {
+      "get": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "Aggregated deposit statistics",
+        "description": "Returns aggregated deposit statistics (total deposits, unique depositors, and total USD volume) for the authenticated client over the requested rolling time window. Only completed deposits are counted.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "24h",
+                "7d",
+                "30d"
+              ],
+              "description": "Rolling time window for aggregated stats",
+              "example": "7d"
+            },
+            "required": true,
+            "description": "Rolling time window for aggregated stats",
+            "name": "period",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deposit statistics for the requested period",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositStatsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/register-managed": {
       "post": {
         "tags": [
@@ -1531,6 +2158,374 @@
           },
           "500": {
             "description": "Failed to register with webhook providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/setup-account": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Prepare account for registration",
+        "description": "Derive the Rhinestone smart account for (ownerAddress, sessionOwnerAddress), compare against the existing registration and target, and return either the Solana deposit address (if no re-registration is needed) or the unsigned session details and factory parameters the client must sign before calling /register.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetupAccountRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Account setup result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetupAccountResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to derive account or build sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portfolio/{address}": {
+      "get": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "Get a wallet portfolio",
+        "description": "Returns a normalised token portfolio for the given address. If the address is a Solana base58 public key, the Solana portfolio is returned; otherwise the EVM portfolio is aggregated from the orchestrator's `/accounts/:address/portfolio` endpoint and priced via the price service.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "EVM address or Solana base58 public key",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": true,
+            "description": "EVM address or Solana base58 public key",
+            "name": "address",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Comma-separated chain IDs to filter the portfolio",
+              "example": "1,8453,42161"
+            },
+            "required": false,
+            "description": "Comma-separated chain IDs to filter the portfolio",
+            "name": "chainIds",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Wallet portfolio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Invalid upstream response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/portfolio/solana/{address}": {
+      "get": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "Get a Solana wallet portfolio",
+        "description": "Returns a normalised SPL portfolio for the given Solana address by paginating through Helius wallet balances.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Solana base58 public key",
+              "example": "So11111111111111111111111111111111111111112"
+            },
+            "required": true,
+            "description": "Solana base58 public key",
+            "name": "address",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Solana wallet portfolio",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PortfolioResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid Solana address or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Helius upstream error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/liquidity": {
+      "get": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "Check route liquidity for an amount",
+        "description": "Returns whether the given source→destination route can fulfil the requested amount, along with the underlying liquidity metadata from the orchestrator.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "description": "Source chain ID (EVM chain ID)",
+              "example": 1
+            },
+            "required": true,
+            "description": "Source chain ID (EVM chain ID)",
+            "name": "sourceChainId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "Source token address",
+              "example": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+            },
+            "required": true,
+            "description": "Source token address",
+            "name": "sourceToken",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "exclusiveMinimum": true,
+              "description": "Destination chain ID (EVM chain ID)",
+              "example": 8453
+            },
+            "required": true,
+            "description": "Destination chain ID (EVM chain ID)",
+            "name": "destinationChainId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "Destination token address",
+              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+            },
+            "required": true,
+            "description": "Destination token address",
+            "name": "destinationToken",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Deposit amount in raw source-token units (integer string)",
+              "example": "1000000"
+            },
+            "required": true,
+            "description": "Deposit amount in raw source-token units (integer string)",
+            "name": "amount",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Liquidity information for the requested route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiquidityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Invalid liquidity response from orchestrator",
             "content": {
               "application/json": {
                 "schema": {
