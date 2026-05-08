@@ -719,6 +719,7 @@
               "processing",
               "completed",
               "failed",
+              "expecting_refund",
               "refunded"
             ]
           },
@@ -1927,6 +1928,7 @@
                 "processing",
                 "completed",
                 "failed",
+                "expecting_refund",
                 "refunded"
               ],
               "description": "Filter by deposit status",
@@ -1952,12 +1954,11 @@
           {
             "schema": {
               "type": "string",
-              "pattern": "^0x[a-fA-F0-9]+$",
-              "description": "Filter by source transaction hash",
+              "description": "Filter by source transaction hash (EVM 0x... or Solana base58 signature)",
               "example": "0xabc123..."
             },
             "required": false,
-            "description": "Filter by source transaction hash",
+            "description": "Filter by source transaction hash (EVM 0x... or Solana base58 signature)",
             "name": "txHash",
             "in": "query"
           },
