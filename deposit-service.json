@@ -91,11 +91,101 @@
             "items": {
               "type": "string"
             }
+          },
+          "outputTokenRules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OutputTokenRule"
+            }
+          },
+          "rejectUnmapped": {
+            "type": "boolean"
+          },
+          "postBridgeActions": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "orderbook-swap"
+                      ]
+                    },
+                    "contract": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    },
+                    "outputToken": {
+                      "type": "string",
+                      "pattern": "^0x[a-fA-F0-9]{40}$",
+                      "description": "Ethereum address (0x followed by 40 hex characters)",
+                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "contract",
+                    "outputToken"
+                  ]
+                }
+              ]
+            }
           }
         },
         "required": [
           "isRegistered"
         ]
+      },
+      "OutputTokenRule": {
+        "type": "object",
+        "properties": {
+          "match": {
+            "$ref": "#/components/schemas/OutputTokenRuleMatch"
+          },
+          "outputToken": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "match",
+          "outputToken"
+        ],
+        "description": "Destination token routing rule. Matches deposits by source token attributes and selects the target-chain output token.",
+        "example": {
+          "match": {
+            "symbol": "USDC"
+          },
+          "outputToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+        }
+      },
+      "OutputTokenRuleMatch": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "token": {
+            "type": "string",
+            "minLength": 1
+          },
+          "symbol": {
+            "type": "string"
+          }
+        },
+        "description": "Source-token match criteria. Rules may match by source chain, source token address, source symbol, or a combination.",
+        "example": {
+          "chain": "eip155:10",
+          "symbol": "USDC"
+        }
       },
       "ErrorResponse": {
         "type": "object",
@@ -473,52 +563,6 @@
           ]
         }
       },
-      "OutputTokenRule": {
-        "type": "object",
-        "properties": {
-          "match": {
-            "$ref": "#/components/schemas/OutputTokenRuleMatch"
-          },
-          "outputToken": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "match",
-          "outputToken"
-        ],
-        "description": "Destination token routing rule. Matches deposits by source token attributes and selects the target-chain output token.",
-        "example": {
-          "match": {
-            "symbol": "USDC"
-          },
-          "outputToken": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-        }
-      },
-      "OutputTokenRuleMatch": {
-        "type": "object",
-        "properties": {
-          "chain": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
-            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
-            "example": "eip155:8453"
-          },
-          "token": {
-            "type": "string",
-            "minLength": 1
-          },
-          "symbol": {
-            "type": "string"
-          }
-        },
-        "description": "Source-token match criteria. Rules may match by source chain, source token address, source symbol, or a combination.",
-        "example": {
-          "chain": "eip155:10",
-          "symbol": "USDC"
-        }
-      },
       "DepositAddressesResponse": {
         "type": "object",
         "properties": {
@@ -601,6 +645,83 @@
         "required": [
           "address"
         ]
+      },
+      "BulkRetryDepositResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          },
+          "deposits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "txHash": {
+                  "type": "string"
+                },
+                "chain": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "txHash",
+                "chain"
+              ]
+            }
+          }
+        },
+        "required": [
+          "message",
+          "count",
+          "deposits"
+        ]
+      },
+      "BulkRetryDepositRequestBody": {
+        "type": "object",
+        "properties": {
+          "projectId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Target user-service project id whose failed deposits should be retried. Provide this for any deposits written after the RHI-3857 rekey. At least one of `projectId` / `clientId` is required; supplying both OR-matches (covers a project's pre- and post-rekey rows in one call).",
+            "example": "proj_abc123"
+          },
+          "clientId": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Legacy keccak256(apiKey) client id. Use to target rows written before the RHI-3857 rekey; will be removed under RHI-3859.",
+            "example": "0x1234..."
+          },
+          "chain": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "Limit to a single CAIP-2 chain",
+            "example": "eip155:8453"
+          },
+          "errorCode": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Limit to deposits that failed with this error code",
+            "example": "BRIDGE_TIMEOUT"
+          },
+          "failedAfter": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO timestamp; include only deposits updated at/after this"
+          },
+          "failedBefore": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO timestamp; include only deposits updated at/before this"
+          }
+        }
       },
       "RefundDepositResponse": {
         "type": "object",
@@ -1357,6 +1478,137 @@
           "refundReceiver",
           "nonce"
         ]
+      },
+      "ListWebhookEventsResponse": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WebhookEvent"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "events",
+          "nextCursor"
+        ]
+      },
+      "WebhookEvent": {
+        "type": "object",
+        "properties": {
+          "eventId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "time": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "delivered",
+              "failed"
+            ]
+          },
+          "attempts": {
+            "type": "number"
+          },
+          "payload": {
+            "nullable": true
+          },
+          "depositId": {
+            "type": "string",
+            "nullable": true
+          },
+          "deliveredAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "eventId",
+          "type",
+          "time",
+          "status",
+          "attempts",
+          "depositId",
+          "deliveredAt"
+        ]
+      },
+      "ResendWebhookEventResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "eventId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "delivered",
+              "failed"
+            ]
+          },
+          "attempts": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "message",
+          "eventId",
+          "status",
+          "attempts"
+        ]
+      },
+      "TestWebhookResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "eventId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message",
+          "eventId"
+        ]
+      },
+      "TestWebhookRequestBody": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "deposit-received",
+              "bridge-started",
+              "bridge-delayed",
+              "bridge-complete",
+              "bridge-failed",
+              "post-bridge-swap-complete",
+              "post-bridge-swap-failed",
+              "deposit-refunded",
+              "error"
+            ],
+            "description": "Which webhook type to simulate",
+            "example": "bridge-started"
+          }
+        },
+        "required": [
+          "type"
+        ]
       }
     },
     "parameters": {}
@@ -1828,6 +2080,81 @@
         }
       }
     },
+    "/admin/deposits/retry/bulk": {
+      "post": {
+        "tags": [
+          "Admin"
+        ],
+        "summary": "Operator bulk retry for failed deposits matching a filter",
+        "description": "Operator-only endpoint. Retry every `failed` deposit for the target identity that matches the supplied filter. Requires the `deposit_retry` API-key scope, at least one of `projectId` / `clientId` (supplying both OR-matches and covers a project's pre- and post-RHI-3857 rows in one call), and at least one narrowing filter (chain, errorCode, failedAfter, failedBefore).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkRetryDepositRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Bulk retry initiated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkRetryDepositResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, no narrowing filter supplied, or bad API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden - missing deposit_retry scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/deposits/refund": {
       "post": {
         "tags": [
@@ -1918,6 +2245,17 @@
             "required": false,
             "description": "EVM address (0x...) or Solana base58 public key",
             "name": "account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by the account's recipient address. Aggregates deposits across every smart account that resolves to the same recipient (typically the integrator's user wallet).",
+              "example": "0x2ca6f15be9580c4f332656bedc11c35bf820d08d"
+            },
+            "required": false,
+            "description": "Filter by the account's recipient address. Aggregates deposits across every smart account that resolves to the same recipient (typically the integrator's user wallet).",
+            "name": "recipient",
             "in": "query"
           },
           {
@@ -2602,6 +2940,259 @@
           },
           "500": {
             "description": "Relay failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/events": {
+      "get": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "List persisted webhook events for the calling client",
+        "description": "Returns webhook events delivered (or attempted) to the caller's webhook URL. Use for backfill or replay verification. Results are id-desc; pass the last `nextCursor` to paginate.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "date-time",
+              "description": "Return events created at or after this ISO timestamp"
+            },
+            "required": false,
+            "description": "Return events created at or after this ISO timestamp",
+            "name": "since",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Filter by webhook type (e.g. \"bridge-started\")"
+            },
+            "required": false,
+            "description": "Filter by webhook type (e.g. \"bridge-started\")",
+            "name": "type",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Max events to return (1-200, default 50)",
+              "example": 50
+            },
+            "required": false,
+            "description": "Max events to return (1-200, default 50)",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Opaque cursor from a previous page. Returned events are id-desc; pass the lowest id from the previous page."
+            },
+            "required": false,
+            "description": "Opaque cursor from a previous page. Returned events are id-desc; pass the lowest id from the previous page.",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook events list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListWebhookEventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid API key or malformed query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/events/{id}/resend": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Re-attempt delivery of a stored webhook event",
+        "description": "Re-sends an existing webhook event to the configured webhook URL using its original eventId. Useful for replaying a delivery that failed permanently. Does not allocate a new event id.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Resend attempted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResendWebhookEventResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Event does not belong to caller's client",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Event not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/test": {
+      "post": {
+        "tags": [
+          "Webhooks"
+        ],
+        "summary": "Send a test webhook to the configured URL",
+        "description": "Sends a single webhook with fixture data to the client's configured URL. Uses the client's real webhook secret so signature verification works as in production. Envelope and persisted payload both carry `\"test\": true` so the receiver can filter and the dashboard can mark it.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestWebhookRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Test webhook dispatched",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestWebhookResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, unknown type, or client has no webhook URL configured",
             "content": {
               "application/json": {
                 "schema": {
