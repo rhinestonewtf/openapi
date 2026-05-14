@@ -52,46 +52,32 @@
                   "tokenRequests": {
                     "type": "array",
                     "items": {
-                      "oneOf": [
-                        {
-                          "type": "object",
-                          "properties": {
-                            "tokenAddress": {
-                              "type": "string",
-                              "description": "The address of the requested token",
-                              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-                            },
-                            "amount": {
-                              "type": "string",
-                              "format": "uint256",
-                              "description": "The amount of the requested token (in the smallest unit)",
-                              "example": "1000000"
-                            }
-                          },
-                          "required": [
-                            "tokenAddress",
-                            "amount"
-                          ]
+                      "type": "object",
+                      "properties": {
+                        "tokenAddress": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "The address of the requested token. Format depends on destination chain — 0x-hex for EVM, base58 SPL mint for Solana, T-address for Tron.",
+                          "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
                         },
-                        {
-                          "type": "object",
-                          "properties": {
-                            "tokenAddress": {
-                              "type": "string",
-                              "description": "The address of the requested token",
-                              "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
-                            },
-                            "amount": {
-                              "type": "string",
-                              "format": "uint256",
-                              "description": "The amount of the requested token (in the smallest unit)",
-                              "example": "1000000"
-                            }
-                          },
-                          "required": [
-                            "tokenAddress"
-                          ]
+                        "amount": {
+                          "type": "string",
+                          "format": "uint256",
+                          "description": "The amount of the requested token (in the smallest unit). Omit for max-out.",
+                          "example": "1000000"
+                        },
+                        "balance": {
+                          "type": "string",
+                          "enum": [
+                            "spot",
+                            "perp"
+                          ],
+                          "description": "HyperCore balance class for this token request — 'spot' or 'perp'. Optional; defaults to 'perp' when destinationChainId is HyperCore. Rejected on every other destination.",
+                          "example": "spot"
                         }
+                      },
+                      "required": [
+                        "tokenAddress"
                       ]
                     },
                     "description": "A list of token requested on the target chain"
@@ -273,8 +259,8 @@
                                 "ETH",
                                 "USDC",
                                 "WETH",
-                                "USDT0",
                                 "USDT",
+                                "USDT0",
                                 "BNB",
                                 "WBNB",
                                 "XDAI",
@@ -289,7 +275,11 @@
                                 "WHYPE",
                                 "XPL",
                                 "WXPL",
-                                "MockUSD"
+                                "MockUSD",
+                                "TRX",
+                                "WTRX",
+                                "SOL",
+                                "WSOL"
                               ]
                             }
                           ]
@@ -310,8 +300,8 @@
                                   "ETH",
                                   "USDC",
                                   "WETH",
-                                  "USDT0",
                                   "USDT",
+                                  "USDT0",
                                   "BNB",
                                   "WBNB",
                                   "XDAI",
@@ -326,7 +316,11 @@
                                   "WHYPE",
                                   "XPL",
                                   "WXPL",
-                                  "MockUSD"
+                                  "MockUSD",
+                                  "TRX",
+                                  "WTRX",
+                                  "SOL",
+                                  "WSOL"
                                 ]
                               }
                             ]
@@ -369,8 +363,8 @@
                                     "ETH",
                                     "USDC",
                                     "WETH",
-                                    "USDT0",
                                     "USDT",
+                                    "USDT0",
                                     "BNB",
                                     "WBNB",
                                     "XDAI",
@@ -385,7 +379,11 @@
                                     "WHYPE",
                                     "XPL",
                                     "WXPL",
-                                    "MockUSD"
+                                    "MockUSD",
+                                    "TRX",
+                                    "WTRX",
+                                    "SOL",
+                                    "WSOL"
                                   ]
                                 }
                               ]
@@ -406,8 +404,8 @@
                                       "ETH",
                                       "USDC",
                                       "WETH",
-                                      "USDT0",
                                       "USDT",
+                                      "USDT0",
                                       "BNB",
                                       "WBNB",
                                       "XDAI",
@@ -422,7 +420,11 @@
                                       "WHYPE",
                                       "XPL",
                                       "WXPL",
-                                      "MockUSD"
+                                      "MockUSD",
+                                      "TRX",
+                                      "WTRX",
+                                      "SOL",
+                                      "WSOL"
                                     ]
                                   }
                                 ]
@@ -582,8 +584,8 @@
                           "ETH",
                           "USDC",
                           "WETH",
-                          "USDT0",
                           "USDT",
+                          "USDT0",
                           "BNB",
                           "WBNB",
                           "XDAI",
@@ -598,7 +600,11 @@
                           "WHYPE",
                           "XPL",
                           "WXPL",
-                          "MockUSD"
+                          "MockUSD",
+                          "TRX",
+                          "WTRX",
+                          "SOL",
+                          "WSOL"
                         ]
                       },
                       "executionTokensReceived": {
@@ -689,8 +695,7 @@
                             "type": "object",
                             "properties": {
                               "seconds": {
-                                "type": "integer",
-                                "minimum": 0,
+                                "type": "number",
                                 "description": "Typical end-to-end fill time for this route in seconds. Directional, not guaranteed.",
                                 "example": 3
                               }
@@ -1082,7 +1087,7 @@
                                     "required": [
                                       "usd"
                                     ],
-                                    "description": "Sum of all categories in USD (including sponsored)"
+                                    "description": "Full route cost in USD, regardless of who pays. Equal to `sum(breakdown.*.usd)` modulo rounding."
                                   },
                                   "breakdown": {
                                     "type": "object",
@@ -1092,80 +1097,68 @@
                                         "properties": {
                                           "usd": {
                                             "type": "number",
-                                            "description": "USD-denominated value",
+                                            "description": "Total cost of this category in USD, regardless of who pays.",
                                             "example": 0.029
+                                          },
+                                          "sponsored": {
+                                            "type": "boolean",
+                                            "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                            "example": false
                                           }
                                         },
                                         "required": [
-                                          "usd"
+                                          "usd",
+                                          "sponsored"
                                         ],
-                                        "description": "Aggregate gas cost in USD (destination fill, swap execution, origin gas)"
+                                        "description": "Aggregate gas cost (destination fill, swap execution, origin gas)"
                                       },
                                       "bridge": {
                                         "type": "object",
                                         "properties": {
                                           "usd": {
                                             "type": "number",
-                                            "description": "USD-denominated value",
+                                            "description": "Total cost of this category in USD, regardless of who pays.",
                                             "example": 0.029
+                                          },
+                                          "sponsored": {
+                                            "type": "boolean",
+                                            "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                            "example": false
                                           }
                                         },
                                         "required": [
-                                          "usd"
+                                          "usd",
+                                          "sponsored"
                                         ],
-                                        "description": "Aggregate bridge commission in USD"
-                                      },
-                                      "protocol": {
-                                        "type": "object",
-                                        "properties": {
-                                          "usd": {
-                                            "type": "number",
-                                            "description": "USD-denominated value",
-                                            "example": 0.029
-                                          }
-                                        },
-                                        "required": [
-                                          "usd"
-                                        ],
-                                        "description": "Aggregate protocol fee in USD"
+                                        "description": "Aggregate settlement-layer bridge cost"
                                       },
                                       "swap": {
                                         "type": "object",
                                         "properties": {
                                           "usd": {
                                             "type": "number",
-                                            "description": "USD-denominated value",
+                                            "description": "Total cost of this category in USD, regardless of who pays.",
                                             "example": 0.029
+                                          },
+                                          "sponsored": {
+                                            "type": "boolean",
+                                            "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                            "example": false
                                           }
                                         },
                                         "required": [
-                                          "usd"
+                                          "usd",
+                                          "sponsored"
                                         ],
-                                        "description": "Aggregate solver swap commission in USD"
-                                      },
-                                      "settlement": {
-                                        "type": "object",
-                                        "properties": {
-                                          "usd": {
-                                            "type": "number",
-                                            "description": "USD-denominated value",
-                                            "example": 0.029
-                                          }
-                                        },
-                                        "required": [
-                                          "usd"
-                                        ],
-                                        "description": "Aggregate settlement layer fee in USD"
+                                        "description": "Aggregate solver swap commission"
                                       }
                                     },
                                     "required": [
                                       "gas",
                                       "bridge",
-                                      "protocol",
-                                      "swap",
-                                      "settlement"
+                                      "swap"
                                     ],
-                                    "description": "Per-category USD fee breakdown"
+                                    "description": "Per-category fee breakdown"
                                   }
                                 },
                                 "required": [
@@ -2951,82 +2944,72 @@
                       "type": "string",
                       "enum": [
                         "PENDING",
-                        "PRECONFIRMED",
-                        "CLAIMED",
-                        "FILLED",
                         "COMPLETED",
-                        "FAILED",
-                        "EXPIRED"
+                        "FAILED"
                       ],
-                      "description": "Overall status of the intent operation",
+                      "description": "Overall intent status: PENDING, COMPLETED, or FAILED",
                       "example": "COMPLETED"
-                    },
-                    "fillTimestamp": {
-                      "type": "number",
-                      "description": "Timestamp of the fill transaction",
-                      "example": 1633493192
-                    },
-                    "fillTransactionHash": {
-                      "type": "string",
-                      "description": "Transaction hash of the fill transaction",
-                      "example": "0xc1674f4671accbceec3f22c2c9cfa4f7aead7183f48df90c239e0d85d6c31e21"
-                    },
-                    "destinationChainId": {
-                      "type": "string",
-                      "pattern": "^eip155:\\d+$",
-                      "description": "Chain ID of the fill transaction",
-                      "example": "eip155:42161"
                     },
                     "accountAddress": {
                       "type": "string",
                       "description": "Account address",
                       "example": "0x3672e268a79bd4acc5ee646bdda652547c7a435c"
                     },
-                    "claims": {
+                    "operations": {
                       "type": "array",
                       "items": {
                         "type": "object",
                         "properties": {
-                          "chainId": {
-                            "type": "string",
-                            "pattern": "^eip155:\\d+$",
-                            "description": "Chain ID of the claim",
-                            "example": "eip155:42161"
-                          },
-                          "status": {
-                            "type": "string",
-                            "enum": [
-                              "PENDING",
-                              "EXPIRED",
-                              "PRECONFIRMED",
-                              "COMPLETED",
-                              "FAILED"
-                            ],
-                            "description": "Status of the claim",
-                            "example": "COMPLETED"
-                          },
-                          "claimTimestamp": {
+                          "chain": {
                             "type": "number",
-                            "description": "Timestamp when the claim was processed"
+                            "description": "Chain ID",
+                            "example": 10
                           },
-                          "claimTransactionHash": {
-                            "type": "string",
-                            "description": "Transaction hash of the claim transaction"
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "PENDING",
+                                    "COMPLETED",
+                                    "FAILED"
+                                  ],
+                                  "description": "Operation status",
+                                  "example": "COMPLETED"
+                                },
+                                "txHash": {
+                                  "type": "string",
+                                  "description": "Transaction hash (present when COMPLETED)",
+                                  "example": "0xc1674f4671accbceec3f22c2c9cfa4f7aead7183f48df90c239e0d85d6c31e21"
+                                },
+                                "timestamp": {
+                                  "type": "number",
+                                  "description": "Block timestamp in unix seconds (present when COMPLETED)",
+                                  "example": 1633493192
+                                }
+                              },
+                              "required": [
+                                "status"
+                              ]
+                            },
+                            "description": "Operations on this chain"
                           }
                         },
                         "required": [
-                          "chainId",
-                          "status"
+                          "chain",
+                          "items"
                         ]
                       },
-                      "description": "Array of claims within the intent"
+                      "description": "Operations grouped by chain. Each chain has one or more operations (e.g. CLAIM, FILL, BRIDGE_FILL)."
                     }
                   },
                   "required": [
                     "status",
-                    "destinationChainId",
                     "accountAddress",
-                    "claims"
+                    "operations"
                   ],
                   "description": "Successfully retrieved intent operation status"
                 }
