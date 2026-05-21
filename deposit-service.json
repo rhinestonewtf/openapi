@@ -806,6 +806,11 @@
       "DepositListItem": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Deposit id. Pass to GET /deposits/{id}/quotes.",
+            "example": "12345"
+          },
           "chain": {
             "type": "string"
           },
@@ -882,6 +887,7 @@
           }
         },
         "required": [
+          "id",
           "chain",
           "txHash",
           "token",
@@ -899,6 +905,86 @@
           "completedAt",
           "errorCode",
           "isSpam"
+        ]
+      },
+      "DepositQuotesResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepositQuoteItem"
+            }
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ]
+      },
+      "DepositQuoteItem": {
+        "type": "object",
+        "properties": {
+          "intentId": {
+            "type": "string"
+          },
+          "settlementLayer": {
+            "type": "string"
+          },
+          "bridgeProvider": {
+            "type": "string",
+            "nullable": true
+          },
+          "rank": {
+            "type": "integer"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "quoted",
+              "attempted",
+              "succeeded",
+              "failed",
+              "skipped"
+            ]
+          },
+          "quote": {
+            "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "attemptedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "intentId",
+          "settlementLayer",
+          "bridgeProvider",
+          "rank",
+          "outcome",
+          "errorCode",
+          "errorMessage",
+          "attemptedAt",
+          "completedAt",
+          "createdAt"
         ]
       },
       "DepositStatsResponse": {
@@ -1741,6 +1827,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1799,6 +1895,16 @@
           },
           "400": {
             "description": "Invalid account data or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2340,12 +2446,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication",
+              "description": "API key for authentication (omit when sending Authorization)",
               "example": "your-api-key"
             },
-            "required": true,
-            "description": "API key for authentication",
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
             "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
             "in": "header"
           }
         ],
@@ -2362,6 +2479,102 @@
           },
           "400": {
             "description": "Invalid query or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired platform bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deposits/{id}/quotes": {
+      "get": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "List candidate quotes considered for a deposit",
+        "description": "Returns every quote the orchestrator (or Solana bridge adapter) returned for this deposit, including which one was attempted and its terminal outcome. Scoped to the caller's tenant.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Deposit id. Returned by GET /deposits.",
+              "example": "12345"
+            },
+            "required": true,
+            "description": "Deposit id. Returned by GET /deposits.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quotes considered for the deposit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositQuotesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid deposit id or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Deposit not found or not owned by the caller",
             "content": {
               "application/json": {
                 "schema": {
@@ -2400,12 +2613,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication",
+              "description": "API key for authentication (omit when sending Authorization)",
               "example": "your-api-key"
             },
-            "required": true,
-            "description": "API key for authentication",
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
             "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
             "in": "header"
           }
         ],
@@ -2422,6 +2646,26 @@
           },
           "400": {
             "description": "Invalid query or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired platform bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2487,6 +2731,16 @@
           },
           "400": {
             "description": "Invalid parameters or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2562,6 +2816,16 @@
           },
           "400": {
             "description": "Invalid request or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2938,6 +3202,16 @@
               }
             }
           },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Relay failed",
             "content": {
@@ -3043,6 +3317,16 @@
           },
           "400": {
             "description": "Invalid API key or malformed query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3193,6 +3477,16 @@
           },
           "400": {
             "description": "Invalid request, unknown type, or client has no webhook URL configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
