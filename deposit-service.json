@@ -602,6 +602,37 @@
           "sessionDetails"
         ]
       },
+      "TokenAccountResponse": {
+        "type": "object",
+        "properties": {
+          "ataAddress": {
+            "type": "string"
+          },
+          "created": {
+            "type": "boolean"
+          },
+          "txSignature": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ataAddress",
+          "created"
+        ]
+      },
+      "TokenAccountRequestBody": {
+        "type": "object",
+        "properties": {
+          "mint": {
+            "type": "string",
+            "description": "Base58-encoded SPL token mint to create the Associated Token Account for",
+            "example": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          }
+        },
+        "required": [
+          "mint"
+        ]
+      },
       "RetryDepositResponse": {
         "type": "object",
         "properties": {
@@ -690,14 +721,8 @@
           "projectId": {
             "type": "string",
             "minLength": 1,
-            "description": "Target user-service project id whose failed deposits should be retried. Provide this for any deposits written after the RHI-3857 rekey. At least one of `projectId` / `clientId` is required; supplying both OR-matches (covers a project's pre- and post-rekey rows in one call).",
+            "description": "Target user-service project id whose failed deposits should be retried.",
             "example": "proj_abc123"
-          },
-          "clientId": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Legacy keccak256(apiKey) client id. Use to target rows written before the RHI-3857 rekey; will be removed under RHI-3859.",
-            "example": "0x1234..."
           },
           "chain": {
             "type": "string",
@@ -721,7 +746,10 @@
             "format": "date-time",
             "description": "ISO timestamp; include only deposits updated at/before this"
           }
-        }
+        },
+        "required": [
+          "projectId"
+        ]
       },
       "RefundDepositResponse": {
         "type": "object",
@@ -806,6 +834,11 @@
       "DepositListItem": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "description": "Deposit id. Pass to GET /deposits/{id}/quotes.",
+            "example": "12345"
+          },
           "chain": {
             "type": "string"
           },
@@ -882,6 +915,7 @@
           }
         },
         "required": [
+          "id",
           "chain",
           "txHash",
           "token",
@@ -899,6 +933,86 @@
           "completedAt",
           "errorCode",
           "isSpam"
+        ]
+      },
+      "DepositQuotesResponse": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DepositQuoteItem"
+            }
+          }
+        },
+        "required": [
+          "count",
+          "items"
+        ]
+      },
+      "DepositQuoteItem": {
+        "type": "object",
+        "properties": {
+          "intentId": {
+            "type": "string"
+          },
+          "settlementLayer": {
+            "type": "string"
+          },
+          "bridgeProvider": {
+            "type": "string",
+            "nullable": true
+          },
+          "rank": {
+            "type": "integer"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "quoted",
+              "attempted",
+              "succeeded",
+              "failed",
+              "skipped"
+            ]
+          },
+          "quote": {
+            "nullable": true
+          },
+          "errorCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "errorMessage": {
+            "type": "string",
+            "nullable": true
+          },
+          "attemptedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "completedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "intentId",
+          "settlementLayer",
+          "bridgeProvider",
+          "rank",
+          "outcome",
+          "errorCode",
+          "errorMessage",
+          "attemptedAt",
+          "completedAt",
+          "createdAt"
         ]
       },
       "DepositStatsResponse": {
@@ -1153,9 +1267,7 @@
           },
           "targetToken": {
             "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            "minLength": 1
           },
           "targetChain": {
             "anyOf": [
@@ -1173,10 +1285,7 @@
             "example": "eip155:8453"
           },
           "recipient": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            "type": "string"
           },
           "postBridgeActions": {
             "type": "array",
@@ -1334,6 +1443,24 @@
           "maxAmount"
         ]
       },
+      "PricesResponse": {
+        "type": "object",
+        "properties": {
+          "prices": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "USD unit price keyed by uppercased token symbol",
+            "example": {
+              "SOL": 168.42
+            }
+          }
+        },
+        "required": [
+          "prices"
+        ]
+      },
       "WithdrawResponse": {
         "type": "object",
         "properties": {
@@ -1477,6 +1604,102 @@
           "gasToken",
           "refundReceiver",
           "nonce"
+        ]
+      },
+      "PolymarketWithdrawResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "txHash": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          }
+        },
+        "required": [
+          "message",
+          "txHash"
+        ]
+      },
+      "PolymarketWithdrawRequestBody": {
+        "type": "object",
+        "properties": {
+          "depositWallet": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "owner": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "nonce": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "deadline": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "calls": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PolymarketCall"
+            },
+            "minItems": 1
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          }
+        },
+        "required": [
+          "depositWallet",
+          "owner",
+          "nonce",
+          "deadline",
+          "calls",
+          "signature"
+        ]
+      },
+      "PolymarketCall": {
+        "type": "object",
+        "properties": {
+          "target": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "value": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          },
+          "data": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Hex-encoded string (0x followed by hex characters)",
+            "example": "0x1234abcd"
+          }
+        },
+        "required": [
+          "target",
+          "value",
+          "data"
         ]
       },
       "ListWebhookEventsResponse": {
@@ -1741,6 +1964,16 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -1799,6 +2032,16 @@
           },
           "400": {
             "description": "Invalid account data or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2005,6 +2248,123 @@
         }
       }
     },
+    "/account/{address}/token-accounts": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Create a Solana token account (ATA) for an account",
+        "description": "Create the Solana Associated Token Account (ATA) for a registered account's Solana deposit address and an SPL mint, so transfers from senders that omit a create-ATA instruction (some CEXes) do not bounce on-chain. Allowlisted clients only. Idempotent: returns the existing ATA with created=false if it already exists. Rejects native/wrapped SOL (no ATA needed).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "Ethereum address (0x followed by 40 hex characters)",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": true,
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "name": "address",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenAccountRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token account exists (created now or previously)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenAccountResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid mint (bad base58, unsupported token, or SOL/WSOL)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Project not in the allowlist, lacks deposits:write scope, or the account is owned by a different project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No Solana account registered for this address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Solana RPC or transaction submission failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/deposits/retry": {
       "post": {
         "tags": [
@@ -2086,7 +2446,7 @@
           "Admin"
         ],
         "summary": "Operator bulk retry for failed deposits matching a filter",
-        "description": "Operator-only endpoint. Retry every `failed` deposit for the target identity that matches the supplied filter. Requires the `deposit_retry` API-key scope, at least one of `projectId` / `clientId` (supplying both OR-matches and covers a project's pre- and post-RHI-3857 rows in one call), and at least one narrowing filter (chain, errorCode, failedAfter, failedBefore).",
+        "description": "Operator-only endpoint. Retry every `failed` deposit for the target project that matches the supplied filter. Requires the `deposit_retry` API-key scope, a `projectId`, and at least one narrowing filter (chain, errorCode, failedAfter, failedBefore).",
         "parameters": [
           {
             "schema": {
@@ -2340,12 +2700,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication",
+              "description": "API key for authentication (omit when sending Authorization)",
               "example": "your-api-key"
             },
-            "required": true,
-            "description": "API key for authentication",
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
             "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
             "in": "header"
           }
         ],
@@ -2362,6 +2733,102 @@
           },
           "400": {
             "description": "Invalid query or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired platform bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deposits/{id}/quotes": {
+      "get": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "List candidate quotes considered for a deposit",
+        "description": "Returns every quote the orchestrator (or Solana bridge adapter) returned for this deposit, including which one was attempted and its terminal outcome. Scoped to the caller's tenant.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Deposit id. Returned by GET /deposits.",
+              "example": "12345"
+            },
+            "required": true,
+            "description": "Deposit id. Returned by GET /deposits.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Quotes considered for the deposit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositQuotesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid deposit id or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Deposit not found or not owned by the caller",
             "content": {
               "application/json": {
                 "schema": {
@@ -2400,12 +2867,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication",
+              "description": "API key for authentication (omit when sending Authorization)",
               "example": "your-api-key"
             },
-            "required": true,
-            "description": "API key for authentication",
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
             "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
             "in": "header"
           }
         ],
@@ -2422,6 +2900,26 @@
           },
           "400": {
             "description": "Invalid query or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired platform bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2487,6 +2985,16 @@
           },
           "400": {
             "description": "Invalid parameters or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2562,6 +3070,16 @@
           },
           "400": {
             "description": "Invalid request or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2876,6 +3394,74 @@
         }
       }
     },
+    "/prices": {
+      "get": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "Get USD unit prices for token symbols",
+        "description": "Returns USD unit prices keyed by uppercased token symbol. Used to convert a USD amount into estimated destination-token units for tokens not present in the portfolio (e.g. a SOL or ETH destination the user does not hold).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Comma-separated token symbols to price (e.g. \"SOL,ETH\")",
+              "example": "SOL"
+            },
+            "required": true,
+            "description": "Comma-separated token symbols to price (e.g. \"SOL,ETH\")",
+            "name": "symbols",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "USD unit prices for the requested symbols",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PricesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/safe/withdraw": {
       "post": {
         "tags": [
@@ -2938,8 +3524,113 @@
               }
             }
           },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Relay failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/polymarket/withdraw": {
+      "post": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "Relay a Polymarket deposit-wallet withdrawal",
+        "description": "Relay a user-signed Polymarket deposit-wallet `WALLET` batch (approve/unwrap pUSD or transfer USDC.e) through the Polymarket relayer using server-held builder credentials. Submitted calls must target known Polymarket contracts.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolymarketWithdrawRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Withdrawal relayed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolymarketWithdrawResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, disallowed call, or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Polymarket relayer rejected or failed the batch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Polymarket builder credentials not configured",
             "content": {
               "application/json": {
                 "schema": {
@@ -3043,6 +3734,16 @@
           },
           "400": {
             "description": "Invalid API key or malformed query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -3193,6 +3894,16 @@
           },
           "400": {
             "description": "Invalid request, unknown type, or client has no webhook URL configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
