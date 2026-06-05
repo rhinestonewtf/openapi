@@ -354,6 +354,47 @@
           ]
         }
       },
+      "GetSetupResponse": {
+        "type": "object",
+        "properties": {
+          "webhookUrl": {
+            "type": "string"
+          },
+          "hasWebhookSecret": {
+            "type": "boolean"
+          },
+          "sponsorship": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/ChainSponsorship"
+            }
+          },
+          "depositWhitelist": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "minAmount": {
+                    "type": "string"
+                  },
+                  "maxAmount": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "description": "Per-source-chain deposit allowlist keyed by CAIP-2 chain identifiers, each mapping allowed tokens to optional raw-unit min/max limits."
+          },
+          "maxPriceDeviationBps": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "hasWebhookSecret"
+        ]
+      },
       "RegisterResponse": {
         "type": "object",
         "properties": {
@@ -910,6 +951,9 @@
             "type": "string",
             "nullable": true
           },
+          "retryable": {
+            "type": "boolean"
+          },
           "isSpam": {
             "type": "boolean"
           }
@@ -932,6 +976,7 @@
           "createdAt",
           "completedAt",
           "errorCode",
+          "retryable",
           "isSpam"
         ]
       },
@@ -1013,6 +1058,119 @@
           "attemptedAt",
           "completedAt",
           "createdAt"
+        ]
+      },
+      "QuotePreviewResponse": {
+        "type": "object",
+        "properties": {
+          "settlementLayer": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "integer"
+          },
+          "estimatedFillTimeSeconds": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fees": {
+            "type": "object",
+            "properties": {
+              "totalUsd": {
+                "type": "number"
+              },
+              "breakdown": {
+                "type": "object",
+                "properties": {
+                  "gasUsd": {
+                    "type": "number"
+                  },
+                  "bridgeUsd": {
+                    "type": "number"
+                  },
+                  "swapUsd": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "gasUsd",
+                  "bridgeUsd",
+                  "swapUsd"
+                ]
+              }
+            },
+            "required": [
+              "totalUsd",
+              "breakdown"
+            ]
+          },
+          "output": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "string"
+              },
+              "symbol": {
+                "type": "string",
+                "nullable": true
+              },
+              "decimals": {
+                "type": "integer",
+                "nullable": true
+              }
+            },
+            "required": [
+              "token",
+              "amount",
+              "symbol",
+              "decimals"
+            ]
+          }
+        },
+        "required": [
+          "settlementLayer",
+          "expiresAt",
+          "estimatedFillTimeSeconds",
+          "fees",
+          "output"
+        ]
+      },
+      "QuotePreviewRequest": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "sourceChainId": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "sourceToken": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Numeric string representing a bigint value",
+            "example": "1000000000000000000"
+          }
+        },
+        "required": [
+          "account",
+          "sourceChainId",
+          "sourceToken",
+          "amount"
         ]
       },
       "DepositStatsResponse": {
@@ -1820,6 +1978,7 @@
               "bridge-delayed",
               "bridge-complete",
               "bridge-failed",
+              "deposit-rejected",
               "post-bridge-swap-complete",
               "post-bridge-swap-failed",
               "deposit-refunded",
@@ -1914,12 +2073,23 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication",
+              "description": "API key for authentication (omit when sending Authorization)",
               "example": "your-api-key"
             },
-            "required": true,
-            "description": "API key for authentication",
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
             "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
             "in": "header"
           },
           {
@@ -1957,6 +2127,69 @@
           },
           "400": {
             "description": "Invalid parameters or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Clients"
+        ],
+        "summary": "Read client settings",
+        "description": "Returns the stored client configuration — webhook URL/secret, sponsorship rules, source-token whitelist, and price-deviation guard — for the authenticated project.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Client configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSetupResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
             "content": {
               "application/json": {
                 "schema": {
@@ -2371,17 +2604,28 @@
           "Processing"
         ],
         "summary": "Retry failed deposits for an account",
-        "description": "Retry all failed deposits for a given account address. The API key must belong to the client that registered the account.",
+        "description": "Retry all failed deposits for a given account address. Authenticate with an `x-api-key` (write scope) or a Bearer platform token; the credential must belong to the client that registered the account.",
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication",
+              "description": "API key for authentication (omit when sending Authorization)",
               "example": "your-api-key"
             },
-            "required": true,
-            "description": "API key for authentication",
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
             "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
             "in": "header"
           },
           {
@@ -2427,8 +2671,18 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
-            "description": "Unauthorized - API key does not belong to the client that registered the account",
+            "description": "Unauthorized - credential does not belong to the client that registered the account, or API key lacks write scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2829,6 +3083,110 @@
           },
           "404": {
             "description": "Deposit not found or not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quotes/preview": {
+      "post": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "Preview a bridge quote before depositing",
+        "description": "Returns the fees and expected output for bridging `amount` of `sourceToken` from `sourceChainId` to the account's registered target, before any funds are deposited. The orchestrator quotes against the supplied amount as if the deposit wallet already held it; the result is indicative and may differ from the quote applied once a real deposit lands. EVM source chains only. Scoped to the caller's tenant.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuotePreviewRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Indicative quote for the requested route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuotePreviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed request body or unsupported source chain",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid API key or expired platform bearer token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account not found or not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Route cannot be quoted (token/amount not allowed by the client whitelist, unsupported token route, post-bridge-swap account, no session for the source chain, or no available routes)",
             "content": {
               "application/json": {
                 "schema": {
