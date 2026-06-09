@@ -4891,12 +4891,12 @@
                           },
                           "token": {
                             "type": "string",
-                            "description": "Token delivered on the destination chain",
+                            "description": "Intent value token. The token delivered on the destination chain, or the spent token for same-chain intents (which have no persisted delivery).",
                             "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                           },
                           "amount": {
                             "type": "string",
-                            "description": "Amount delivered on the destination chain, in base units",
+                            "description": "Intent value in base units — delivered on the destination chain, or spent for same-chain intents (which have no persisted delivery; for same-chain swaps this is the input, not the received amount).",
                             "example": "1000000"
                           },
                           "account": {
@@ -7024,7 +7024,7 @@
         "description": "Retrieves the token balances across all supported chains for a user's abstracted account",
         "summary": "Get Account Portfolio",
         "tags": [
-          "Portfolio"
+          "Utilities"
         ],
         "parameters": [
           {
