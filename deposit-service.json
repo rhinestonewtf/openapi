@@ -392,7 +392,8 @@
           }
         },
         "required": [
-          "hasWebhookSecret"
+          "hasWebhookSecret",
+          "maxPriceDeviationBps"
         ]
       },
       "RegisterResponse": {
@@ -716,80 +717,6 @@
         },
         "required": [
           "address"
-        ]
-      },
-      "BulkRetryDepositResponse": {
-        "type": "object",
-        "properties": {
-          "message": {
-            "type": "string"
-          },
-          "count": {
-            "type": "number"
-          },
-          "deposits": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "string"
-                },
-                "txHash": {
-                  "type": "string"
-                },
-                "chain": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "id",
-                "txHash",
-                "chain"
-              ]
-            }
-          }
-        },
-        "required": [
-          "message",
-          "count",
-          "deposits"
-        ]
-      },
-      "BulkRetryDepositRequestBody": {
-        "type": "object",
-        "properties": {
-          "projectId": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Target user-service project id whose failed deposits should be retried.",
-            "example": "proj_abc123"
-          },
-          "chain": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
-            "description": "Limit to a single CAIP-2 chain",
-            "example": "eip155:8453"
-          },
-          "errorCode": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Limit to deposits that failed with this error code",
-            "example": "BRIDGE_TIMEOUT"
-          },
-          "failedAfter": {
-            "type": "string",
-            "format": "date-time",
-            "description": "ISO timestamp; include only deposits updated at/after this"
-          },
-          "failedBefore": {
-            "type": "string",
-            "format": "date-time",
-            "description": "ISO timestamp; include only deposits updated at/before this"
-          }
-        },
-        "required": [
-          "projectId"
         ]
       },
       "RefundDepositResponse": {
@@ -1999,7 +1926,7 @@
     "/chains": {
       "get": {
         "tags": [
-          "Info"
+          "Utilities"
         ],
         "summary": "List supported chains and tokens",
         "description": "Returns all chains supported by the deposit service, with their tokens and whether they support deposits, bridging destinations, or both",
@@ -2694,81 +2621,6 @@
         }
       }
     },
-    "/admin/deposits/retry/bulk": {
-      "post": {
-        "tags": [
-          "Admin"
-        ],
-        "summary": "Operator bulk retry for failed deposits matching a filter",
-        "description": "Operator-only endpoint. Retry every `failed` deposit for the target project that matches the supplied filter. Requires the `deposit_retry` API-key scope, a `projectId`, and at least one narrowing filter (chain, errorCode, failedAfter, failedBefore).",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "API key for authentication",
-              "example": "your-api-key"
-            },
-            "required": true,
-            "description": "API key for authentication",
-            "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
-              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
-              "example": "2026-04.amazon"
-            },
-            "required": false,
-            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
-            "name": "x-api-version",
-            "in": "header"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BulkRetryDepositRequestBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Bulk retry initiated",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BulkRetryDepositResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request, no narrowing filter supplied, or bad API key",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Forbidden - missing deposit_retry scope",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/deposits/refund": {
       "post": {
         "tags": [
@@ -2845,7 +2697,7 @@
     "/deposits": {
       "get": {
         "tags": [
-          "Processing"
+          "Utilities"
         ],
         "summary": "List deposits for the authenticated client",
         "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address).",
@@ -3021,7 +2873,7 @@
     "/deposits/{id}/quotes": {
       "get": {
         "tags": [
-          "Processing"
+          "Utilities"
         ],
         "summary": "List candidate quotes considered for a deposit",
         "description": "Returns every quote the orchestrator (or Solana bridge adapter) returned for this deposit, including which one was attempted and its terminal outcome. Scoped to the caller's tenant.",
@@ -3201,7 +3053,7 @@
     "/deposits/stats": {
       "get": {
         "tags": [
-          "Processing"
+          "Utilities"
         ],
         "summary": "Aggregated deposit statistics",
         "description": "Returns aggregated deposit statistics (total deposits, unique depositors, and total USD volume) for the authenticated client over the requested rolling time window. Only completed deposits are counted.",
