@@ -75,7 +75,8 @@
         "type": "object",
         "properties": {
           "isRegistered": {
-            "type": "boolean"
+            "type": "boolean",
+            "description": "Whether the EVM account is registered. EVM-scoped (legacy): a Solana/Tron-only account reads `false` here. Use `sources` for per-chain registration across all namespaces."
           },
           "targetChain": {
             "type": "string"
@@ -135,10 +136,30 @@
                 }
               ]
             }
+          },
+          "sources": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "chain": {
+                  "type": "string"
+                },
+                "depositAddress": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "chain",
+                "depositAddress"
+              ]
+            },
+            "description": "Every chain this account can receive deposits from — CAIP-2 id + deposit address — uniform across EVM, Solana, and Tron. A chain is present iff the account is registered for it (the canonical per-source registration signal); absence means not registered. EVM chains share the account address; Solana/Tron carry their own. Always present (may be empty)."
           }
         },
         "required": [
-          "isRegistered"
+          "isRegistered",
+          "sources"
         ]
       },
       "OutputTokenRule": {
@@ -278,6 +299,13 @@
             "maximum": 10000,
             "description": "Maximum allowed price deviation in basis points for stablecoin-to-stablecoin bridges. Defaults to 200 (2%) if not set.",
             "example": 200
+          },
+          "minDepositUsd": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "description": "Minimum deposit value in USD. Deposits priced below this are rejected and the client is notified via deposit-rejected. Applies to all tokens and chains.",
+            "example": 1
           }
         }
       },
@@ -388,6 +416,9 @@
             "description": "Per-source-chain deposit allowlist keyed by CAIP-2 chain identifiers, each mapping allowed tokens to optional raw-unit min/max limits."
           },
           "maxPriceDeviationBps": {
+            "type": "number"
+          },
+          "minDepositUsd": {
             "type": "number"
           }
         },
@@ -780,6 +811,63 @@
           "recipient"
         ]
       },
+      "ProcessHypercoreDepositResponse": {
+        "type": "object",
+        "properties": {
+          "depositId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "processing",
+              "failed"
+            ]
+          },
+          "amount": {
+            "type": "string"
+          },
+          "protocolAddress": {
+            "type": "string"
+          },
+          "intentId": {
+            "type": "string"
+          },
+          "sourceTxHash": {
+            "type": "string"
+          },
+          "errorCode": {
+            "type": "string"
+          },
+          "errorMessage": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "depositId",
+          "status"
+        ]
+      },
+      "ProcessHypercoreDepositRequestBody": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Registered account whose full HyperCore spot balance is bridged to its destination.",
+            "example": "0xde0fdf9c06b404cc5e20543cb84cac9067102f19"
+          },
+          "symbol": {
+            "type": "string",
+            "minLength": 1,
+            "description": "HyperCore spot token symbol to process. Defaults to UXPL.",
+            "example": "UXPL"
+          }
+        },
+        "required": [
+          "account"
+        ]
+      },
       "ListDepositsResponse": {
         "type": "object",
         "properties": {
@@ -841,6 +929,8 @@
               "processing",
               "completed",
               "failed",
+              "rejected",
+              "ignored",
               "expecting_refund",
               "refunded"
             ]
@@ -2627,17 +2717,28 @@
           "Processing"
         ],
         "summary": "Refund a failed deposit",
-        "description": "Transfer the funds from a failed deposit back to a user-provided address on the same chain.",
+        "description": "Transfer the funds from a failed deposit back to a user-provided address on the same chain. Authenticate with an `x-api-key` (write scope) or a Bearer platform token; the credential must belong to the client that registered the account.",
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication",
+              "description": "API key for authentication (omit when sending Authorization)",
               "example": "your-api-key"
             },
-            "required": true,
-            "description": "API key for authentication",
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
             "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
             "in": "header"
           }
         ],
@@ -2671,8 +2772,18 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
-            "description": "Unauthorized - API key does not own the account",
+            "description": "Unauthorized - credential does not belong to the client that registered the account, or API key lacks write scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -2683,6 +2794,110 @@
           },
           "500": {
             "description": "Refund transfer failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hypercore/process": {
+      "post": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "Process a HyperCore deposit",
+        "description": "Process an account's HyperCore deposit: bridge its full HyperCore spot balance (e.g. UXPL) to its registered destination (e.g. native XPL on Plasma) via Unit. Reads the balance, records a deposit, and submits the source transfer; the bridge then completes asynchronously. Authenticate with an `x-api-key` (write scope) or a Bearer platform token.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessHypercoreDepositRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deposit accepted (processing) or failed at submission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProcessHypercoreDepositResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request or unsupported token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks write scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Account or client not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A withdrawal of this amount is already in flight",
             "content": {
               "application/json": {
                 "schema": {
@@ -2732,6 +2947,8 @@
                 "processing",
                 "completed",
                 "failed",
+                "rejected",
+                "ignored",
                 "expecting_refund",
                 "refunded"
               ],
