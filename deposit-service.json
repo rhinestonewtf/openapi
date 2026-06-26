@@ -102,41 +102,6 @@
           "rejectUnmapped": {
             "type": "boolean"
           },
-          "postBridgeActions": {
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "type": "string",
-                      "enum": [
-                        "orderbook-swap"
-                      ]
-                    },
-                    "contract": {
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "description": "Ethereum address (0x followed by 40 hex characters)",
-                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-                    },
-                    "outputToken": {
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "description": "Ethereum address (0x followed by 40 hex characters)",
-                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-                    }
-                  },
-                  "required": [
-                    "type",
-                    "contract",
-                    "outputToken"
-                  ]
-                }
-              ]
-            }
-          },
           "sources": {
             "type": "array",
             "items": {
@@ -567,47 +532,13 @@
           "rejectUnmapped": {
             "type": "boolean"
           },
-          "postBridgeActions": {
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "type": "string",
-                      "enum": [
-                        "orderbook-swap"
-                      ]
-                    },
-                    "contract": {
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "description": "Ethereum address (0x followed by 40 hex characters)",
-                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-                    },
-                    "outputToken": {
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "description": "Ethereum address (0x followed by 40 hex characters)",
-                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-                    }
-                  },
-                  "required": [
-                    "type",
-                    "contract",
-                    "outputToken"
-                  ]
-                }
-              ]
-            }
-          }
+          "postBridgeActions": {}
         },
         "required": [
           "chain",
           "token"
         ],
-        "description": "Destination target configuration. `chain` must be a CAIP-2 chain identifier such as \"eip155:8453\" or \"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp\". When `postBridgeActions` are present, `token` is the token bridged into the smart account before those actions execute, and the last action `outputToken` becomes the final token delivered to `recipient`.",
+        "description": "Destination target configuration. `chain` must be a CAIP-2 chain identifier such as \"eip155:8453\" or \"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp\". `outputTokenRules` select the final target token per source token; `rejectUnmapped` ignores deposits with no matching rule.",
         "example": {
           "chain": "eip155:8453",
           "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -626,14 +557,7 @@
               "outputToken": "0x0000000000000000000000000000000000000000"
             }
           ],
-          "rejectUnmapped": true,
-          "postBridgeActions": [
-            {
-              "type": "orderbook-swap",
-              "contract": "0xb6807116b3b1b321a390594e31ecd6e0076f6278",
-              "outputToken": "0x0000000000000000000000000000000000000001"
-            }
-          ]
+          "rejectUnmapped": true
         }
       },
       "DepositAddressesResponse": {
@@ -1294,41 +1218,7 @@
           "rejectUnmapped": {
             "type": "boolean"
           },
-          "postBridgeActions": {
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "type": "string",
-                      "enum": [
-                        "orderbook-swap"
-                      ]
-                    },
-                    "contract": {
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "description": "Ethereum address (0x followed by 40 hex characters)",
-                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-                    },
-                    "outputToken": {
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "description": "Ethereum address (0x followed by 40 hex characters)",
-                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-                    }
-                  },
-                  "required": [
-                    "type",
-                    "contract",
-                    "outputToken"
-                  ]
-                }
-              ]
-            }
-          }
+          "postBridgeActions": {}
         },
         "required": [
           "recipient",
@@ -1462,41 +1352,6 @@
           "recipient": {
             "type": "string"
           },
-          "postBridgeActions": {
-            "type": "array",
-            "items": {
-              "oneOf": [
-                {
-                  "type": "object",
-                  "properties": {
-                    "type": {
-                      "type": "string",
-                      "enum": [
-                        "orderbook-swap"
-                      ]
-                    },
-                    "contract": {
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "description": "Ethereum address (0x followed by 40 hex characters)",
-                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-                    },
-                    "outputToken": {
-                      "type": "string",
-                      "pattern": "^0x[a-fA-F0-9]{40}$",
-                      "description": "Ethereum address (0x followed by 40 hex characters)",
-                      "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-                    }
-                  },
-                  "required": [
-                    "type",
-                    "contract",
-                    "outputToken"
-                  ]
-                }
-              ]
-            }
-          },
           "outputTokenRules": {
             "type": "array",
             "items": {
@@ -1506,6 +1361,7 @@
           "rejectUnmapped": {
             "type": "boolean"
           },
+          "postBridgeActions": {},
           "signerAddress": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
@@ -1996,8 +1852,6 @@
               "bridge-complete",
               "bridge-failed",
               "deposit-rejected",
-              "post-bridge-swap-complete",
-              "post-bridge-swap-failed",
               "deposit-refunded",
               "error"
             ],
@@ -3255,7 +3109,7 @@
             }
           },
           "422": {
-            "description": "Route cannot be quoted (token/amount not allowed by the client whitelist, unsupported token route, post-bridge-swap account, no session for the source chain, or no available routes)",
+            "description": "Route cannot be quoted (token/amount not allowed by the client whitelist, unsupported token route, no session for the source chain, or no available routes)",
             "content": {
               "application/json": {
                 "schema": {
