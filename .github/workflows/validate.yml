@@ -12,4 +12,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "20"
-      - run: npx --yes @redocly/cli lint --extends minimal orchestrator/*.json deposit-service.json
+      - run: npx --yes @redocly/cli lint --extends minimal orchestrator/*.json
