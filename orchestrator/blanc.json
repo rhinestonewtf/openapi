@@ -428,7 +428,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "^(eip155|solana|tron):[-_a-zA-Z0-9]{1,32}$",
+              "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
               "description": "Destination chain ID (CAIP-2)",
               "example": "eip155:8453"
             },
@@ -7655,7 +7655,7 @@
                                   "properties": {
                                     "chainId": {
                                       "type": "string",
-                                      "pattern": "^(eip155|solana|tron):[-_a-zA-Z0-9]{1,32}$",
+                                      "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
                                       "description": "Chain where this token leg settles (CAIP-2, any namespace)",
                                       "example": "eip155:8453"
                                     },
@@ -8986,7 +8986,7 @@
                     "type": "string",
                     "description": "CAIP-2 chain identifier of the destination chain (EVM `eip155:<id>`, or non-EVM `solana:…`/`tron:…`)",
                     "example": "eip155:8453",
-                    "pattern": "^(eip155|solana|tron):[-_a-zA-Z0-9]{1,32}$"
+                    "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$"
                   },
                   "tokenRequests": {
                     "type": "array",
