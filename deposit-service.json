@@ -751,9 +751,6 @@
           "amount": {
             "type": "string"
           },
-          "protocolAddress": {
-            "type": "string"
-          },
           "intentId": {
             "type": "string"
           },
@@ -784,8 +781,8 @@
           "symbol": {
             "type": "string",
             "minLength": 1,
-            "description": "HyperCore spot token symbol to process. Defaults to UXPL.",
-            "example": "UXPL"
+            "description": "HyperCore spot token symbol to process (USDC or USDT0). Defaults to USDC.",
+            "example": "USDC"
           }
         },
         "required": [
@@ -2665,7 +2662,7 @@
           "Processing"
         ],
         "summary": "Process a HyperCore deposit",
-        "description": "Process an account's HyperCore deposit: bridge its full HyperCore spot balance (e.g. UXPL) to its registered destination (e.g. native XPL on Plasma) via Unit. Reads the balance, records a deposit, and submits the source transfer; the bridge then completes asynchronously. Authenticate with an `x-api-key` (write scope) or a Bearer platform token.",
+        "description": "Process an account's HyperCore deposit: move its full HyperCore spot balance (e.g. USDT0) to HyperEVM via CoreWriter, then bridge it to the account's registered destination via the orchestrator. Reads the balance and submits the Core→EVM transfer; the credit and bridge then complete asynchronously. Authenticate with an `x-api-key` (write scope) or a Bearer platform token.",
         "parameters": [
           {
             "schema": {
@@ -2752,6 +2749,16 @@
           },
           "409": {
             "description": "A withdrawal of this amount is already in flight",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Deposits are paused (kill switch)",
             "content": {
               "application/json": {
                 "schema": {
