@@ -240,13 +240,17 @@
         "type": "object",
         "properties": {
           "webhookUrl": {
-            "type": "string",
-            "nullable": true,
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uri"
           },
           "webhookSecret": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "sponsorship": {
             "type": "object",
@@ -258,16 +262,20 @@
             "$ref": "#/components/schemas/DepositWhitelist"
           },
           "maxPriceDeviationBps": {
-            "type": "integer",
-            "nullable": true,
+            "type": [
+              "integer",
+              "null"
+            ],
             "minimum": 0,
             "maximum": 10000,
             "description": "Maximum allowed price deviation in basis points for stablecoin-to-stablecoin bridges. Defaults to 200 (2%) if not set.",
             "example": 200
           },
           "minDepositUsd": {
-            "type": "number",
-            "nullable": true,
+            "type": [
+              "number",
+              "null"
+            ],
             "minimum": 0,
             "description": "Minimum deposit value in USD. Deposits priced below this are rejected and the client is notified via deposit-rejected. Applies to all tokens and chains.",
             "example": 1
@@ -477,8 +485,7 @@
               "properties": {
                 "chainId": {
                   "type": "integer",
-                  "minimum": 0,
-                  "exclusiveMinimum": true,
+                  "exclusiveMinimum": 0,
                   "description": "Positive integer",
                   "example": 1
                 },
@@ -803,8 +810,10 @@
             }
           },
           "nextCursor": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -841,6 +850,20 @@
           "account": {
             "type": "string"
           },
+          "recipient": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Destination-chain address that receives the funds. Falls back to the smart account for EVM/HyperCore/Tron when no distinct recipient is configured; null for Solana rows whose EVM recipient is not yet known (historical rows pending backfill), never the internal swig."
+          },
+          "depositAddress": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Source-chain address that received the deposit (EVM smart account, Solana wallet PDA, or Tron deposit address). Nullable for historical rows pending backfill."
+          },
           "targetChain": {
             "type": "string"
           },
@@ -861,23 +884,31 @@
             ]
           },
           "sourceTxHash": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "destinationTxHash": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "sourceAmount": {
-            "type": "string",
-            "nullable": true,
+            "type": [
+              "string",
+              "null"
+            ],
             "pattern": "^\\d+$",
             "description": "Numeric string representing a bigint value",
             "example": "1000000000000000000"
           },
           "destinationAmount": {
-            "type": "string",
-            "nullable": true,
+            "type": [
+              "string",
+              "null"
+            ],
             "pattern": "^\\d+$",
             "description": "Numeric string representing a bigint value",
             "example": "1000000000000000000"
@@ -886,12 +917,16 @@
             "type": "string"
           },
           "completedAt": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "retryable": {
             "type": "boolean"
@@ -908,6 +943,8 @@
           "amount",
           "sender",
           "account",
+          "recipient",
+          "depositAddress",
           "targetChain",
           "targetToken",
           "status",
@@ -950,8 +987,10 @@
             "type": "string"
           },
           "bridgeProvider": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "rank": {
             "type": "integer"
@@ -966,24 +1005,30 @@
               "skipped"
             ]
           },
-          "quote": {
-            "nullable": true
-          },
+          "quote": {},
           "errorCode": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "errorMessage": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "attemptedAt": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "completedAt": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "createdAt": {
             "type": "string"
@@ -1056,12 +1101,16 @@
                 "type": "string"
               },
               "symbol": {
-                "type": "string",
-                "nullable": true
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "decimals": {
-                "type": "integer",
-                "nullable": true
+                "type": [
+                  "integer",
+                  "null"
+                ]
               }
             },
             "required": [
@@ -1299,9 +1348,7 @@
               },
               "data": {
                 "type": "object",
-                "additionalProperties": {
-                  "nullable": true
-                }
+                "additionalProperties": {}
               }
             },
             "required": [
@@ -1339,8 +1386,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true
+                "exclusiveMinimum": 0
               },
               {
                 "type": "string",
@@ -1373,8 +1419,7 @@
             "type": "array",
             "items": {
               "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true
+              "exclusiveMinimum": 0
             }
           },
           "forceRegister": {
@@ -1463,8 +1508,10 @@
             "type": "boolean"
           },
           "maxAmount": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -1517,8 +1564,7 @@
             "anyOf": [
               {
                 "type": "integer",
-                "minimum": 0,
-                "exclusiveMinimum": true
+                "exclusiveMinimum": 0
               },
               {
                 "type": "string",
@@ -1744,8 +1790,10 @@
             }
           },
           "nextCursor": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -1776,16 +1824,18 @@
           "attempts": {
             "type": "number"
           },
-          "payload": {
-            "nullable": true
-          },
+          "payload": {},
           "depositId": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "deliveredAt": {
-            "type": "string",
-            "nullable": true
+            "type": [
+              "string",
+              "null"
+            ]
           }
         },
         "required": [
@@ -2780,7 +2830,7 @@
           "Utilities"
         ],
         "summary": "List deposits for the authenticated client",
-        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address).",
+        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, recipient, depositAddress, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address); `depositAddress` filters on the source-chain address that received the deposit.",
         "parameters": [
           {
             "schema": {
@@ -2802,6 +2852,17 @@
             "required": false,
             "description": "Filter by the account's recipient address. Aggregates deposits across every smart account that resolves to the same recipient (typically the integrator's user wallet).",
             "name": "recipient",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Filter by the source-chain address that received the deposit (EVM smart account, Solana wallet PDA, or Tron deposit address).",
+              "example": "0x2ca6f15be9580c4f332656bedc11c35bf820d08d"
+            },
+            "required": false,
+            "description": "Filter by the source-chain address that received the deposit (EVM smart account, Solana wallet PDA, or Tron deposit address).",
+            "name": "depositAddress",
             "in": "query"
           },
           {
@@ -3569,8 +3630,7 @@
           {
             "schema": {
               "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
+              "exclusiveMinimum": 0,
               "description": "Source chain ID (EVM chain ID)",
               "example": 1
             },
@@ -3594,8 +3654,7 @@
           {
             "schema": {
               "type": "integer",
-              "minimum": 0,
-              "exclusiveMinimum": true,
+              "exclusiveMinimum": 0,
               "description": "Destination chain ID (EVM chain ID)",
               "example": 8453
             },
@@ -4207,5 +4266,6 @@
         }
       }
     }
-  }
+  },
+  "webhooks": {}
 }
