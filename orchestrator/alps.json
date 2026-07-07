@@ -4,6 +4,11 @@
     "title": "Rhinestone Orchestrator API",
     "version": "2026-01.alps"
   },
+  "servers": [
+    {
+      "url": "https://v1.orchestrator.rhinestone.dev"
+    }
+  ],
   "paths": {
     "/chains": {
       "get": {
@@ -3297,50 +3302,48 @@
                                 }
                               },
                               "appFee": {
-                                "type": "array",
-                                "items": {
-                                  "type": "object",
-                                  "properties": {
-                                    "feeBps": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "maximum": 10000,
-                                      "description": "Integrator app-fee rate in basis points.",
-                                      "example": 100
-                                    },
-                                    "baseAmount": {
-                                      "type": "string",
-                                      "format": "uint256",
-                                      "description": "Principal amount the app fee was computed from, in token base units.",
-                                      "example": "10000000"
-                                    },
-                                    "amount": {
-                                      "type": "string",
-                                      "format": "uint256",
-                                      "description": "App-fee amount in token base units.",
-                                      "example": "100000"
-                                    },
-                                    "chainId": {
-                                      "type": "integer",
-                                      "minimum": 0,
-                                      "description": "Origin chain ID where the app-fee token is spent.",
-                                      "example": 42161
-                                    },
-                                    "tokenAddress": {
-                                      "type": "string",
-                                      "description": "Address of the token used to pay the app fee.",
-                                      "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
-                                    }
+                                "type": "object",
+                                "properties": {
+                                  "feeBps": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "maximum": 10000,
+                                    "description": "Integrator app-fee rate in basis points.",
+                                    "example": 100
                                   },
-                                  "required": [
-                                    "feeBps",
-                                    "baseAmount",
-                                    "amount",
-                                    "chainId",
-                                    "tokenAddress"
-                                  ],
-                                  "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored."
-                                }
+                                  "baseAmount": {
+                                    "type": "string",
+                                    "format": "uint256",
+                                    "description": "Principal amount the app fee was computed from, in token base units.",
+                                    "example": "10000000"
+                                  },
+                                  "amount": {
+                                    "type": "string",
+                                    "format": "uint256",
+                                    "description": "App-fee amount in token base units.",
+                                    "example": "100000"
+                                  },
+                                  "chainId": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "description": "Origin chain ID where the app-fee token is spent.",
+                                    "example": 42161
+                                  },
+                                  "tokenAddress": {
+                                    "type": "string",
+                                    "description": "Address of the token used to pay the app fee.",
+                                    "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                  }
+                                },
+                                "required": [
+                                  "feeBps",
+                                  "baseAmount",
+                                  "amount",
+                                  "chainId",
+                                  "tokenAddress"
+                                ],
+                                "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored.",
+                                "nullable": true
                               }
                             }
                           },
@@ -5519,50 +5522,48 @@
                                   }
                                 },
                                 "appFee": {
-                                  "type": "array",
-                                  "items": {
-                                    "type": "object",
-                                    "properties": {
-                                      "feeBps": {
-                                        "type": "integer",
-                                        "minimum": 0,
-                                        "maximum": 10000,
-                                        "description": "Integrator app-fee rate in basis points.",
-                                        "example": 100
-                                      },
-                                      "baseAmount": {
-                                        "type": "string",
-                                        "format": "uint256",
-                                        "description": "Principal amount the app fee was computed from, in token base units.",
-                                        "example": "10000000"
-                                      },
-                                      "amount": {
-                                        "type": "string",
-                                        "format": "uint256",
-                                        "description": "App-fee amount in token base units.",
-                                        "example": "100000"
-                                      },
-                                      "chainId": {
-                                        "type": "integer",
-                                        "minimum": 0,
-                                        "description": "Origin chain ID where the app-fee token is spent.",
-                                        "example": 42161
-                                      },
-                                      "tokenAddress": {
-                                        "type": "string",
-                                        "description": "Address of the token used to pay the app fee.",
-                                        "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
-                                      }
+                                  "type": "object",
+                                  "properties": {
+                                    "feeBps": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 10000,
+                                      "description": "Integrator app-fee rate in basis points.",
+                                      "example": 100
                                     },
-                                    "required": [
-                                      "feeBps",
-                                      "baseAmount",
-                                      "amount",
-                                      "chainId",
-                                      "tokenAddress"
-                                    ],
-                                    "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored."
-                                  }
+                                    "baseAmount": {
+                                      "type": "string",
+                                      "format": "uint256",
+                                      "description": "Principal amount the app fee was computed from, in token base units.",
+                                      "example": "10000000"
+                                    },
+                                    "amount": {
+                                      "type": "string",
+                                      "format": "uint256",
+                                      "description": "App-fee amount in token base units.",
+                                      "example": "100000"
+                                    },
+                                    "chainId": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "description": "Origin chain ID where the app-fee token is spent.",
+                                      "example": 42161
+                                    },
+                                    "tokenAddress": {
+                                      "type": "string",
+                                      "description": "Address of the token used to pay the app fee.",
+                                      "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                    }
+                                  },
+                                  "required": [
+                                    "feeBps",
+                                    "baseAmount",
+                                    "amount",
+                                    "chainId",
+                                    "tokenAddress"
+                                  ],
+                                  "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored.",
+                                  "nullable": true
                                 }
                               }
                             },
@@ -6037,51 +6038,48 @@
                               "description": "Transaction fees"
                             },
                             "appFee": {
-                              "type": "array",
-                              "items": {
-                                "type": "object",
-                                "properties": {
-                                  "feeBps": {
-                                    "type": "integer",
-                                    "minimum": 0,
-                                    "maximum": 10000,
-                                    "description": "Integrator app-fee rate in basis points.",
-                                    "example": 100
-                                  },
-                                  "baseAmount": {
-                                    "type": "string",
-                                    "format": "uint256",
-                                    "description": "Principal amount the app fee was computed from, in token base units.",
-                                    "example": "10000000"
-                                  },
-                                  "amount": {
-                                    "type": "string",
-                                    "format": "uint256",
-                                    "description": "App-fee amount in token base units.",
-                                    "example": "100000"
-                                  },
-                                  "chainId": {
-                                    "type": "integer",
-                                    "minimum": 0,
-                                    "description": "Origin chain ID where the app-fee token is spent.",
-                                    "example": 42161
-                                  },
-                                  "tokenAddress": {
-                                    "type": "string",
-                                    "description": "Address of the token used to pay the app fee.",
-                                    "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
-                                  }
+                              "type": "object",
+                              "properties": {
+                                "feeBps": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "maximum": 10000,
+                                  "description": "Integrator app-fee rate in basis points.",
+                                  "example": 100
                                 },
-                                "required": [
-                                  "feeBps",
-                                  "baseAmount",
-                                  "amount",
-                                  "chainId",
-                                  "tokenAddress"
-                                ],
-                                "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored."
+                                "baseAmount": {
+                                  "type": "string",
+                                  "format": "uint256",
+                                  "description": "Principal amount the app fee was computed from, in token base units.",
+                                  "example": "10000000"
+                                },
+                                "amount": {
+                                  "type": "string",
+                                  "format": "uint256",
+                                  "description": "App-fee amount in token base units.",
+                                  "example": "100000"
+                                },
+                                "chainId": {
+                                  "type": "integer",
+                                  "minimum": 0,
+                                  "description": "Origin chain ID where the app-fee token is spent.",
+                                  "example": 42161
+                                },
+                                "tokenAddress": {
+                                  "type": "string",
+                                  "description": "Address of the token used to pay the app fee.",
+                                  "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                }
                               },
-                              "description": "Concrete app-fee legs charged to the user. Empty when no app fee applies; app fees are never sponsored."
+                              "required": [
+                                "feeBps",
+                                "baseAmount",
+                                "amount",
+                                "chainId",
+                                "tokenAddress"
+                              ],
+                              "description": "The single whole-intent integrator app-fee carve (token/chain/amount), or `null` when no app fee is charged. App fees are never sponsored.",
+                              "nullable": true
                             },
                             "gasCost": {
                               "type": "object",

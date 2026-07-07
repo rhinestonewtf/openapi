@@ -4,6 +4,11 @@
     "title": "Rhinestone Orchestrator API",
     "version": "2026-04.blanc"
   },
+  "servers": [
+    {
+      "url": "https://v1.orchestrator.rhinestone.dev"
+    }
+  ],
   "paths": {
     "/chains": {
       "get": {
@@ -428,7 +433,7 @@
             "required": true,
             "schema": {
               "type": "string",
-              "pattern": "^(eip155|solana|tron):[-_a-zA-Z0-9]{1,32}$",
+              "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
               "description": "Destination chain ID (CAIP-2)",
               "example": "eip155:8453"
             },
@@ -7655,7 +7660,7 @@
                                   "properties": {
                                     "chainId": {
                                       "type": "string",
-                                      "pattern": "^(eip155|solana|tron):[-_a-zA-Z0-9]{1,32}$",
+                                      "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
                                       "description": "Chain where this token leg settles (CAIP-2, any namespace)",
                                       "example": "eip155:8453"
                                     },
@@ -7834,53 +7839,6 @@
                               "fees"
                             ],
                             "description": "Route cost: inputs, outputs, and fee breakdown"
-                          },
-                          "appFee": {
-                            "type": "array",
-                            "items": {
-                              "type": "object",
-                              "properties": {
-                                "feeBps": {
-                                  "type": "integer",
-                                  "minimum": 0,
-                                  "maximum": 10000,
-                                  "description": "Integrator app-fee rate in basis points.",
-                                  "example": 100
-                                },
-                                "baseAmount": {
-                                  "type": "string",
-                                  "format": "uint256",
-                                  "description": "Principal amount the app fee was computed from, in token base units.",
-                                  "example": "10000000"
-                                },
-                                "amount": {
-                                  "type": "string",
-                                  "format": "uint256",
-                                  "description": "App-fee amount in token base units.",
-                                  "example": "100000"
-                                },
-                                "chainId": {
-                                  "type": "string",
-                                  "pattern": "^eip155:[0-9]{1,32}$",
-                                  "description": "Origin chain where the app-fee token is spent.",
-                                  "example": "eip155:42161"
-                                },
-                                "tokenAddress": {
-                                  "type": "string",
-                                  "description": "Address of the token used to pay the app fee.",
-                                  "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
-                                }
-                              },
-                              "required": [
-                                "feeBps",
-                                "baseAmount",
-                                "amount",
-                                "chainId",
-                                "tokenAddress"
-                              ],
-                              "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored."
-                            },
-                            "description": "Concrete app-fee legs charged to the user. Empty or omitted when no app fee applies; app fees are never sponsored."
                           },
                           "tokenRequirements": {
                             "type": "object",
@@ -8986,7 +8944,7 @@
                     "type": "string",
                     "description": "CAIP-2 chain identifier of the destination chain (EVM `eip155:<id>`, or non-EVM `solana:…`/`tron:…`)",
                     "example": "eip155:8453",
-                    "pattern": "^(eip155|solana|tron):[-_a-zA-Z0-9]{1,32}$"
+                    "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$"
                   },
                   "tokenRequests": {
                     "type": "array",
