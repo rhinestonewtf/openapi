@@ -2085,6 +2085,11 @@
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                     },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
@@ -2095,6 +2100,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type"
                                                   ]
                                                 },
@@ -2110,6 +2116,11 @@
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                     },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
@@ -2124,6 +2135,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type",
                                                     "requestId"
                                                   ]
@@ -2140,6 +2152,11 @@
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                     },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
@@ -2154,6 +2171,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type",
                                                     "depositAddress"
                                                   ]
@@ -2170,6 +2188,11 @@
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                     },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
@@ -2184,6 +2207,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type",
                                                     "commitmentId"
                                                   ]
@@ -2199,6 +2223,11 @@
                                                       "type": "integer",
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                    },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
                                                     },
                                                     "type": {
                                                       "type": "string",
@@ -2218,6 +2247,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type",
                                                     "sourceDomainId",
                                                     "destinationDomainId"
@@ -2283,6 +2313,11 @@
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                     },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
@@ -2293,6 +2328,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type"
                                                   ]
                                                 },
@@ -2308,6 +2344,11 @@
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                     },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
@@ -2322,6 +2363,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type",
                                                     "requestId"
                                                   ]
@@ -2338,6 +2380,11 @@
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                     },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
@@ -2352,6 +2399,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type",
                                                     "depositAddress"
                                                   ]
@@ -2368,6 +2416,11 @@
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                     },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
@@ -2382,6 +2435,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type",
                                                     "commitmentId"
                                                   ]
@@ -2397,6 +2451,11 @@
                                                       "type": "integer",
                                                       "minimum": 0,
                                                       "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                    },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
                                                     },
                                                     "type": {
                                                       "type": "string",
@@ -2416,6 +2475,7 @@
                                                   },
                                                   "required": [
                                                     "destinationChainId",
+                                                    "fillStatusTimeout",
                                                     "type",
                                                     "sourceDomainId",
                                                     "destinationDomainId"
@@ -3333,6 +3393,12 @@
                                     "type": "string",
                                     "description": "Address of the token used to pay the app fee.",
                                     "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                  },
+                                  "usdValue": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "description": "USD value of the app fee, fixed at planning time (baseUSD × feeBps / 10000). Persisted on accrual so the integrator balance is priced at collection.",
+                                    "example": 0.1
                                   }
                                 },
                                 "required": [
@@ -3340,7 +3406,8 @@
                                   "baseAmount",
                                   "amount",
                                   "chainId",
-                                  "tokenAddress"
+                                  "tokenAddress",
+                                  "usdValue"
                                 ],
                                 "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored.",
                                 "nullable": true
@@ -4305,6 +4372,11 @@
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                       },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
@@ -4315,6 +4387,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type"
                                                     ]
                                                   },
@@ -4330,6 +4403,11 @@
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                       },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
@@ -4344,6 +4422,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type",
                                                       "requestId"
                                                     ]
@@ -4360,6 +4439,11 @@
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                       },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
@@ -4374,6 +4458,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type",
                                                       "depositAddress"
                                                     ]
@@ -4390,6 +4475,11 @@
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                       },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
@@ -4404,6 +4494,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type",
                                                       "commitmentId"
                                                     ]
@@ -4419,6 +4510,11 @@
                                                         "type": "integer",
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                      },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
                                                       },
                                                       "type": {
                                                         "type": "string",
@@ -4438,6 +4534,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type",
                                                       "sourceDomainId",
                                                       "destinationDomainId"
@@ -4503,6 +4600,11 @@
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                       },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
@@ -4513,6 +4615,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type"
                                                     ]
                                                   },
@@ -4528,6 +4631,11 @@
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                       },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
@@ -4542,6 +4650,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type",
                                                       "requestId"
                                                     ]
@@ -4558,6 +4667,11 @@
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                       },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
@@ -4572,6 +4686,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type",
                                                       "depositAddress"
                                                     ]
@@ -4588,6 +4703,11 @@
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
                                                       },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
@@ -4602,6 +4722,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type",
                                                       "commitmentId"
                                                     ]
@@ -4617,6 +4738,11 @@
                                                         "type": "integer",
                                                         "minimum": 0,
                                                         "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                      },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
                                                       },
                                                       "type": {
                                                         "type": "string",
@@ -4636,6 +4762,7 @@
                                                     },
                                                     "required": [
                                                       "destinationChainId",
+                                                      "fillStatusTimeout",
                                                       "type",
                                                       "sourceDomainId",
                                                       "destinationDomainId"
@@ -5553,6 +5680,12 @@
                                       "type": "string",
                                       "description": "Address of the token used to pay the app fee.",
                                       "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                    },
+                                    "usdValue": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "description": "USD value of the app fee, fixed at planning time (baseUSD × feeBps / 10000). Persisted on accrual so the integrator balance is priced at collection.",
+                                      "example": 0.1
                                     }
                                   },
                                   "required": [
@@ -5560,7 +5693,8 @@
                                     "baseAmount",
                                     "amount",
                                     "chainId",
-                                    "tokenAddress"
+                                    "tokenAddress",
+                                    "usdValue"
                                   ],
                                   "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored.",
                                   "nullable": true
@@ -6069,6 +6203,12 @@
                                   "type": "string",
                                   "description": "Address of the token used to pay the app fee.",
                                   "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                },
+                                "usdValue": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "description": "USD value of the app fee, fixed at planning time (baseUSD × feeBps / 10000). Persisted on accrual so the integrator balance is priced at collection.",
+                                  "example": 0.1
                                 }
                               },
                               "required": [
@@ -6076,7 +6216,8 @@
                                 "baseAmount",
                                 "amount",
                                 "chainId",
-                                "tokenAddress"
+                                "tokenAddress",
+                                "usdValue"
                               ],
                               "description": "The single whole-intent integrator app-fee carve (token/chain/amount), or `null` when no app fee is charged. App fees are never sponsored.",
                               "nullable": true
@@ -7279,6 +7420,183 @@
             }
           }
         }
+      }
+    },
+    "/app-fees/balances": {
+      "get": {
+        "operationId": "getAppFeeBalances",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-01.alps"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "withdrawableUsd": {
+                      "type": "number"
+                    },
+                    "pendingUsd": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "withdrawableUsd",
+                    "pendingUsd"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get App-Fee Balances",
+        "description": "The authenticated project's withdrawable app-fee balance as a USD total, valued at collection time. `pendingUsd` is 0 until withdrawals land.",
+        "tags": [
+          "App Fees"
+        ]
       }
     }
   }
