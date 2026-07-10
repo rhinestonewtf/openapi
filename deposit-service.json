@@ -742,64 +742,6 @@
           "recipient"
         ]
       },
-      "ProcessHypercoreDepositResponse": {
-        "type": "object",
-        "properties": {
-          "depositId": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "processing",
-              "failed",
-              "ignored"
-            ]
-          },
-          "amount": {
-            "type": "string"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "intentId": {
-            "type": "string"
-          },
-          "sourceTxHash": {
-            "type": "string"
-          },
-          "errorCode": {
-            "type": "string"
-          },
-          "errorMessage": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "depositId",
-          "status"
-        ]
-      },
-      "ProcessHypercoreDepositRequestBody": {
-        "type": "object",
-        "properties": {
-          "account": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Registered account whose full HyperCore spot balance is bridged to its destination.",
-            "example": "0xde0fdf9c06b404cc5e20543cb84cac9067102f19"
-          },
-          "symbol": {
-            "type": "string",
-            "minLength": 1,
-            "description": "HyperCore spot token symbol to process (USDC or USDT0). Defaults to USDC.",
-            "example": "USDC"
-          }
-        },
-        "required": [
-          "account"
-        ]
-      },
       "ListDepositsResponse": {
         "type": "object",
         "properties": {
@@ -1530,7 +1472,7 @@
             "additionalProperties": {
               "type": "number"
             },
-            "description": "USD unit price keyed by uppercased token symbol",
+            "description": "USD unit price keyed by uppercased token symbol (for `symbols`) or by CAIP-2 token id (for `addresses`)",
             "example": {
               "SOL": 168.42
             }
@@ -1912,6 +1854,227 @@
         },
         "required": [
           "type"
+        ]
+      },
+      "SwappedUrlResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "sandbox": {
+            "type": "boolean"
+          },
+          "externalCustomerId": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "url",
+          "currencyCode",
+          "sandbox",
+          "externalCustomerId",
+          "expiresAt"
+        ]
+      },
+      "SwappedWidgetUrlRequestBody": {
+        "type": "object",
+        "properties": {
+          "smartAccount": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "email": {
+            "type": "string"
+          },
+          "baseCountry": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$",
+            "description": "ISO-3166-1 alpha-2 country code",
+            "example": "US"
+          },
+          "baseCurrencyCode": {
+            "type": "string",
+            "pattern": "^[A-Z]{3,4}$",
+            "description": "ISO fiat currency code",
+            "example": "USD"
+          },
+          "baseCurrencyAmount": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "locale": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "smartAccount"
+        ]
+      },
+      "SwappedConnectUrlRequestBody": {
+        "type": "object",
+        "properties": {
+          "smartAccount": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "baseCountry": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$",
+            "description": "ISO-3166-1 alpha-2 country code",
+            "example": "US"
+          },
+          "baseCurrencyCode": {
+            "type": "string",
+            "pattern": "^[A-Z]{3,4}$",
+            "description": "ISO fiat currency code",
+            "example": "USD"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "connection": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "smartAccount"
+        ]
+      },
+      "SwappedStatusResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "orderId": {
+            "type": "string"
+          },
+          "status": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "orderCrypto": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "orderCryptoAmount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "transactionId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "receivedAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "paidAmountUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "paidAmountEur": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "onrampFeeUsd": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "paymentMethod": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "SwappedConnectExchangesResponse": {
+        "type": "object",
+        "properties": {
+          "exchanges": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "connection": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "logoUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "connection",
+                "name",
+                "logoUrl"
+              ]
+            }
+          },
+          "fetchedAt": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          },
+          "stale": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "exchanges",
+          "fetchedAt",
+          "expiresAt",
+          "stale"
         ]
       }
     },
@@ -2699,120 +2862,6 @@
           },
           "500": {
             "description": "Refund transfer failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/hypercore/process": {
-      "post": {
-        "tags": [
-          "Processing"
-        ],
-        "summary": "Process a HyperCore deposit",
-        "description": "Process an account's HyperCore deposit: move its full HyperCore spot balance (e.g. USDT0) to HyperEVM via CoreWriter, then bridge it to the account's registered destination via the orchestrator. Reads the balance and submits the Core→EVM transfer; the credit and bridge then complete asynchronously. Authenticate with an `x-api-key` (write scope) or a Bearer platform token.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
-              "example": "your-api-key"
-            },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
-            "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
-            "in": "header"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessHypercoreDepositRequestBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Deposit accepted (processing) or failed at submission",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProcessHypercoreDepositResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request or unsupported token",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required or invalid",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "API key lacks write scope",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Account or client not found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "A withdrawal of this amount is already in flight",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Deposits are paused (kill switch)",
             "content": {
               "application/json": {
                 "schema": {
@@ -3757,12 +3806,24 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "description": "Comma-separated token symbols to price (e.g. \"SOL,ETH\")",
+              "description": "Comma-separated token symbols to price (e.g. \"SOL,ETH\"). Prefer `addresses` for arbitrary tokens — symbol pricing collides across tokens that share a ticker (a spam token can inherit a real token's price). Exactly one of `symbols` or `addresses` must be provided.",
               "example": "SOL"
             },
-            "required": true,
-            "description": "Comma-separated token symbols to price (e.g. \"SOL,ETH\")",
+            "required": false,
+            "description": "Comma-separated token symbols to price (e.g. \"SOL,ETH\"). Prefer `addresses` for arbitrary tokens — symbol pricing collides across tokens that share a ticker (a spam token can inherit a real token's price). Exactly one of `symbols` or `addresses` must be provided.",
             "name": "symbols",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Comma-separated CAIP-2 token ids to price by exact on-chain contract (e.g. \"eip155:8453:0x833589...\"). Collision-free; preferred over `symbols`. Exactly one of `symbols` or `addresses` must be provided.",
+              "example": "eip155:8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+            },
+            "required": false,
+            "description": "Comma-separated CAIP-2 token ids to price by exact on-chain contract (e.g. \"eip155:8453:0x833589...\"). Collision-free; preferred over `symbols`. Exactly one of `symbols` or `addresses` must be provided.",
+            "name": "addresses",
             "in": "query"
           },
           {
@@ -4255,6 +4316,386 @@
           },
           "403": {
             "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/swapped/widget-url": {
+      "post": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "Mint a signed Swapped widget URL (fiat on-ramp)",
+        "description": "Returns a signed Swapped widget URL the modal embeds in an iframe for the fiat on-ramp. The destination asset is fixed server-side (the configured currency code); the caller supplies the smart account that receives the crypto.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwappedWidgetUrlRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed widget URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwappedUrlResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server misconfigured or signing failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Swapped on-ramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/swapped/connect-url": {
+      "post": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "Mint a signed Swapped Connect URL (CEX funding)",
+        "description": "Returns a signed Swapped Connect URL the modal embeds in an iframe so the user can fund from a centralized exchange. Requires a configured public webhook callback URL.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SwappedConnectUrlRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Signed Connect URL",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwappedUrlResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server misconfigured or signing failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Swapped on-ramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/swapped/status/{smartAccount}": {
+      "get": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "Poll the latest Swapped order status for a smart account",
+        "description": "Returns the latest Swapped order recorded for the smart account (from notify webhooks), or `{ ok: false, reason: \"no_order\" }` when none exists yet.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "Ethereum address (0x followed by 40 hex characters)",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": true,
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "name": "smartAccount",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest order status (or no_order)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwappedStatusResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid smart account address",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Swapped on-ramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/swapped/connect-exchanges": {
+      "get": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "List centralized exchanges for the Connect picker",
+        "description": "Returns the centralized exchanges offered by the Swapped Connect picker. Served from a maintained static list (Swapped exposes no enumeration API).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Supported exchanges",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwappedConnectExchangesResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Swapped on-ramp is not configured",
             "content": {
               "application/json": {
                 "schema": {
