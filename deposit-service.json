@@ -793,18 +793,12 @@
             "type": "string"
           },
           "recipient": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Destination-chain address that receives the funds. Falls back to the smart account for EVM/HyperCore/Tron when no distinct recipient is configured; null for Solana rows whose EVM recipient is not yet known (historical rows pending backfill), never the internal swig."
+            "type": "string",
+            "description": "Destination-chain address that receives the funds. Falls back to the smart account for EVM/HyperCore/Tron when no distinct recipient is configured; for Solana it is the EVM recipient, never the internal swig."
           },
           "depositAddress": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Source-chain address that received the deposit (EVM smart account, Solana wallet PDA, or Tron deposit address). Nullable for historical rows pending backfill."
+            "type": "string",
+            "description": "Source-chain address that received the deposit (EVM smart account, Solana wallet PDA, or Tron deposit address)."
           },
           "targetChain": {
             "type": "string"
@@ -822,7 +816,9 @@
               "rejected",
               "ignored",
               "expecting_refund",
-              "refunded"
+              "refunded",
+              "awaiting_sweep",
+              "reconciliation_required"
             ]
           },
           "sourceTxHash": {
@@ -2925,7 +2921,9 @@
                 "rejected",
                 "ignored",
                 "expecting_refund",
-                "refunded"
+                "refunded",
+                "awaiting_sweep",
+                "reconciliation_required"
               ],
               "description": "Filter by deposit status",
               "example": "failed"
