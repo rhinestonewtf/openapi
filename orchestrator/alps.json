@@ -7398,6 +7398,13 @@
                         ],
                         "description": "How to rank candidate plans. `cheapest` minimizes direct USD cost. `fastest` minimizes estimated fill time (with cost tiebreaker). `best` balances both via a notional- and time-weighted shadow fee.",
                         "example": "best"
+                      },
+                      "customDeadline": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "description": "Absolute unix timestamp (seconds) overriding the on-chain fill deadline. **TOKENLESS intents only** — ignored on every other route. Must be between `now + 120s` and `now + 86400s`. The bundle claim/nonce expiry and the response `expiresAt` track this value automatically.",
+                        "example": 1893456000
                       }
                     },
                     "description": "Intent options",
@@ -7599,6 +7606,806 @@
         },
         "summary": "Get App-Fee Balances",
         "description": "The authenticated project's withdrawable app-fee balance as a USD total, valued at collection time. `pendingUsd` is 0 until withdrawals land.",
+        "tags": [
+          "App Fees"
+        ]
+      }
+    },
+    "/app-fees/withdrawals": {
+      "post": {
+        "operationId": "createAppFeeWithdrawal",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-01.alps"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestNonce": {
+                      "type": "string",
+                      "pattern": "^\\d+$"
+                    }
+                  },
+                  "required": [
+                    "requestNonce"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No payout address, nothing to withdraw, or invalid target",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A withdrawal is in progress or failed delivery is awaiting finalization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create App-Fee Withdrawal",
+        "description": "Withdraw the authenticated project's full app-fee balance to a whitelisted stablecoin on the chosen chain, paid to the project's registered payout address.",
+        "tags": [
+          "App Fees"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "targetChainId": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "targetToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "targetChainId",
+                  "targetToken"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listAppFeeWithdrawals",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-01.alps"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "withdrawals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "requestNonce": {
+                            "type": "string",
+                            "pattern": "^\\d+$"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "PENDING",
+                              "COMPLETED",
+                              "FAILED"
+                            ]
+                          },
+                          "payoutUsd": {
+                            "type": "number"
+                          },
+                          "targetChainId": {
+                            "type": "integer"
+                          },
+                          "targetToken": {
+                            "type": "string"
+                          },
+                          "targetAmount": {
+                            "type": "string"
+                          },
+                          "payoutAddress": {
+                            "type": "string"
+                          },
+                          "txHash": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "requestNonce",
+                          "status",
+                          "payoutUsd",
+                          "targetChainId",
+                          "targetToken",
+                          "targetAmount",
+                          "payoutAddress",
+                          "txHash",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "withdrawals"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key scope denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "List App-Fee Withdrawals",
+        "description": "The authenticated project's app-fee withdrawals (newest first) with each withdrawal's status and USD value paid out.",
+        "tags": [
+          "App Fees"
+        ]
+      }
+    },
+    "/app-fees/withdrawals/{nonce}": {
+      "get": {
+        "operationId": "getAppFeeWithdrawal",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-01.alps"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          },
+          {
+            "name": "nonce",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestNonce": {
+                      "type": "string",
+                      "pattern": "^\\d+$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "COMPLETED",
+                        "FAILED"
+                      ]
+                    },
+                    "payoutUsd": {
+                      "type": "number"
+                    },
+                    "targetChainId": {
+                      "type": "integer"
+                    },
+                    "targetToken": {
+                      "type": "string"
+                    },
+                    "targetAmount": {
+                      "type": "string"
+                    },
+                    "payoutAddress": {
+                      "type": "string"
+                    },
+                    "txHash": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "requestNonce",
+                    "status",
+                    "payoutUsd",
+                    "targetChainId",
+                    "targetToken",
+                    "targetAmount",
+                    "payoutAddress",
+                    "txHash",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key scope denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Withdrawal not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get App-Fee Withdrawal",
+        "description": "A single app-fee withdrawal owned by the authenticated project, with its status and USD value paid out.",
         "tags": [
           "App Fees"
         ]

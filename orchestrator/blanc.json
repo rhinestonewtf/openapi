@@ -346,6 +346,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -747,6 +749,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -1027,6 +1031,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -1307,6 +1313,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -1996,6 +2004,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -2276,6 +2286,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -2556,6 +2568,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -2836,6 +2850,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -3279,6 +3295,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -3559,6 +3577,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -3839,6 +3859,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -4285,6 +4307,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -4565,6 +4589,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -4845,6 +4871,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -5177,6 +5205,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -5457,6 +5487,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -5737,6 +5769,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -6017,6 +6051,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -6546,6 +6582,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -6826,6 +6864,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -7160,6 +7200,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -8372,6 +8414,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -8652,6 +8696,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -8932,6 +8978,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -9646,6 +9694,13 @@
                         ],
                         "description": "How to rank candidate plans. `cheapest` minimizes direct USD cost. `fastest` minimizes estimated fill time (with cost tiebreaker). `best` balances both via a notional- and time-weighted shadow fee.",
                         "example": "best"
+                      },
+                      "customDeadline": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "exclusiveMinimum": true,
+                        "description": "Absolute unix timestamp (seconds) overriding the on-chain fill deadline. **TOKENLESS intents only** — ignored on every other route. Must be between `now + 120s` and `now + 86400s`. The bundle claim/nonce expiry and the response `expiresAt` track this value automatically.",
+                        "example": 1893456000
                       }
                     },
                     "description": "Intent options",
@@ -9992,6 +10047,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -10272,6 +10329,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -10552,6 +10611,8 @@
                             "UNAUTHORIZED",
                             "FORBIDDEN",
                             "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
                             "UNPROCESSABLE_CONTENT",
                             "TOO_MANY_REQUESTS",
                             "SETTLEMENT_QUOTE_ERROR",
@@ -10580,6 +10641,3952 @@
         },
         "summary": "Get App-Fee Balances",
         "description": "The authenticated project's withdrawable app-fee balance as a USD total, valued at collection time. `pendingUsd` is 0 until withdrawals land.",
+        "tags": [
+          "App Fees"
+        ]
+      }
+    },
+    "/app-fees/withdrawals": {
+      "post": {
+        "operationId": "createAppFeeWithdrawal",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-04.blanc"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestNonce": {
+                      "type": "string",
+                      "pattern": "^\\d+$"
+                    }
+                  },
+                  "required": [
+                    "requestNonce"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No payout address, nothing to withdraw, or invalid target",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A withdrawal is in progress or failed delivery is awaiting finalization",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create App-Fee Withdrawal",
+        "description": "Withdraw the authenticated project's full app-fee balance to a whitelisted stablecoin on the chosen chain, paid to the project's registered payout address.",
+        "tags": [
+          "App Fees"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "targetChainId": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  },
+                  "targetToken": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "targetChainId",
+                  "targetToken"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "operationId": "listAppFeeWithdrawals",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-04.blanc"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "withdrawals": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "requestNonce": {
+                            "type": "string",
+                            "pattern": "^\\d+$"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "PENDING",
+                              "COMPLETED",
+                              "FAILED"
+                            ]
+                          },
+                          "payoutUsd": {
+                            "type": "number"
+                          },
+                          "targetChainId": {
+                            "type": "integer"
+                          },
+                          "targetToken": {
+                            "type": "string"
+                          },
+                          "targetAmount": {
+                            "type": "string"
+                          },
+                          "payoutAddress": {
+                            "type": "string"
+                          },
+                          "txHash": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "createdAt": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "requestNonce",
+                          "status",
+                          "payoutUsd",
+                          "targetChainId",
+                          "targetToken",
+                          "targetAmount",
+                          "payoutAddress",
+                          "txHash",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "withdrawals"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key scope denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "List App-Fee Withdrawals",
+        "description": "The authenticated project's app-fee withdrawals (newest first) with each withdrawal's status and USD value paid out.",
+        "tags": [
+          "App Fees"
+        ]
+      }
+    },
+    "/app-fees/withdrawals/{nonce}": {
+      "get": {
+        "operationId": "getAppFeeWithdrawal",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-04.blanc"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          },
+          {
+            "name": "nonce",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "requestNonce": {
+                      "type": "string",
+                      "pattern": "^\\d+$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "COMPLETED",
+                        "FAILED"
+                      ]
+                    },
+                    "payoutUsd": {
+                      "type": "number"
+                    },
+                    "targetChainId": {
+                      "type": "integer"
+                    },
+                    "targetToken": {
+                      "type": "string"
+                    },
+                    "targetAmount": {
+                      "type": "string"
+                    },
+                    "payoutAddress": {
+                      "type": "string"
+                    },
+                    "txHash": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "requestNonce",
+                    "status",
+                    "payoutUsd",
+                    "targetChainId",
+                    "targetToken",
+                    "targetAmount",
+                    "payoutAddress",
+                    "txHash",
+                    "createdAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key scope denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Withdrawal not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get App-Fee Withdrawal",
+        "description": "A single app-fee withdrawal owned by the authenticated project, with its status and USD value paid out.",
         "tags": [
           "App Fees"
         ]
