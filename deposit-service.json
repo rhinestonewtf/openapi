@@ -4605,7 +4605,7 @@
             }
           },
           "403": {
-            "description": "API key lacks required deposits scope",
+            "description": "API key lacks the required deposits scope, or the account is not registered to the calling project",
             "content": {
               "application/json": {
                 "schema": {
@@ -4709,7 +4709,7 @@
             }
           },
           "403": {
-            "description": "API key lacks required deposits scope",
+            "description": "API key lacks the required deposits scope, or the account is not registered to the calling project",
             "content": {
               "application/json": {
                 "schema": {
@@ -4816,7 +4816,7 @@
             }
           },
           "403": {
-            "description": "API key lacks required deposits scope",
+            "description": "API key lacks the required deposits scope, or the account is not registered to the calling project",
             "content": {
               "application/json": {
                 "schema": {
