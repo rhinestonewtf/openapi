@@ -742,6 +742,86 @@
           "recipient"
         ]
       },
+      "RecoverDepositErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "DEPOSIT_NOT_RECOVERABLE",
+              "RECOVERY_UNSUPPORTED",
+              "SIGNATURE_EXPIRED",
+              "SIGNATURE_INVALID",
+              "VERIFICATION_UNAVAILABLE",
+              "REFUND_RECONCILIATION_REQUIRED",
+              "REFUND_FAILED"
+            ]
+          }
+        },
+        "required": [
+          "error",
+          "code"
+        ]
+      },
+      "RecoverDepositRequestBody": {
+        "type": "object",
+        "properties": {
+          "chain": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier of the deposit (e.g. \"eip155:8453\")",
+            "example": "eip155:8453"
+          },
+          "txHash": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]+$",
+            "description": "Source transaction hash of the failed/rejected deposit",
+            "example": "0xabc123..."
+          },
+          "account": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Deposit smart account that received the funds",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "token": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Source token address. Use the zero address for native transfers.",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "recipient": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Address to receive the recovered tokens on the source chain",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "deadline": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "description": "Unix timestamp (seconds) after which the signature is no longer valid",
+            "example": 1800000000
+          },
+          "signature": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{130}$",
+            "description": "Raw 65-byte ECDSA signature by the account owner over the RecoverDeposit typed data",
+            "example": "0x1111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111"
+          }
+        },
+        "required": [
+          "chain",
+          "txHash",
+          "account",
+          "token",
+          "recipient",
+          "deadline",
+          "signature"
+        ]
+      },
       "ListDepositsResponse": {
         "type": "object",
         "properties": {
@@ -817,6 +897,7 @@
               "ignored",
               "expecting_refund",
               "refunded",
+              "delayed",
               "awaiting_sweep",
               "reconciliation_required"
             ]
@@ -1841,7 +1922,9 @@
               "bridge-complete",
               "bridge-failed",
               "deposit-rejected",
+              "deposit-delayed",
               "deposit-refunded",
+              "onramp-order",
               "error"
             ],
             "description": "Which webhook type to simulate",
@@ -2869,13 +2952,137 @@
         }
       }
     },
+    "/deposits/recover": {
+      "post": {
+        "tags": [
+          "Processing"
+        ],
+        "summary": "Recover a failed deposit with an owner signature",
+        "description": "Return a failed or rejected deposit's source-chain funds to a user-chosen recipient, authorized by the smart-account owner's EIP-712 signature (not just the API key). The server reconstructs the RecoverDeposit typed data from the stored deposit and verifies it against the account via ERC-1271/ERC-6492, then runs the same claim + transfer path as the refund endpoint. EVM Nexus accounts created by the deposit modal only. Authenticate with an `x-api-key` (write scope).",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecoverDepositRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Deposit recovered; funds returned on the source chain",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RefundDepositResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Deposit not recoverable (DEPOSIT_NOT_RECOVERABLE), account type unsupported (RECOVERY_UNSUPPORTED), or signature expired (SIGNATURE_EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoverDepositErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks the deposits:write scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The refund may have been submitted and is held for reconciliation (REFUND_RECONCILIATION_REQUIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoverDepositErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "The signature does not authorize this recovery (SIGNATURE_INVALID)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoverDepositErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Recovery transfer failed (REFUND_FAILED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoverDepositErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Smart-account signature verification is temporarily unavailable (VERIFICATION_UNAVAILABLE)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecoverDepositErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/deposits": {
       "get": {
         "tags": [
           "Utilities"
         ],
         "summary": "List deposits for the authenticated client",
-        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, recipient, depositAddress, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address); `depositAddress` filters on the source-chain address that received the deposit.",
+        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, recipient, address, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address); `address` matches the source-chain deposit address or target-chain recipient.",
         "parameters": [
           {
             "schema": {
@@ -2902,12 +3109,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "Filter by the source-chain address that received the deposit (EVM smart account, Solana wallet PDA, or Tron deposit address).",
+              "description": "Filter by the source-chain deposit address or target-chain recipient.",
               "example": "0x2ca6f15be9580c4f332656bedc11c35bf820d08d"
             },
             "required": false,
-            "description": "Filter by the source-chain address that received the deposit (EVM smart account, Solana wallet PDA, or Tron deposit address).",
-            "name": "depositAddress",
+            "description": "Filter by the source-chain deposit address or target-chain recipient.",
+            "name": "address",
             "in": "query"
           },
           {
@@ -2922,6 +3129,7 @@
                 "ignored",
                 "expecting_refund",
                 "refunded",
+                "delayed",
                 "awaiting_sweep",
                 "reconciliation_required"
               ],
@@ -4609,6 +4817,16 @@
           },
           "403": {
             "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to read order status",
             "content": {
               "application/json": {
                 "schema": {
