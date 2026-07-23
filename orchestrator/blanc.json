@@ -7881,6 +7881,26 @@
                                         ],
                                         "description": "Aggregate integrator app fee"
                                       },
+                                      "protocol": {
+                                        "type": "object",
+                                        "properties": {
+                                          "usd": {
+                                            "type": "number",
+                                            "description": "Total cost of this category in USD, regardless of who pays.",
+                                            "example": 0.029
+                                          },
+                                          "sponsored": {
+                                            "type": "boolean",
+                                            "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                            "example": false
+                                          }
+                                        },
+                                        "required": [
+                                          "usd",
+                                          "sponsored"
+                                        ],
+                                        "description": "Rhinestone protocol fee (`options.protocolFees`). `sponsored: true` when the integrator sponsorship balance pays it instead of the user."
+                                      },
                                       "sponsorSurcharge": {
                                         "type": "object",
                                         "properties": {
@@ -7899,7 +7919,7 @@
                                           "usd",
                                           "sponsored"
                                         ],
-                                        "description": "Rhinestone's surcharge on the sponsored fee, charged to the sponsor. 0 when the intent is not sponsored."
+                                        "description": "Rhinestone's surcharge on the sponsored relayer coverage, charged to the sponsor. 0 when the intent is not sponsored. Pure surcharge — a sponsored protocol fee is shown on `protocol`, never here."
                                       }
                                     },
                                     "required": [
@@ -7907,6 +7927,7 @@
                                       "bridge",
                                       "swap",
                                       "app",
+                                      "protocol",
                                       "sponsorSurcharge"
                                     ],
                                     "description": "Per-category fee breakdown"
@@ -9635,6 +9656,11 @@
                             "default": false,
                             "type": "boolean",
                             "description": "Whether to sponsor swap fees for the intent"
+                          },
+                          "protocolFees": {
+                            "default": false,
+                            "type": "boolean",
+                            "description": "Whether to sponsor the Rhinestone protocol fee (`options.protocolFees`) for the intent. When `true`, the fee is charged to the integrator's sponsorship balance instead of carved from the user, without the sponsorship surcharge."
                           }
                         },
                         "description": "Sponsor settings for the intent",
@@ -9707,6 +9733,21 @@
                             "maximum": 10000,
                             "description": "App fee rate in basis points of the input value (0–10000 = 0–100%).",
                             "example": 25
+                          }
+                        },
+                        "required": [
+                          "feeBps"
+                        ]
+                      },
+                      "protocolFees": {
+                        "type": "object",
+                        "properties": {
+                          "feeBps": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 10000,
+                            "description": "Rhinestone protocol fee rate in basis points of the input value (0–10000 = 0–100%). Collected alongside the app fee in one batched transfer and always accrues to Rhinestone; sponsor it via `sponsorSettings.protocolFees` to charge the integrator balance instead of the user.",
+                            "example": 35
                           }
                         },
                         "required": [
@@ -9791,6 +9832,1471 @@
                     "address": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
                   }
                 }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/quotes/estimate": {
+      "post": {
+        "operationId": "createQuoteEstimate",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-04.blanc"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "routes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "settlementLayer": {
+                            "type": "string",
+                            "enum": [
+                              "INTENT_EXECUTOR",
+                              "SAME_CHAIN",
+                              "ACROSS",
+                              "ECO",
+                              "RELAY",
+                              "OFT",
+                              "NEAR",
+                              "RHINO",
+                              "CCTP"
+                            ],
+                            "description": "Settlement layer this estimate is for",
+                            "example": "ACROSS"
+                          },
+                          "accuracy": {
+                            "type": "string",
+                            "enum": [
+                              "exact",
+                              "approximated"
+                            ],
+                            "description": "`exact` for formula-priced layers; `approximated` for solver-market layers estimated from a typical-fee table.",
+                            "example": "exact"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "ok",
+                              "over_capacity"
+                            ],
+                            "description": "`over_capacity` when the delivered notional exceeds the known liquidity ceiling for this route; such routes rank below fillable ones.",
+                            "example": "ok"
+                          },
+                          "input": {
+                            "type": "object",
+                            "properties": {
+                              "chainId": {
+                                "type": "string",
+                                "pattern": "^eip155:[0-9]{1,32}$",
+                                "description": "Chain where this token leg settles",
+                                "example": "eip155:8453"
+                              },
+                              "tokenAddress": {
+                                "type": "string",
+                                "description": "ERC-20 contract address for this token",
+                                "example": "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
+                              },
+                              "symbol": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Token symbol. `null` when the internal token registry has no entry for this address.",
+                                "example": "USDC"
+                              },
+                              "decimals": {
+                                "type": "integer",
+                                "nullable": true,
+                                "description": "Token decimals. `null` when the internal token registry has no entry for this address.",
+                                "example": 6
+                              },
+                              "price": {
+                                "type": "object",
+                                "properties": {
+                                  "usd": {
+                                    "type": "number",
+                                    "description": "Unit price in USD",
+                                    "example": 1
+                                  }
+                                },
+                                "required": [
+                                  "usd"
+                                ],
+                                "nullable": true,
+                                "description": "Unit price in USD. `null` when the price oracle has no data for this token."
+                              },
+                              "amount": {
+                                "type": "string",
+                                "format": "uint256",
+                                "description": "Token amount in the token's smallest unit",
+                                "example": "1050000"
+                              }
+                            },
+                            "required": [
+                              "chainId",
+                              "tokenAddress",
+                              "symbol",
+                              "decimals",
+                              "price",
+                              "amount"
+                            ],
+                            "description": "A single (chain, token) leg with amount, price, and metadata"
+                          },
+                          "output": {
+                            "type": "object",
+                            "properties": {
+                              "chainId": {
+                                "type": "string",
+                                "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
+                                "description": "Chain where this token leg settles (CAIP-2, any namespace)",
+                                "example": "eip155:8453"
+                              },
+                              "tokenAddress": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Contract address of the delivered token (EVM 0x or non-EVM base58)",
+                                "example": "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
+                              },
+                              "symbol": {
+                                "type": "string",
+                                "nullable": true,
+                                "description": "Token symbol. `null` when the internal token registry has no entry for this address.",
+                                "example": "USDC"
+                              },
+                              "decimals": {
+                                "type": "integer",
+                                "nullable": true,
+                                "description": "Token decimals. `null` when the internal token registry has no entry for this address.",
+                                "example": 6
+                              },
+                              "price": {
+                                "type": "object",
+                                "properties": {
+                                  "usd": {
+                                    "type": "number",
+                                    "description": "Unit price in USD",
+                                    "example": 1
+                                  }
+                                },
+                                "required": [
+                                  "usd"
+                                ],
+                                "nullable": true,
+                                "description": "Unit price in USD. `null` when the price oracle has no data for this token."
+                              },
+                              "amount": {
+                                "type": "string",
+                                "format": "uint256",
+                                "description": "Token amount in the token's smallest unit",
+                                "example": "1050000"
+                              }
+                            },
+                            "required": [
+                              "chainId",
+                              "tokenAddress",
+                              "symbol",
+                              "decimals",
+                              "price",
+                              "amount"
+                            ],
+                            "description": "A single (chain, token) leg with amount, price, and metadata"
+                          },
+                          "fees": {
+                            "type": "object",
+                            "properties": {
+                              "total": {
+                                "type": "object",
+                                "properties": {
+                                  "usd": {
+                                    "type": "number",
+                                    "description": "USD-denominated value",
+                                    "example": 0.029
+                                  }
+                                },
+                                "required": [
+                                  "usd"
+                                ],
+                                "description": "Full route cost in USD, regardless of who pays. Equal to `sum(breakdown.*.usd)` modulo rounding."
+                              },
+                              "breakdown": {
+                                "type": "object",
+                                "properties": {
+                                  "gas": {
+                                    "type": "object",
+                                    "properties": {
+                                      "usd": {
+                                        "type": "number",
+                                        "description": "Total cost of this category in USD, regardless of who pays.",
+                                        "example": 0.029
+                                      },
+                                      "sponsored": {
+                                        "type": "boolean",
+                                        "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                        "example": false
+                                      }
+                                    },
+                                    "required": [
+                                      "usd",
+                                      "sponsored"
+                                    ],
+                                    "description": "Aggregate gas cost (destination fill, swap execution, origin gas)"
+                                  },
+                                  "bridge": {
+                                    "type": "object",
+                                    "properties": {
+                                      "usd": {
+                                        "type": "number",
+                                        "description": "Total cost of this category in USD, regardless of who pays.",
+                                        "example": 0.029
+                                      },
+                                      "sponsored": {
+                                        "type": "boolean",
+                                        "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                        "example": false
+                                      }
+                                    },
+                                    "required": [
+                                      "usd",
+                                      "sponsored"
+                                    ],
+                                    "description": "Aggregate settlement-layer bridge cost"
+                                  },
+                                  "swap": {
+                                    "type": "object",
+                                    "properties": {
+                                      "usd": {
+                                        "type": "number",
+                                        "description": "Total cost of this category in USD, regardless of who pays.",
+                                        "example": 0.029
+                                      },
+                                      "sponsored": {
+                                        "type": "boolean",
+                                        "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                        "example": false
+                                      }
+                                    },
+                                    "required": [
+                                      "usd",
+                                      "sponsored"
+                                    ],
+                                    "description": "Aggregate solver swap commission"
+                                  },
+                                  "app": {
+                                    "type": "object",
+                                    "properties": {
+                                      "usd": {
+                                        "type": "number",
+                                        "description": "Total cost of this category in USD, regardless of who pays.",
+                                        "example": 0.029
+                                      },
+                                      "sponsored": {
+                                        "type": "boolean",
+                                        "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                        "example": false
+                                      }
+                                    },
+                                    "required": [
+                                      "usd",
+                                      "sponsored"
+                                    ],
+                                    "description": "Aggregate integrator app fee"
+                                  },
+                                  "protocol": {
+                                    "type": "object",
+                                    "properties": {
+                                      "usd": {
+                                        "type": "number",
+                                        "description": "Total cost of this category in USD, regardless of who pays.",
+                                        "example": 0.029
+                                      },
+                                      "sponsored": {
+                                        "type": "boolean",
+                                        "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                        "example": false
+                                      }
+                                    },
+                                    "required": [
+                                      "usd",
+                                      "sponsored"
+                                    ],
+                                    "description": "Rhinestone protocol fee (`options.protocolFees`). `sponsored: true` when the integrator sponsorship balance pays it instead of the user."
+                                  },
+                                  "sponsorSurcharge": {
+                                    "type": "object",
+                                    "properties": {
+                                      "usd": {
+                                        "type": "number",
+                                        "description": "Total cost of this category in USD, regardless of who pays.",
+                                        "example": 0.029
+                                      },
+                                      "sponsored": {
+                                        "type": "boolean",
+                                        "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                        "example": false
+                                      }
+                                    },
+                                    "required": [
+                                      "usd",
+                                      "sponsored"
+                                    ],
+                                    "description": "Rhinestone's surcharge on the sponsored relayer coverage, charged to the sponsor. 0 when the intent is not sponsored. Pure surcharge — a sponsored protocol fee is shown on `protocol`, never here."
+                                  }
+                                },
+                                "required": [
+                                  "gas",
+                                  "bridge",
+                                  "swap",
+                                  "app",
+                                  "protocol",
+                                  "sponsorSurcharge"
+                                ],
+                                "description": "Per-category fee breakdown"
+                              }
+                            },
+                            "required": [
+                              "total",
+                              "breakdown"
+                            ],
+                            "description": "Aggregate route fees with per-category breakdown"
+                          },
+                          "estimatedFillTime": {
+                            "type": "object",
+                            "properties": {
+                              "seconds": {
+                                "type": "number",
+                                "description": "Typical end-to-end fill time for this route in seconds. Directional, not guaranteed.",
+                                "example": 3
+                              }
+                            },
+                            "required": [
+                              "seconds"
+                            ],
+                            "description": "Estimated fill time for the route"
+                          }
+                        },
+                        "required": [
+                          "settlementLayer",
+                          "accuracy",
+                          "status",
+                          "input",
+                          "output",
+                          "fees",
+                          "estimatedFillTime"
+                        ],
+                        "description": "A single indicative route estimate"
+                      },
+                      "description": "Indicative route estimates, best-first. Empty when no route is available."
+                    },
+                    "unavailableReason": {
+                      "type": "string",
+                      "enum": [
+                        "unsupported_token",
+                        "no_route_support",
+                        "no_price",
+                        "below_minimum"
+                      ],
+                      "description": "Set when `routes` is empty and there is a single explanatory reason."
+                    }
+                  },
+                  "required": [
+                    "routes"
+                  ],
+                  "description": "Response body for `POST /quotes/estimate`. Indicative (non-binding): carries no `intentId`, `signData`, or `expiresAt`."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key scope denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "WITHDRAWAL_FINALIZATION_PENDING",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create Indicative Quote",
+        "description": "Computes an indicative (non-binding) quote: ranked route estimates with per-route cost breakdown and fill time. Unlike `POST /quotes`, it returns no `intentId`, `signData`, or `expiresAt` — it cannot be submitted to `POST /intents`. Use it for pre-quote UX (price previews, route discovery) without persisting an intent.",
+        "tags": [
+          "Quotes"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "direction": {
+                    "type": "string",
+                    "enum": [
+                      "exactIn",
+                      "exactOut"
+                    ],
+                    "description": "`exactIn` fixes the deposited `amountIn` and estimates the delivered output; `exactOut` fixes the desired `amountOut` and estimates the required input.",
+                    "example": "exactIn"
+                  },
+                  "sourceChainId": {
+                    "type": "string",
+                    "pattern": "^eip155:[0-9]{1,32}$",
+                    "description": "Source chain id (CAIP-2, eip155)",
+                    "example": "eip155:8453"
+                  },
+                  "sourceToken": {
+                    "type": "string",
+                    "description": "Source token address",
+                    "example": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+                  },
+                  "destinationChainId": {
+                    "type": "string",
+                    "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
+                    "description": "Destination chain id (CAIP-2), matching the destinations `POST /quotes` accepts: EVM (`eip155:*`), the virtual `hypercore:mainnet`, or non-EVM `solana:…` / `tron:…`.",
+                    "example": "eip155:42161"
+                  },
+                  "destinationToken": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Destination token address — EVM `0x…`, Solana base58 mint, or Tron T-address.",
+                    "example": "0xaf88d065e77c8cc2239327c5edb3a432268e5831"
+                  },
+                  "amountIn": {
+                    "type": "string",
+                    "format": "uint256",
+                    "description": "Deposited amount in the source token's smallest unit. Required for (and only valid with) `direction: exactIn`.",
+                    "example": "1000000"
+                  },
+                  "amountOut": {
+                    "type": "string",
+                    "format": "uint256",
+                    "description": "Desired delivered amount in the destination token's smallest unit. Required for (and only valid with) `direction: exactOut`.",
+                    "example": "1000000"
+                  },
+                  "accountType": {
+                    "type": "string",
+                    "enum": [
+                      "EOA",
+                      "SMART_ACCOUNT"
+                    ],
+                    "description": "Account the route would execute against. Settlement layers filter on account type, so declaring it yields an estimate that matches what `POST /quotes` would plan. Defaults to `EOA` — the more restrictive of the two — so an undeclared caller is never shown smart-account-only routes.",
+                    "example": "SMART_ACCOUNT"
+                  },
+                  "accountDeployed": {
+                    "type": "boolean",
+                    "description": "Whether the smart account is already deployed on the source chain. An undeployed account pays one-time setup gas, so declaring it avoids over-charging repeat users. Defaults to undeployed (charges setup) for a smart account when omitted — the conservative direction. Ignored for EOAs.",
+                    "example": true
+                  },
+                  "options": {
+                    "type": "object",
+                    "properties": {
+                      "settlementLayers": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "include": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ACROSS",
+                                    "ECO",
+                                    "RELAY",
+                                    "OFT",
+                                    "NEAR",
+                                    "RHINO",
+                                    "CCTP"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "include"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "exclude": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "ACROSS",
+                                    "ECO",
+                                    "RELAY",
+                                    "OFT",
+                                    "NEAR",
+                                    "RHINO",
+                                    "CCTP"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "exclude"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ],
+                        "description": "Which settlement layers the estimate may rank. `{ include: [...] }` (allow-list) or `{ exclude: [...] }` (deny-list). Default unset = all layers eligible.",
+                        "example": {
+                          "exclude": [
+                            "RELAY"
+                          ]
+                        }
+                      },
+                      "sponsorSettings": {
+                        "type": "object",
+                        "properties": {
+                          "gas": {
+                            "default": false,
+                            "type": "boolean",
+                            "description": "Whether to sponsor gas for the intent",
+                            "example": true
+                          },
+                          "bridgeFees": {
+                            "default": false,
+                            "type": "boolean",
+                            "description": "Whether to sponsor bridge fees for the intent"
+                          },
+                          "swapFees": {
+                            "default": false,
+                            "type": "boolean",
+                            "description": "Whether to sponsor swap fees for the intent"
+                          },
+                          "protocolFees": {
+                            "default": false,
+                            "type": "boolean",
+                            "description": "Whether to sponsor the Rhinestone protocol fee (`options.protocolFees`) for the intent. When `true`, the fee is charged to the integrator's sponsorship balance instead of carved from the user, without the sponsorship surcharge."
+                          }
+                        },
+                        "description": "Which fee categories to treat as sponsored. Sponsored categories are absorbed by the sponsor and do not reduce the delivered amount.",
+                        "example": {
+                          "gas": true,
+                          "bridgeFees": true,
+                          "swapFees": false
+                        }
+                      },
+                      "selectionStrategy": {
+                        "type": "string",
+                        "enum": [
+                          "cheapest",
+                          "fastest",
+                          "best"
+                        ],
+                        "description": "How to rank candidate routes. `cheapest` minimizes USD cost, `fastest` minimizes fill time, `best` balances delivered output and speed.",
+                        "example": "best"
+                      },
+                      "appFees": {
+                        "type": "object",
+                        "properties": {
+                          "feeBps": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 10000,
+                            "description": "App fee rate in basis points of the input value (0–10000 = 0–100%).",
+                            "example": 25
+                          }
+                        },
+                        "required": [
+                          "feeBps"
+                        ],
+                        "description": "Integrator app fee applied to the estimate"
+                      },
+                      "protocolFees": {
+                        "type": "object",
+                        "properties": {
+                          "feeBps": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 10000,
+                            "description": "Rhinestone protocol fee rate in basis points of the input value (0–10000 = 0–100%). Carved from the user unless `sponsorSettings.protocolFees` is set.",
+                            "example": 5
+                          }
+                        },
+                        "required": [
+                          "feeBps"
+                        ],
+                        "description": "Rhinestone protocol fee applied to the estimate"
+                      }
+                    },
+                    "description": "Optional estimate tuning knobs"
+                  }
+                },
+                "required": [
+                  "direction",
+                  "sourceChainId",
+                  "sourceToken",
+                  "destinationChainId",
+                  "destinationToken"
+                ],
+                "description": "Indicative-quote request. Chain ids are eip155 CAIP-2 strings; exactly one of `amountIn`/`amountOut` is required, matching `direction`."
               }
             }
           }

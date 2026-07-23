@@ -3434,6 +3434,122 @@
                                 ],
                                 "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored.",
                                 "nullable": true
+                              },
+                              "protocolFee": {
+                                "discriminator": {
+                                  "propertyName": "collection"
+                                },
+                                "oneOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "collection": {
+                                        "type": "string",
+                                        "enum": [
+                                          "CARVE"
+                                        ],
+                                        "description": "Discriminator: the fee is carved from the user in the same batched transfer as the app fee."
+                                      },
+                                      "source": {
+                                        "type": "string",
+                                        "enum": [
+                                          "request",
+                                          "policy"
+                                        ],
+                                        "description": "Provenance of the effective protocol-fee rate: the caller's request or the orchestrator-side policy floor (merged as max; ties resolve to `request`).",
+                                        "example": "request"
+                                      },
+                                      "feeBps": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 10000,
+                                        "description": "Protocol-fee rate in basis points.",
+                                        "example": 35
+                                      },
+                                      "baseAmount": {
+                                        "type": "string",
+                                        "format": "uint256",
+                                        "description": "Principal amount the fee was computed from, in token base units.",
+                                        "example": "10000000"
+                                      },
+                                      "amount": {
+                                        "type": "string",
+                                        "format": "uint256",
+                                        "description": "Protocol-fee amount in token base units.",
+                                        "example": "35000"
+                                      },
+                                      "chainId": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "description": "Origin chain ID where the fee token is spent.",
+                                        "example": 42161
+                                      },
+                                      "tokenAddress": {
+                                        "type": "string",
+                                        "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
+                                        "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                      },
+                                      "usdValue": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "description": "USD value of the fee, fixed at planning time (baseUSD × feeBps / 10000).",
+                                        "example": 0.035
+                                      }
+                                    },
+                                    "required": [
+                                      "collection",
+                                      "source",
+                                      "feeBps",
+                                      "baseAmount",
+                                      "amount",
+                                      "chainId",
+                                      "tokenAddress",
+                                      "usdValue"
+                                    ]
+                                  },
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "collection": {
+                                        "type": "string",
+                                        "enum": [
+                                          "SPONSOR"
+                                        ],
+                                        "description": "Discriminator: the fee is charged to the integrator's sponsorship balance — no user debit and no token movement."
+                                      },
+                                      "source": {
+                                        "type": "string",
+                                        "enum": [
+                                          "request",
+                                          "policy"
+                                        ],
+                                        "description": "Provenance of the effective protocol-fee rate: the caller's request or the orchestrator-side policy floor (merged as max; ties resolve to `request`).",
+                                        "example": "request"
+                                      },
+                                      "feeBps": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "maximum": 10000,
+                                        "description": "Protocol-fee rate in basis points.",
+                                        "example": 35
+                                      },
+                                      "usdValue": {
+                                        "type": "number",
+                                        "minimum": 0,
+                                        "description": "USD value charged to the sponsor (baseUSD × feeBps / 10000), without the sponsorship surcharge.",
+                                        "example": 0.035
+                                      }
+                                    },
+                                    "required": [
+                                      "collection",
+                                      "source",
+                                      "feeBps",
+                                      "usdValue"
+                                    ]
+                                  }
+                                ],
+                                "description": "The Rhinestone protocol fee charged on this intent, discriminated on `collection` (`CARVE` = user-paid carve, `SPONSOR` = sponsor-paid accounting).",
+                                "nullable": true
                               }
                             }
                           },
@@ -3455,6 +3571,11 @@
                                 "default": false,
                                 "type": "boolean",
                                 "description": "Whether to sponsor swap fees for the intent"
+                              },
+                              "protocolFees": {
+                                "default": false,
+                                "type": "boolean",
+                                "description": "Whether to sponsor the Rhinestone protocol fee (`options.protocolFees`) for the intent. When `true`, the fee is charged to the integrator's sponsorship balance instead of carved from the user, without the sponsorship surcharge."
                               }
                             },
                             "description": "Sponsor settings requested at quote time. Used during submit to distinguish sponsored zero-segment setup-only fills from unsponsored fallback fills."
@@ -5721,6 +5842,122 @@
                                   ],
                                   "description": "Concrete user-paid integrator app-fee leg. App fees are never sponsored.",
                                   "nullable": true
+                                },
+                                "protocolFee": {
+                                  "discriminator": {
+                                    "propertyName": "collection"
+                                  },
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "collection": {
+                                          "type": "string",
+                                          "enum": [
+                                            "CARVE"
+                                          ],
+                                          "description": "Discriminator: the fee is carved from the user in the same batched transfer as the app fee."
+                                        },
+                                        "source": {
+                                          "type": "string",
+                                          "enum": [
+                                            "request",
+                                            "policy"
+                                          ],
+                                          "description": "Provenance of the effective protocol-fee rate: the caller's request or the orchestrator-side policy floor (merged as max; ties resolve to `request`).",
+                                          "example": "request"
+                                        },
+                                        "feeBps": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 10000,
+                                          "description": "Protocol-fee rate in basis points.",
+                                          "example": 35
+                                        },
+                                        "baseAmount": {
+                                          "type": "string",
+                                          "format": "uint256",
+                                          "description": "Principal amount the fee was computed from, in token base units.",
+                                          "example": "10000000"
+                                        },
+                                        "amount": {
+                                          "type": "string",
+                                          "format": "uint256",
+                                          "description": "Protocol-fee amount in token base units.",
+                                          "example": "35000"
+                                        },
+                                        "chainId": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "description": "Origin chain ID where the fee token is spent.",
+                                          "example": 42161
+                                        },
+                                        "tokenAddress": {
+                                          "type": "string",
+                                          "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
+                                          "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                        },
+                                        "usdValue": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "description": "USD value of the fee, fixed at planning time (baseUSD × feeBps / 10000).",
+                                          "example": 0.035
+                                        }
+                                      },
+                                      "required": [
+                                        "collection",
+                                        "source",
+                                        "feeBps",
+                                        "baseAmount",
+                                        "amount",
+                                        "chainId",
+                                        "tokenAddress",
+                                        "usdValue"
+                                      ]
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "collection": {
+                                          "type": "string",
+                                          "enum": [
+                                            "SPONSOR"
+                                          ],
+                                          "description": "Discriminator: the fee is charged to the integrator's sponsorship balance — no user debit and no token movement."
+                                        },
+                                        "source": {
+                                          "type": "string",
+                                          "enum": [
+                                            "request",
+                                            "policy"
+                                          ],
+                                          "description": "Provenance of the effective protocol-fee rate: the caller's request or the orchestrator-side policy floor (merged as max; ties resolve to `request`).",
+                                          "example": "request"
+                                        },
+                                        "feeBps": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "maximum": 10000,
+                                          "description": "Protocol-fee rate in basis points.",
+                                          "example": 35
+                                        },
+                                        "usdValue": {
+                                          "type": "number",
+                                          "minimum": 0,
+                                          "description": "USD value charged to the sponsor (baseUSD × feeBps / 10000), without the sponsorship surcharge.",
+                                          "example": 0.035
+                                        }
+                                      },
+                                      "required": [
+                                        "collection",
+                                        "source",
+                                        "feeBps",
+                                        "usdValue"
+                                      ]
+                                    }
+                                  ],
+                                  "description": "The Rhinestone protocol fee charged on this intent, discriminated on `collection` (`CARVE` = user-paid carve, `SPONSOR` = sponsor-paid accounting).",
+                                  "nullable": true
                                 }
                               }
                             },
@@ -5738,12 +5975,17 @@
                                 "swapFeesSponsored": {
                                   "type": "boolean",
                                   "description": "Whether swap fees are sponsored"
+                                },
+                                "protocolFeesSponsored": {
+                                  "type": "boolean",
+                                  "description": "Whether the Rhinestone protocol fee is sponsored"
                                 }
                               },
                               "required": [
                                 "gasSponsored",
                                 "bridgeFeesSponsored",
-                                "swapFeesSponsored"
+                                "swapFeesSponsored",
+                                "protocolFeesSponsored"
                               ],
                               "description": "Sponsor settings echoed back on the older wire"
                             },
@@ -6245,6 +6487,122 @@
                               "description": "The single whole-intent integrator app-fee carve (token/chain/amount), or `null` when no app fee is charged. App fees are never sponsored.",
                               "nullable": true
                             },
+                            "protocolFee": {
+                              "discriminator": {
+                                "propertyName": "collection"
+                              },
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "collection": {
+                                      "type": "string",
+                                      "enum": [
+                                        "CARVE"
+                                      ],
+                                      "description": "Discriminator: the fee is carved from the user in the same batched transfer as the app fee."
+                                    },
+                                    "source": {
+                                      "type": "string",
+                                      "enum": [
+                                        "request",
+                                        "policy"
+                                      ],
+                                      "description": "Provenance of the effective protocol-fee rate: the caller's request or the orchestrator-side policy floor (merged as max; ties resolve to `request`).",
+                                      "example": "request"
+                                    },
+                                    "feeBps": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 10000,
+                                      "description": "Protocol-fee rate in basis points.",
+                                      "example": 35
+                                    },
+                                    "baseAmount": {
+                                      "type": "string",
+                                      "format": "uint256",
+                                      "description": "Principal amount the fee was computed from, in token base units.",
+                                      "example": "10000000"
+                                    },
+                                    "amount": {
+                                      "type": "string",
+                                      "format": "uint256",
+                                      "description": "Protocol-fee amount in token base units.",
+                                      "example": "35000"
+                                    },
+                                    "chainId": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "description": "Origin chain ID where the fee token is spent.",
+                                      "example": 42161
+                                    },
+                                    "tokenAddress": {
+                                      "type": "string",
+                                      "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
+                                      "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                    },
+                                    "usdValue": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "description": "USD value of the fee, fixed at planning time (baseUSD × feeBps / 10000).",
+                                      "example": 0.035
+                                    }
+                                  },
+                                  "required": [
+                                    "collection",
+                                    "source",
+                                    "feeBps",
+                                    "baseAmount",
+                                    "amount",
+                                    "chainId",
+                                    "tokenAddress",
+                                    "usdValue"
+                                  ]
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "collection": {
+                                      "type": "string",
+                                      "enum": [
+                                        "SPONSOR"
+                                      ],
+                                      "description": "Discriminator: the fee is charged to the integrator's sponsorship balance — no user debit and no token movement."
+                                    },
+                                    "source": {
+                                      "type": "string",
+                                      "enum": [
+                                        "request",
+                                        "policy"
+                                      ],
+                                      "description": "Provenance of the effective protocol-fee rate: the caller's request or the orchestrator-side policy floor (merged as max; ties resolve to `request`).",
+                                      "example": "request"
+                                    },
+                                    "feeBps": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "maximum": 10000,
+                                      "description": "Protocol-fee rate in basis points.",
+                                      "example": 35
+                                    },
+                                    "usdValue": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "description": "USD value charged to the sponsor (baseUSD × feeBps / 10000), without the sponsorship surcharge.",
+                                      "example": 0.035
+                                    }
+                                  },
+                                  "required": [
+                                    "collection",
+                                    "source",
+                                    "feeBps",
+                                    "usdValue"
+                                  ]
+                                }
+                              ],
+                              "description": "The single whole-intent Rhinestone protocol-fee leg (CARVE or SPONSOR), or `null` when no protocol fee is charged.",
+                              "nullable": true
+                            },
                             "gasCost": {
                               "type": "object",
                               "properties": {
@@ -6361,6 +6719,7 @@
                             "tokensReceived",
                             "sponsorFee",
                             "appFee",
+                            "protocolFee",
                             "gasCost",
                             "feeBreakdownUSD"
                           ]
@@ -7318,6 +7677,11 @@
                             "default": false,
                             "type": "boolean",
                             "description": "Whether to sponsor swap fees for the intent"
+                          },
+                          "protocolFees": {
+                            "default": false,
+                            "type": "boolean",
+                            "description": "Whether to sponsor the Rhinestone protocol fee (`options.protocolFees`) for the intent. When `true`, the fee is charged to the integrator's sponsorship balance instead of carved from the user, without the sponsorship surcharge."
                           }
                         },
                         "description": "Sponsor settings for the intent",
@@ -7390,6 +7754,21 @@
                             "maximum": 10000,
                             "description": "App fee rate in basis points of the input value (0–10000 = 0–100%).",
                             "example": 25
+                          }
+                        },
+                        "required": [
+                          "feeBps"
+                        ]
+                      },
+                      "protocolFees": {
+                        "type": "object",
+                        "properties": {
+                          "feeBps": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 10000,
+                            "description": "Rhinestone protocol fee rate in basis points of the input value (0–10000 = 0–100%). Collected alongside the app fee in one batched transfer and always accrues to Rhinestone; sponsor it via `sponsorSettings.protocolFees` to charge the integrator balance instead of the user.",
+                            "example": 35
                           }
                         },
                         "required": [
