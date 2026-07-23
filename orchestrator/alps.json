@@ -8017,7 +8017,7 @@
           }
         },
         "summary": "Get App-Fee Balances",
-        "description": "The authenticated project's withdrawable app-fee balance as a USD total, valued at collection time. `pendingUsd` is 0 until withdrawals land.",
+        "description": "The authenticated project's app-fee balance as USD totals valued at collection time. `pendingUsd` is the payout value permanently reserved by signed withdrawals whose target-chain FILL has not completed, including failed or expired payouts.",
         "tags": [
           "App Fees"
         ]
@@ -8150,7 +8150,7 @@
             }
           },
           "409": {
-            "description": "A withdrawal is in progress or failed delivery is awaiting finalization",
+            "description": "A withdrawal is already being signed",
             "content": {
               "application/json": {
                 "schema": {
