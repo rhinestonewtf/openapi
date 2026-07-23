@@ -78,12 +78,35 @@
                             }
                           }
                         ]
+                      },
+                      "wrappedNativeToken": {
+                        "type": "object",
+                        "properties": {
+                          "symbol": {
+                            "type": "string"
+                          },
+                          "address": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Token contract address (format depends on the chain)"
+                          },
+                          "decimals": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "symbol",
+                          "address",
+                          "decimals"
+                        ],
+                        "description": "The wrapped-native token (e.g. WETH) for the chain. Lets clients resolve the wrapped-native address without bundling a token registry."
                       }
                     },
                     "required": [
                       "name",
                       "testnet",
-                      "supportedTokens"
+                      "supportedTokens",
+                      "wrappedNativeToken"
                     ]
                   },
                   "description": "Supported chains and tokens, keyed by CAIP-2 chain id"
@@ -7857,13 +7880,34 @@
                                           "sponsored"
                                         ],
                                         "description": "Aggregate integrator app fee"
+                                      },
+                                      "sponsorSurcharge": {
+                                        "type": "object",
+                                        "properties": {
+                                          "usd": {
+                                            "type": "number",
+                                            "description": "Total cost of this category in USD, regardless of who pays.",
+                                            "example": 0.029
+                                          },
+                                          "sponsored": {
+                                            "type": "boolean",
+                                            "description": "True when a sponsor absorbs some or all of this category. The user-vs-sponsor split is not surfaced.",
+                                            "example": false
+                                          }
+                                        },
+                                        "required": [
+                                          "usd",
+                                          "sponsored"
+                                        ],
+                                        "description": "Rhinestone's surcharge on the sponsored fee, charged to the sponsor. 0 when the intent is not sponsored."
                                       }
                                     },
                                     "required": [
                                       "gas",
                                       "bridge",
                                       "swap",
-                                      "app"
+                                      "app",
+                                      "sponsorSurcharge"
                                     ],
                                     "description": "Per-category fee breakdown"
                                   }
@@ -9253,6 +9297,8 @@
                                 "USDG",
                                 "XPL",
                                 "WXPL",
+                                "AVAX",
+                                "WAVAX",
                                 "MockUSD",
                                 "TRX",
                                 "WTRX",
@@ -9295,6 +9341,8 @@
                                   "USDG",
                                   "XPL",
                                   "WXPL",
+                                  "AVAX",
+                                  "WAVAX",
                                   "MockUSD",
                                   "TRX",
                                   "WTRX",
@@ -9356,6 +9404,8 @@
                                     "USDG",
                                     "XPL",
                                     "WXPL",
+                                    "AVAX",
+                                    "WAVAX",
                                     "MockUSD",
                                     "TRX",
                                     "WTRX",
@@ -9398,6 +9448,8 @@
                                       "USDG",
                                       "XPL",
                                       "WXPL",
+                                      "AVAX",
+                                      "WAVAX",
                                       "MockUSD",
                                       "TRX",
                                       "WTRX",
@@ -9636,6 +9688,8 @@
                           "USDG",
                           "XPL",
                           "WXPL",
+                          "AVAX",
+                          "WAVAX",
                           "MockUSD",
                           "TRX",
                           "WTRX",
@@ -9699,7 +9753,7 @@
                         "type": "integer",
                         "minimum": 0,
                         "exclusiveMinimum": true,
-                        "description": "Absolute unix timestamp (seconds) overriding the on-chain fill deadline. **TOKENLESS intents only** — ignored on every other route. Must be between `now + 120s` and `now + 86400s`. The bundle claim/nonce expiry and the response `expiresAt` track this value automatically.",
+                        "description": "Absolute unix timestamp (seconds) overriding the on-chain fill deadline. **TOKENLESS intents only.** If the intent resolves to any other route (cross-chain or same-chain), the request is **rejected** with `INVALID_CUSTOM_DEADLINE` (422) rather than silently ignoring the override. Must be between `now + 120s` and `now + 86400s`. The bundle claim/nonce expiry and the response `expiresAt` track this value automatically.",
                         "example": 1893456000
                       }
                     },
