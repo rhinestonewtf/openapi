@@ -869,9 +869,6 @@
           "sender": {
             "type": "string"
           },
-          "account": {
-            "type": "string"
-          },
           "recipient": {
             "type": "string",
             "description": "Destination-chain address that receives the funds. Falls back to the smart account for EVM/HyperCore/Tron when no distinct recipient is configured; for Solana it is the EVM recipient, never the internal swig."
@@ -961,7 +958,6 @@
           "token",
           "amount",
           "sender",
-          "account",
           "recipient",
           "depositAddress",
           "targetChain",
@@ -2001,7 +1997,9 @@
             "type": "string"
           },
           "method": {
-            "type": "string"
+            "type": "string",
+            "description": "Optional. Preselects a Swapped payment method (a `payment_group`) in the widget — e.g. \"creditcard\", \"apple-pay\", \"bank-transfer\", \"skrill\", \"pix\", \"sepa-bank-transfer\". Any Swapped-supported value is accepted and forwarded as-is; omit it to let Swapped auto-select the best method for the user based on their location and other signals. See Swapped's Get Payment Methods endpoint for the full, per-region list.",
+            "example": "apple-pay"
           }
         },
         "required": [
