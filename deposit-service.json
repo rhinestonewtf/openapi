@@ -214,6 +214,24 @@
           "error"
         ]
       },
+      "UnsupportedFactoryResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "UNSUPPORTED_ACCOUNT_FACTORY"
+            ]
+          }
+        },
+        "required": [
+          "error",
+          "code"
+        ]
+      },
       "SetupResponse": {
         "type": "object",
         "properties": {
@@ -279,6 +297,9 @@
             "minimum": 0,
             "description": "Minimum deposit value in USD. Deposits priced below this are rejected and the client is notified via deposit-rejected. Applies to all tokens and chains.",
             "example": 1
+          },
+          "appFees": {
+            "$ref": "#/components/schemas/AppFees"
           }
         }
       },
@@ -305,6 +326,15 @@
             "example": "all"
           },
           "bridging": {
+            "type": "string",
+            "enum": [
+              "all",
+              "none"
+            ],
+            "description": "Fee sponsorship mode",
+            "example": "all"
+          },
+          "protocolFee": {
             "type": "string",
             "enum": [
               "all",
@@ -355,6 +385,55 @@
           ]
         }
       },
+      "AppFees": {
+        "type": [
+          "object",
+          "null"
+        ],
+        "properties": {
+          "feeBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          },
+          "tokens": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "feeBps": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  }
+                },
+                "required": [
+                  "token",
+                  "feeBps"
+                ]
+              }
+            }
+          }
+        },
+        "description": "Project app-fee settings. A source chain+token rate overrides feeBps; unmatched source assets use feeBps or 0 when omitted.",
+        "example": {
+          "feeBps": 100,
+          "tokens": {
+            "eip155:8453": [
+              {
+                "token": "0x4200000000000000000000000000000000000006",
+                "feeBps": 200
+              }
+            ]
+          }
+        }
+      },
       "GetSetupResponse": {
         "type": "object",
         "properties": {
@@ -393,6 +472,27 @@
           },
           "minDepositUsd": {
             "type": "number"
+          },
+          "appFees": {
+            "type": "object",
+            "properties": {
+              "feeBps": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 10000
+              },
+              "tokens": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  }
+                }
+              }
+            }
           }
         },
         "required": [
@@ -1078,31 +1178,57 @@
           "fees": {
             "type": "object",
             "properties": {
+              "total": {
+                "type": "object",
+                "properties": {
+                  "usd": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "usd"
+                ]
+              },
               "totalUsd": {
                 "type": "number"
               },
               "breakdown": {
                 "type": "object",
                 "properties": {
-                  "gasUsd": {
-                    "type": "number"
+                  "gas": {
+                    "$ref": "#/components/schemas/PreviewFeeLine"
                   },
-                  "bridgeUsd": {
-                    "type": "number"
+                  "bridge": {
+                    "$ref": "#/components/schemas/PreviewFeeLine"
                   },
-                  "swapUsd": {
-                    "type": "number"
+                  "swap": {
+                    "$ref": "#/components/schemas/PreviewFeeLine"
+                  },
+                  "app": {
+                    "$ref": "#/components/schemas/PreviewFeeLine"
+                  },
+                  "protocol": {
+                    "$ref": "#/components/schemas/PreviewFeeLine"
+                  },
+                  "sponsorSurcharge": {
+                    "$ref": "#/components/schemas/PreviewFeeLine"
                   }
                 },
                 "required": [
-                  "gasUsd",
-                  "bridgeUsd",
-                  "swapUsd"
-                ]
+                  "gas",
+                  "bridge",
+                  "swap",
+                  "app",
+                  "protocol",
+                  "sponsorSurcharge"
+                ],
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/PreviewFeeLine"
+                }
               }
             },
             "required": [
-              "totalUsd",
+              "total",
               "breakdown"
             ]
           },
@@ -1142,6 +1268,27 @@
           "estimatedFillTimeSeconds",
           "fees",
           "output"
+        ]
+      },
+      "PreviewFeeLine": {
+        "type": "object",
+        "properties": {
+          "usd": {
+            "type": "number"
+          },
+          "sponsored": {
+            "type": "boolean"
+          },
+          "label": {
+            "type": "string"
+          },
+          "internal": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "usd",
+          "sponsored"
         ]
       },
       "QuotePreviewRequest": {
@@ -1507,6 +1654,253 @@
           "totalUsd"
         ]
       },
+      "PositionsResponse": {
+        "type": "object",
+        "properties": {
+          "positions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "venue": {
+                  "type": "string",
+                  "enum": [
+                    "aave"
+                  ]
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "lending"
+                  ]
+                },
+                "market": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "address",
+                    "name"
+                  ],
+                  "description": "Positions are keyed by market, not chain — Ethereum alone hosts four Aave v3 markets with distinct pools and risk params."
+                },
+                "chain": {
+                  "type": "string",
+                  "description": "CAIP-2 chain id",
+                  "example": "eip155:8453"
+                },
+                "asset": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string"
+                    },
+                    "symbol": {
+                      "type": "string"
+                    },
+                    "decimals": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "address",
+                    "symbol",
+                    "decimals"
+                  ]
+                },
+                "amount": {
+                  "type": "string",
+                  "description": "Supplied balance in base units, accrued interest included"
+                },
+                "usdValue": {
+                  "type": "number"
+                },
+                "apy": {
+                  "type": "number"
+                },
+                "isCollateral": {
+                  "type": "boolean"
+                },
+                "maxWithdrawable": {
+                  "type": "string",
+                  "description": "Largest amount withdrawable right now, in base units. Capped so the withdraw cannot be rejected on-chain."
+                },
+                "withdrawableUsd": {
+                  "type": "number",
+                  "description": "USD value of `maxWithdrawable` — what would actually reach the deposit address, as opposed to `usdValue`, which prices the whole holding. Display this next to an amount you offer: it is also the figure this project's deposit floor is judged against, and re-deriving it from `usdValue` needs the amount ratio taken in integer space to survive an 18-decimal balance.",
+                  "example": 40.02
+                },
+                "isFullExit": {
+                  "type": "boolean",
+                  "description": "True when the entire supplied balance can leave in one transaction"
+                },
+                "constraints": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "health_factor",
+                      "frozen_reserve",
+                      "nothing_supplied",
+                      "paused_reserve",
+                      "ltv_validation",
+                      "available_liquidity",
+                      "below_deposit_floor",
+                      "deposit_not_whitelisted"
+                    ],
+                    "description": "Why the position cannot be fully migrated. Venue reasons (`health_factor`, `paused_reserve`, `ltv_validation`, `available_liquidity`) cap `maxWithdrawable` itself. `frozen_reserve` is advisory — Aave still permits withdrawing from a frozen reserve. `below_deposit_floor` and `deposit_not_whitelisted` mean the venue would pay out but this project's deposit policy would then reject the proceeds, so they do not reduce `maxWithdrawable`."
+                  }
+                }
+              },
+              "required": [
+                "venue",
+                "kind",
+                "market",
+                "chain",
+                "asset",
+                "amount",
+                "usdValue",
+                "apy",
+                "isCollateral",
+                "maxWithdrawable",
+                "withdrawableUsd",
+                "isFullExit",
+                "constraints"
+              ]
+            }
+          },
+          "totalUsd": {
+            "type": "number"
+          },
+          "minDepositUsd": {
+            "type": "number",
+            "description": "The USD floor the withdrawn proceeds must clear for this project, resolved from the platform minimum and the project's own `minDepositUsd`. Proceeds below it are rejected on ingest after the withdrawal has already happened.",
+            "example": 0.04
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "venue": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "venue",
+                "reason"
+              ]
+            },
+            "description": "Present only when a venue could not be reached, so an empty `positions` list can be told apart from a failed lookup."
+          }
+        },
+        "required": [
+          "positions",
+          "totalUsd",
+          "minDepositUsd"
+        ]
+      },
+      "PrepareUnwindResponse": {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "type": "object",
+            "properties": {
+              "to": {
+                "type": "string"
+              },
+              "data": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              },
+              "chainId": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "to",
+              "data",
+              "value",
+              "chainId"
+            ],
+            "description": "Unsigned transaction for the holding EOA to sign and send. The backend never executes it — the EOA holds the aTokens, so only it can authorise the withdraw."
+          },
+          "amount": {
+            "type": "string",
+            "description": "Base units the transaction will withdraw"
+          },
+          "isFullExit": {
+            "type": "boolean",
+            "description": "True when the whole position is being withdrawn, in which case the calldata uses the max-uint sentinel so interest accrued before the transaction lands is swept too."
+          },
+          "recipient": {
+            "type": "string",
+            "description": "The deposit address the proceeds are sent to, resolved from the registered account. Echoed so it is auditable."
+          },
+          "constraints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Why the amount is below the supplied balance, if it is. Empty for an unconstrained full exit."
+          }
+        },
+        "required": [
+          "transaction",
+          "amount",
+          "isFullExit",
+          "recipient",
+          "constraints"
+        ]
+      },
+      "PrepareUnwindRequestBody": {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The registered deposit account the proceeds go to. The recipient is resolved from this server-side; it is never taken from the request directly."
+          },
+          "market": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The Aave market's Pool address, as returned in a position's `market.address`. Required rather than inferred, because a chain can host several markets."
+          },
+          "chainId": {
+            "type": "integer",
+            "exclusiveMinimum": 0,
+            "example": 8453
+          },
+          "asset": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The supplied underlying token to withdraw"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Base units to withdraw. Omit for the largest amount currently permitted. An amount above that maximum is rejected rather than silently reduced.",
+            "example": "1000000000000000000"
+          }
+        },
+        "required": [
+          "account",
+          "market",
+          "chainId",
+          "asset"
+        ]
+      },
       "LiquidityResponse": {
         "type": "object",
         "properties": {
@@ -1553,6 +1947,44 @@
         },
         "required": [
           "prices"
+        ]
+      },
+      "QrTokensResponse": {
+        "type": "object",
+        "properties": {
+          "tokens": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "symbol": {
+                    "type": "string",
+                    "example": "USDC"
+                  },
+                  "address": {
+                    "type": "string",
+                    "example": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+                  },
+                  "decimals": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 6
+                  }
+                },
+                "required": [
+                  "symbol",
+                  "address",
+                  "decimals"
+                ]
+              }
+            },
+            "description": "Keyed by EVM chain id as a decimal string, plus \"solana\" and \"hypercore\". An empty array means the deposit whitelist disallows this chain entirely — clients should hide it rather than offer a chain with nothing to send, and it is reported even for chains this shortlist does not curate. An absent chain carries no opinion (it is allowed, but no shortlist is curated for it) and clients should keep whatever default they have for it; the two are not interchangeable."
+          }
+        },
+        "required": [
+          "tokens"
         ]
       },
       "WithdrawResponse": {
@@ -1954,6 +2386,10 @@
           },
           "expiresAt": {
             "type": "string"
+          },
+          "exchangeFeeBps": {
+            "type": "integer",
+            "minimum": 0
           }
         },
         "required": [
@@ -2000,10 +2436,37 @@
             "type": "string",
             "description": "Optional. Preselects a Swapped payment method (a `payment_group`) in the widget — e.g. \"creditcard\", \"apple-pay\", \"bank-transfer\", \"skrill\", \"pix\", \"sepa-bank-transfer\". Any Swapped-supported value is accepted and forwarded as-is; omit it to let Swapped auto-select the best method for the user based on their location and other signals. See Swapped's Get Payment Methods endpoint for the full, per-region list.",
             "example": "apple-pay"
+          },
+          "methodSelectionSource": {
+            "type": "string",
+            "enum": [
+              "personalized",
+              "fallback",
+              "configured"
+            ],
+            "description": "How the caller obtained `method`. Use `personalized` only for a method rendered from the regional payment-method response; with a trusted `x-user-country`, this opts into strict catalog validation. `fallback`, `configured`, and omission preserve the legacy exact-method pass-through behavior.",
+            "example": "personalized"
           }
         },
         "required": [
           "smartAccount"
+        ]
+      },
+      "SwappedExchangeFeeChangedResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "exchangeFeeBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
+          }
+        },
+        "required": [
+          "error",
+          "exchangeFeeBps"
         ]
       },
       "SwappedConnectUrlRequestBody": {
@@ -2032,10 +2495,98 @@
           },
           "connection": {
             "type": "string"
+          },
+          "acceptedExchangeFeeBps": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 10000
           }
         },
         "required": [
           "smartAccount"
+        ]
+      },
+      "SwappedPaymentMethodsResponse": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[A-Z]{2}$",
+            "description": "ISO-3166-1 alpha-2 country code",
+            "example": "US"
+          },
+          "methods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                },
+                "label": {
+                  "type": "string"
+                },
+                "iconUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "iconUrlLight": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "minAmount": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "maxAmount": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                },
+                "badge": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "Popular"
+                  ]
+                }
+              },
+              "required": [
+                "method",
+                "label",
+                "iconUrl",
+                "iconUrlLight",
+                "minAmount",
+                "maxAmount",
+                "badge"
+              ]
+            }
+          },
+          "recommendedMethod": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "country",
+          "methods",
+          "recommendedMethod"
         ]
       },
       "SwappedStatusResponse": {
@@ -2145,6 +2696,10 @@
           },
           "stale": {
             "type": "boolean"
+          },
+          "exchangeFeeBps": {
+            "type": "integer",
+            "minimum": 0
           }
         },
         "required": [
@@ -2217,6 +2772,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Account was registered with a factory the service does not support",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnsupportedFactoryResponse"
                 }
               }
             }
@@ -2447,6 +3012,24 @@
           },
           "500": {
             "description": "Failed to register with Alchemy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Webhook provider enrollment is rate limited; retry after the number of seconds in the Retry-After header",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying the registration",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -3618,6 +4201,24 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Webhook provider enrollment is rate limited; retry after the number of seconds in the Retry-After header",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying the registration",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -3784,6 +4385,171 @@
           },
           "502": {
             "description": "Invalid upstream response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/positions/{address}": {
+      "get": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "Get migratable DeFi positions",
+        "description": "Returns the address's DeFi positions in one normalised shape, each carrying the largest amount that can actually be withdrawn right now. `maxWithdrawable` is capped against the venue's full withdraw validation — health factor (with a buffer above the liquidation edge), E-Mode thresholds, zero-LTV collateral, paused reserves and pool liquidity — so a client never asks a user to sign an exit the protocol would reject. Currently covers Aave v3 across every market on the deposit-enabled chains; a `failures` entry appears when a venue could not be reached, so an empty list is distinguishable from a failed lookup.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "EVM address holding the DeFi positions",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": true,
+            "description": "EVM address holding the DeFi positions",
+            "name": "address",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Normalised DeFi positions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PositionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, unauthorized, or the project is not configured for deposits",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks the required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/positions/{address}/unwind": {
+      "post": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "Prepare an Aave position unwind",
+        "description": "Returns an **unsigned** `Pool.withdraw` transaction that exits an Aave position straight to the project's deposit address, so the existing deposit pipeline ingests the proceeds. Nothing is executed: the holding EOA owns the aTokens, so only it can authorise the withdraw, and the service holds no key on this path. The amount is capped server-side against Aave's full withdraw validation and is refused outright if the proceeds would fall foul of the project's deposit policy — that check happens here because this is the last point before an irreversible signature.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "The EOA holding the position. It signs and sends the returned transaction.",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": true,
+            "description": "The EOA holding the position. It signs and sends the returned transaction.",
+            "name": "address",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}\\.[a-z0-9]+$",
+              "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+              "example": "2026-04.amazon"
+            },
+            "required": false,
+            "description": "API version identifier (e.g. \"2026-04.amazon\"). Optional today, will become required in a future release.",
+            "name": "x-api-version",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareUnwindRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Unsigned withdraw transaction",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrepareUnwindResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, unauthorized, no such position, an amount above the withdrawable maximum, or proceeds the deposit policy would reject",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks the required deposits scope, or the account belongs to another project",
             "content": {
               "application/json": {
                 "schema": {
@@ -4067,6 +4833,71 @@
           },
           "400": {
             "description": "Invalid request parameters or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/qr/tokens": {
+      "get": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "List the QR/transfer token shortlist",
+        "description": "Returns the curated per-chain token shortlist the QR / manual-transfer flow offers as \"what are you sending?\". That flow has no connected wallet to read balances from, so it needs a suggested set rather than a discovered one. Filtered against the authenticated project's `depositWhitelist` when one is configured, so the flow cannot offer a token the client would reject on arrival. This is a suggestion list, not a capability list — `/chains` remains the authority on what the service supports.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Token shortlist per chain",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QrTokensResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
@@ -4537,7 +5368,7 @@
           "Onramp"
         ],
         "summary": "Mint a signed Swapped widget URL (fiat on-ramp)",
-        "description": "Returns a signed Swapped widget URL the modal embeds in an iframe for the fiat on-ramp. The destination asset is fixed server-side (the configured currency code); the caller supplies the smart account that receives the crypto.",
+        "description": "Returns a signed Swapped widget URL the modal embeds in an iframe for the fiat on-ramp. The destination asset is fixed server-side (the configured currency code); the caller supplies the smart account that receives the crypto. `methodSelectionSource: \"personalized\"` opts a trusted regional selection into strict merchant-catalog validation; fallback, configured, and legacy selections retain exact-method pass-through.",
         "parameters": [
           {
             "schema": {
@@ -4559,6 +5390,29 @@
             "required": false,
             "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
             "name": "authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+              "example": "PH"
+            },
+            "required": false,
+            "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+            "name": "x-user-country",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+              "example": "203.0.113.7"
+            },
+            "required": false,
+            "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+            "name": "x-client-ip",
             "in": "header"
           }
         ],
@@ -4641,7 +5495,7 @@
           "Onramp"
         ],
         "summary": "Mint a signed Swapped Connect URL (CEX funding)",
-        "description": "Returns a signed Swapped Connect URL the modal embeds in an iframe so the user can fund from a centralized exchange. Requires a configured public webhook callback URL.",
+        "description": "Returns a signed Swapped Connect URL the modal embeds in an iframe so the user can fund from a centralized exchange. Current callers send the exact picker rate as acceptedExchangeFeeBps; omission preserves legacy fee-free delivery, while a stale rate returns 409 before any URL or session state is minted. Requires a configured public webhook callback URL.",
         "parameters": [
           {
             "schema": {
@@ -4663,6 +5517,29 @@
             "required": false,
             "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
             "name": "authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+              "example": "PH"
+            },
+            "required": false,
+            "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+            "name": "x-user-country",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+              "example": "203.0.113.7"
+            },
+            "required": false,
+            "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+            "name": "x-client-ip",
             "in": "header"
           }
         ],
@@ -4716,8 +5593,126 @@
               }
             }
           },
+          "409": {
+            "description": "The Exchange Fee changed after the caller loaded the picker; the returned rate must be disclosed and accepted before retrying",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwappedExchangeFeeChangedResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Server misconfigured or signing failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Swapped on-ramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/swapped/payment-methods": {
+      "get": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "List localized Swapped payment methods",
+        "description": "Returns the configured popular method (when merchant-enabled) followed by the supported subset of credit card, bank transfer, and Apple Pay for the trusted edge-resolved x-user-country. A missing/unknown country or unavailable catalog returns the null-country fallback so clients can use their built-in global defaults.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+              "example": "PH"
+            },
+            "required": false,
+            "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+            "name": "x-user-country",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+              "example": "203.0.113.7"
+            },
+            "required": false,
+            "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+            "name": "x-client-ip",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Localized payment methods or the generic fallback",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SwappedPaymentMethodsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid country header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
             "content": {
               "application/json": {
                 "schema": {
