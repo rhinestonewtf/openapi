@@ -3358,12 +3358,18 @@
                                 "properties": {
                                   "relayer": {
                                     "type": "number",
-                                    "description": "Fee charged by relayer",
+                                    "description": "Gross legacy sponsored coverage (repayable relayer cost plus any provider subsidy).",
                                     "example": 0.0009
                                   },
                                   "protocol": {
                                     "type": "number",
                                     "description": "Fee charged by Rhinestone",
+                                    "example": 0
+                                  },
+                                  "providerSubsidy": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
                                     "example": 0
                                   }
                                 },
@@ -3553,6 +3559,11 @@
                               }
                             }
                           },
+                          "relayFeeUsd": {
+                            "type": "number",
+                            "minimum": 0,
+                            "description": "Quote-pinned flat per-fill fee in USD. Included once in primary relayer compensation."
+                          },
                           "sponsorSettings": {
                             "type": "object",
                             "properties": {
@@ -3657,6 +3668,29 @@
                                 },
                                 "required": [
                                   "tokensOut"
+                                ]
+                              },
+                              "sponsorFee": {
+                                "type": "object",
+                                "properties": {
+                                  "surchargeUsd": {
+                                    "type": "number"
+                                  },
+                                  "surchargeBps": {
+                                    "type": "integer"
+                                  },
+                                  "surchargeBaseUsd": {
+                                    "type": "number"
+                                  },
+                                  "sponsoredProtocolFeeUsd": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "surchargeUsd",
+                                  "surchargeBps",
+                                  "surchargeBaseUsd",
+                                  "sponsoredProtocolFeeUsd"
                                 ]
                               }
                             },
@@ -5766,12 +5800,18 @@
                                   "properties": {
                                     "relayer": {
                                       "type": "number",
-                                      "description": "Fee charged by relayer",
+                                      "description": "Gross legacy sponsored coverage (repayable relayer cost plus any provider subsidy).",
                                       "example": 0.0009
                                     },
                                     "protocol": {
                                       "type": "number",
                                       "description": "Fee charged by Rhinestone",
+                                      "example": 0
+                                    },
+                                    "providerSubsidy": {
+                                      "type": "number",
+                                      "minimum": 0,
+                                      "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
                                       "example": 0
                                     }
                                   },
@@ -5961,6 +6001,11 @@
                                 }
                               }
                             },
+                            "relayFeeUsd": {
+                              "type": "number",
+                              "minimum": 0,
+                              "description": "Quote-pinned flat per-fill fee in USD. Included once in primary relayer compensation."
+                            },
                             "sponsorSettings": {
                               "type": "object",
                               "properties": {
@@ -6066,6 +6111,29 @@
                                   },
                                   "required": [
                                     "tokensOut"
+                                  ]
+                                },
+                                "sponsorFee": {
+                                  "type": "object",
+                                  "properties": {
+                                    "surchargeUsd": {
+                                      "type": "number"
+                                    },
+                                    "surchargeBps": {
+                                      "type": "integer"
+                                    },
+                                    "surchargeBaseUsd": {
+                                      "type": "number"
+                                    },
+                                    "sponsoredProtocolFeeUsd": {
+                                      "type": "number"
+                                    }
+                                  },
+                                  "required": [
+                                    "surchargeUsd",
+                                    "surchargeBps",
+                                    "surchargeBaseUsd",
+                                    "sponsoredProtocolFeeUsd"
                                   ]
                                 }
                               },
@@ -6421,12 +6489,18 @@
                               "properties": {
                                 "relayer": {
                                   "type": "number",
-                                  "description": "Fee charged by relayer",
+                                  "description": "Gross legacy sponsored coverage (repayable relayer cost plus any provider subsidy).",
                                   "example": 0.0009
                                 },
                                 "protocol": {
                                   "type": "number",
                                   "description": "Fee charged by Rhinestone",
+                                  "example": 0
+                                },
+                                "providerSubsidy": {
+                                  "type": "number",
+                                  "minimum": 0,
+                                  "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
                                   "example": 0
                                 }
                               },
@@ -7133,7 +7207,7 @@
                             "spot",
                             "perp"
                           ],
-                          "description": "HyperCore balance class for this token request — 'spot' or 'perp'. Optional; defaults to 'perp' when destinationChainId is HyperCore. Rejected on every other destination.",
+                          "description": "Which HyperCore balance receives this token request — 'spot' (the spot wallet) or 'perp' (the default perp dex's margin account). REQUIRED when destinationChainId is HyperCore, with no default: the two answers credit different accounts, so an unstated venue is rejected rather than guessed. Every tokenRequest in one intent must name the same venue. Rejected on every other destination.",
                           "example": "spot"
                         }
                       },
@@ -7775,7 +7849,7 @@
                           "fastest",
                           "best"
                         ],
-                        "description": "How to rank candidate plans. `cheapest` minimizes direct USD cost. `fastest` minimizes estimated fill time (with cost tiebreaker). `best` balances both via a notional- and time-weighted shadow fee.",
+                        "description": "How to rank candidate plans. `cheapest` minimizes direct USD cost. `fastest` minimizes estimated fill time (with cost tiebreaker). `best` minimizes total USD given up: delivered-output forgone versus the best candidate, plus cost, plus the cost of waiting. Waiting is charged both in proportion to notional (0.8 bps per minute, modelling price risk on funds in flight) and as a flat $0.10 per minute independent of size, so small intents are ranked mostly on speed and large ones mostly on price. The two are equal at $1,250 of notional.",
                         "example": "best"
                       },
                       "customDeadline": {
@@ -7984,6 +8058,264 @@
         },
         "summary": "Get App-Fee Balances",
         "description": "The authenticated project's app-fee balance as USD totals valued at collection time. `pendingUsd` is the payout value permanently reserved by signed withdrawals whose target-chain FILL has not completed, including failed or expired payouts.",
+        "tags": [
+          "App Fees"
+        ]
+      }
+    },
+    "/app-fees/withdrawal-targets": {
+      "get": {
+        "operationId": "getAppFeeWithdrawalTargets",
+        "parameters": [
+          {
+            "name": "x-api-version",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "2026-01.alps"
+              ]
+            },
+            "description": "API version. Required; pinned to this document."
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "API key."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "targets": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "chainId": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "exclusiveMinimum": true
+                          },
+                          "tokens": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "address": {
+                                  "type": "string"
+                                },
+                                "symbol": {
+                                  "type": "string",
+                                  "enum": [
+                                    "USDC",
+                                    "USDT0",
+                                    "USDT"
+                                  ]
+                                },
+                                "decimals": {
+                                  "type": "integer",
+                                  "minimum": 0
+                                }
+                              },
+                              "required": [
+                                "address",
+                                "symbol",
+                                "decimals"
+                              ],
+                              "additionalProperties": false
+                            }
+                          }
+                        },
+                        "required": [
+                          "chainId",
+                          "tokens"
+                        ],
+                        "additionalProperties": false
+                      }
+                    }
+                  },
+                  "required": [
+                    "targets"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key scope denied",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "summary": "Get App-Fee Withdrawal Targets",
+        "description": "Get the enabled EVM chains and whitelisted stablecoins currently accepted for app-fee withdrawals.",
         "tags": [
           "App Fees"
         ]
