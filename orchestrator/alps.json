@@ -3423,6 +3423,10 @@
                                     "description": "Address of the token used to pay the app fee.",
                                     "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
                                   },
+                                  "collector": {
+                                    "type": "string",
+                                    "description": "Collector encoded into the carve transfer. Absent only on legacy in-flight quotes; submit derives it from their signed execution."
+                                  },
                                   "usdValue": {
                                     "type": "number",
                                     "minimum": 0,
@@ -3494,6 +3498,10 @@
                                         "type": "string",
                                         "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
                                         "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                      },
+                                      "collector": {
+                                        "type": "string",
+                                        "description": "Collector encoded into the shared carve transfer. Absent only on legacy in-flight quotes."
                                       },
                                       "usdValue": {
                                         "type": "number",
@@ -5865,6 +5873,10 @@
                                       "description": "Address of the token used to pay the app fee.",
                                       "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
                                     },
+                                    "collector": {
+                                      "type": "string",
+                                      "description": "Collector encoded into the carve transfer. Absent only on legacy in-flight quotes; submit derives it from their signed execution."
+                                    },
                                     "usdValue": {
                                       "type": "number",
                                       "minimum": 0,
@@ -5936,6 +5948,10 @@
                                           "type": "string",
                                           "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
                                           "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                        },
+                                        "collector": {
+                                          "type": "string",
+                                          "description": "Collector encoded into the shared carve transfer. Absent only on legacy in-flight quotes."
                                         },
                                         "usdValue": {
                                           "type": "number",
@@ -6543,6 +6559,10 @@
                                   "description": "Address of the token used to pay the app fee.",
                                   "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
                                 },
+                                "collector": {
+                                  "type": "string",
+                                  "description": "Collector encoded into the carve transfer. Absent only on legacy in-flight quotes; submit derives it from their signed execution."
+                                },
                                 "usdValue": {
                                   "type": "number",
                                   "minimum": 0,
@@ -6614,6 +6634,10 @@
                                       "type": "string",
                                       "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
                                       "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                    },
+                                    "collector": {
+                                      "type": "string",
+                                      "description": "Collector encoded into the shared carve transfer. Absent only on legacy in-flight quotes."
                                     },
                                     "usdValue": {
                                       "type": "number",
@@ -7202,13 +7226,7 @@
                           "example": "1000000"
                         },
                         "balance": {
-                          "type": "string",
-                          "enum": [
-                            "spot",
-                            "perp"
-                          ],
-                          "description": "Which HyperCore balance receives this token request — 'spot' (the spot wallet) or 'perp' (the default perp dex's margin account). REQUIRED when destinationChainId is HyperCore, with no default: the two answers credit different accounts, so an unstated venue is rejected rather than guessed. Every tokenRequest in one intent must name the same venue. Rejected on every other destination.",
-                          "example": "spot"
+                          "readOnly": true
                         }
                       },
                       "required": [
@@ -7416,6 +7434,7 @@
                                 "AVAX",
                                 "WAVAX",
                                 "MockUSD",
+                                "ensUSDC",
                                 "TRX",
                                 "WTRX",
                                 "SOL",
@@ -7460,6 +7479,7 @@
                                   "AVAX",
                                   "WAVAX",
                                   "MockUSD",
+                                  "ensUSDC",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -7523,6 +7543,7 @@
                                     "AVAX",
                                     "WAVAX",
                                     "MockUSD",
+                                    "ensUSDC",
                                     "TRX",
                                     "WTRX",
                                     "SOL",
@@ -7567,6 +7588,7 @@
                                       "AVAX",
                                       "WAVAX",
                                       "MockUSD",
+                                      "ensUSDC",
                                       "TRX",
                                       "WTRX",
                                       "SOL",
