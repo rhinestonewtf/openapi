@@ -100,13 +100,61 @@
                           "decimals"
                         ],
                         "description": "The wrapped-native token (e.g. WETH) for the chain. Lets clients resolve the wrapped-native address without bundling a token registry."
+                      },
+                      "nativeToken": {
+                        "type": "object",
+                        "properties": {
+                          "symbol": {
+                            "type": "string"
+                          },
+                          "address": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Token contract address (format depends on the chain)"
+                          },
+                          "decimals": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "symbol",
+                          "address",
+                          "decimals"
+                        ],
+                        "description": "The chain's gas asset. Lets a client name a native-value transfer without assuming ETH — a wallet on a non-ETH chain would otherwise label AVAX or BNB as ETH in every review and receipt."
+                      },
+                      "explorer": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "example": "https://basescan.org"
+                          },
+                          "addressPath": {
+                            "type": "string",
+                            "example": "/address/"
+                          },
+                          "txPath": {
+                            "type": "string",
+                            "example": "/tx/"
+                          }
+                        },
+                        "required": [
+                          "url",
+                          "addressPath",
+                          "txPath"
+                        ],
+                        "nullable": true,
+                        "description": "Block explorer, or null for a chain that has none. Lets a client link a transaction on a chain it was never compiled against, instead of bundling a per-chain URL table."
                       }
                     },
                     "required": [
                       "name",
                       "testnet",
                       "supportedTokens",
-                      "wrappedNativeToken"
+                      "wrappedNativeToken",
+                      "nativeToken",
+                      "explorer"
                     ]
                   },
                   "description": "Supported chains and tokens, keyed by CAIP-2 chain id"
@@ -9123,13 +9171,7 @@
                           "example": "1000000"
                         },
                         "balance": {
-                          "type": "string",
-                          "enum": [
-                            "spot",
-                            "perp"
-                          ],
-                          "description": "Which HyperCore balance receives this token request — 'spot' (the spot wallet) or 'perp' (the default perp dex's margin account). REQUIRED when destinationChainId is HyperCore, with no default: the two answers credit different accounts, so an unstated venue is rejected rather than guessed. Every tokenRequest in one intent must name the same venue. Rejected on every other destination.",
-                          "example": "spot"
+                          "readOnly": true
                         }
                       },
                       "required": [
@@ -9302,7 +9344,7 @@
                         "items": {
                           "type": "string",
                           "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
-                          "description": "CAIP-2 chain identifier (e.g. `eip155:8453`, `solana:…`, `tron:…`, or `hypercore:mainnet`)",
+                          "description": "CAIP-2 chain identifier (e.g. `eip155:8453`, `solana:…`, `tron:…`, or a HyperCore delivery venue `hypercore:spot` / `hypercore:perp`)",
                           "example": "eip155:8453"
                         }
                       },
@@ -9339,6 +9381,7 @@
                                 "AVAX",
                                 "WAVAX",
                                 "MockUSD",
+                                "ensUSDC",
                                 "TRX",
                                 "WTRX",
                                 "SOL",
@@ -9383,6 +9426,7 @@
                                   "AVAX",
                                   "WAVAX",
                                   "MockUSD",
+                                  "ensUSDC",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -9423,7 +9467,7 @@
                             "items": {
                               "type": "string",
                               "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
-                              "description": "CAIP-2 chain identifier (e.g. `eip155:8453`, `solana:…`, `tron:…`, or `hypercore:mainnet`)",
+                              "description": "CAIP-2 chain identifier (e.g. `eip155:8453`, `solana:…`, `tron:…`, or a HyperCore delivery venue `hypercore:spot` / `hypercore:perp`)",
                               "example": "eip155:8453"
                             }
                           },
@@ -9460,6 +9504,7 @@
                                     "AVAX",
                                     "WAVAX",
                                     "MockUSD",
+                                    "ensUSDC",
                                     "TRX",
                                     "WTRX",
                                     "SOL",
@@ -9504,6 +9549,7 @@
                                       "AVAX",
                                       "WAVAX",
                                       "MockUSD",
+                                      "ensUSDC",
                                       "TRX",
                                       "WTRX",
                                       "SOL",
@@ -11116,7 +11162,7 @@
                   "destinationChainId": {
                     "type": "string",
                     "pattern": "^(eip155|solana|tron|hypercore):[-_a-zA-Z0-9]{1,32}$",
-                    "description": "Destination chain id (CAIP-2), matching the destinations `POST /quotes` accepts: EVM (`eip155:*`), the virtual `hypercore:mainnet`, or non-EVM `solana:…` / `tron:…`.",
+                    "description": "Destination chain id (CAIP-2), matching the destinations `POST /quotes` accepts: EVM (`eip155:*`), a virtual HyperCore delivery venue (`hypercore:spot` or `hypercore:perp`), or non-EVM `solana:…` / `tron:…`.",
                     "example": "eip155:42161"
                   },
                   "destinationToken": {
@@ -11136,15 +11182,6 @@
                     "format": "uint256",
                     "description": "Desired delivered amount in the destination token's smallest unit. Required for (and only valid with) `direction: exactOut`.",
                     "example": "1000000"
-                  },
-                  "balance": {
-                    "type": "string",
-                    "enum": [
-                      "spot",
-                      "perp"
-                    ],
-                    "description": "Which HyperCore balance receives this token request — 'spot' (the spot wallet) or 'perp' (the default perp dex's margin account). REQUIRED when destinationChainId is HyperCore, with no default: the two answers credit different accounts, so an unstated venue is rejected rather than guessed. Every tokenRequest in one intent must name the same venue. Rejected on every other destination.",
-                    "example": "spot"
                   },
                   "accountType": {
                     "type": "string",
@@ -11297,6 +11334,9 @@
                       }
                     },
                     "description": "Optional estimate tuning knobs"
+                  },
+                  "balance": {
+                    "readOnly": true
                   }
                 },
                 "required": [
