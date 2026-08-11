@@ -31,7 +31,7 @@
             },
             "refund": {
               "type": "boolean",
-              "description": "Whether a failed deposit on this chain can be refunded via POST /deposits/refund. Chain-level only: a chain that advertises true still declines individual deposits for reasons belonging to the deposit or the account rather than the chain — a HyperCore deposit already credited to HyperEVM, a Solana Token-2022 mint or one with unsupported decimals, or a user-owned account with no session on the source chain. Not the same as POST /deposits/recover, the signature-authorized self-service path, which is EVM-only on both source and target chain.",
+              "description": "Whether a failed deposit on this chain can be refunded via POST /deposits/{id}/refund. Chain-level only: a chain that advertises true still declines individual deposits for reasons belonging to the deposit or the account rather than the chain — a HyperCore deposit already credited to HyperEVM, a Solana Token-2022 mint or one with unsupported decimals, or a user-owned account with no session on the source chain. Not the same as POST /deposits/recover, the signature-authorized self-service path, which is EVM-only on both source and target chain.",
               "example": true
             },
             "vmType": {
@@ -123,6 +123,16 @@
                   }
                 }
               ]
+            },
+            "publicRpcUrl": {
+              "type": "string",
+              "description": "The chain's PUBLIC, unauthenticated JSON-RPC endpoint. Build a viem `Chain` with `defineChain` from it — a browser client can derive every other argument from this entry but not this one, which is what makes a chain it was never compiled against usable. Deliberately not the rpc-proxy URL: this is served to a browser holding no credential. Absent for a chain that publishes none — treat that chain as display-only rather than as an error.",
+              "example": "https://mainnet.base.org"
+            },
+            "iconUrl": {
+              "type": "string",
+              "description": "The chain's mark, for rendering a chain the client was never compiled against and therefore holds no bundled asset for. Absent for a chain that publishes no icon — render a text or colour fallback, never an error. Served from Rhinestone's public CDN, so a host with an explicit `img-src` CSP must include `https://s3.rhinestone.dev` in it: without that the image fails SILENTLY, with no console error naming the policy.",
+              "example": "https://s3.rhinestone.dev/chains/base.svg"
             }
           },
           "required": [
@@ -804,49 +814,43 @@
           "mint"
         ]
       },
-      "RetryDepositResponse": {
+      "RetryDepositByIdResponse": {
         "type": "object",
         "properties": {
           "message": {
             "type": "string"
           },
-          "deposits": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "txHash": {
-                  "type": "string"
-                },
-                "chain": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "txHash",
-                "chain"
-              ]
-            }
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "completed",
+              "failed",
+              "rejected",
+              "ignored",
+              "expecting_refund",
+              "refunded",
+              "delayed",
+              "reconciliation_required"
+            ]
           }
         },
         "required": [
           "message",
-          "deposits"
+          "status"
         ]
       },
-      "RetryDepositRequestBody": {
+      "RetryDepositByIdRequestBody": {
         "type": "object",
         "properties": {
-          "address": {
+          "settlementLayer": {
             "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            "minLength": 1,
+            "description": "Optional settlement-layer override for the re-drive (e.g. \"ACROSS\", \"RELAY\"). EVM deposits only; rejected for Solana. Omit to let the orchestrator pick.",
+            "example": "RELAY"
           }
-        },
-        "required": [
-          "address"
-        ]
+        }
       },
       "RefundDepositResponse": {
         "type": "object",
@@ -867,45 +871,17 @@
           "amount"
         ]
       },
-      "RefundDepositRequestBody": {
+      "RefundDepositByIdRequestBody": {
         "type": "object",
         "properties": {
-          "chain": {
-            "type": "string",
-            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
-            "description": "CAIP-2 chain identifier of the deposit (e.g. \"eip155:8453\")",
-            "example": "eip155:8453"
-          },
-          "txHash": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Source transaction hash of the stuck deposit",
-            "example": "0xabc123..."
-          },
-          "account": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Managed account address that received the deposit (EVM address or Solana public key)",
-            "example": "0xde0fdf9c06b404cc5e20543cb84cac9067102f19"
-          },
-          "token": {
-            "type": "string",
-            "minLength": 1,
-            "description": "Source token address. Use the zero address (0x000…000) for native transfers.",
-            "example": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
-          },
           "recipient": {
             "type": "string",
             "minLength": 1,
-            "description": "Address to receive the refunded tokens (EVM address or Solana public key)",
+            "description": "Address to receive the refunded tokens (EVM address or Solana public key).",
             "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
           }
         },
         "required": [
-          "chain",
-          "txHash",
-          "account",
-          "token",
           "recipient"
         ]
       },
@@ -1067,7 +1043,6 @@
               "expecting_refund",
               "refunded",
               "delayed",
-              "awaiting_sweep",
               "reconciliation_required"
             ]
           },
@@ -1100,6 +1075,16 @@
             "pattern": "^\\d+$",
             "description": "Numeric string representing a bigint value",
             "example": "1000000000000000000"
+          },
+          "sponsoredGasUsd": {
+            "type": "string",
+            "description": "USD value of gas absorbed for the user. Absent when no sponsorship accounting exists; \"0\" means nothing was sponsored.",
+            "example": "0.42"
+          },
+          "sponsoredBridgeFeeUsd": {
+            "type": "string",
+            "description": "USD value of the bridge fee absorbed for the user. Excludes app fees and sponsor surcharges. Absent when no accounting exists; \"0\" means nothing was sponsored.",
+            "example": "0.13"
           },
           "createdAt": {
             "type": "string"
@@ -3439,14 +3424,26 @@
         }
       }
     },
-    "/deposits/retry": {
+    "/deposits/{id}/retry": {
       "post": {
         "tags": [
           "Processing"
         ],
-        "summary": "Retry failed deposits for an account",
-        "description": "Retry all failed deposits for a given account address. Authenticate with an `x-api-key` (write scope) or a Bearer platform token; the credential must belong to the client that registered the account.",
+        "summary": "Retry a failed deposit by id",
+        "description": "Re-drive one failed deposit through the settlement flow, addressing it by the stable id returned by `GET /deposits`. Authenticate with an `x-api-key` (write scope) or a Bearer platform token. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404. The deposit must be `failed` or `rejected`; operator-only states (`ignored`, `delayed`) are retryable through the admin endpoint only. Unlike `POST /deposits/retry`, the error code the deposit failed with does not gate the retry. Optionally pin the settlement layer — EVM only, refused for a Solana or HyperCore deposit rather than silently ignored. Omit the body entirely to retry without pinning a layer. Tron deposits are not retryable. A HyperCore deposit whose first leg already completed is refused with a 409. A 200 means the retry was accepted and re-driven, not that it settled.",
         "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Deposit id. Returned by GET /deposits.",
+              "example": "12345"
+            },
+            "required": true,
+            "description": "Deposit id. Returned by GET /deposits.",
+            "name": "id",
+            "in": "path"
+          },
           {
             "schema": {
               "type": "string",
@@ -3483,27 +3480,28 @@
           }
         ],
         "requestBody": {
+          "required": false,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RetryDepositRequestBody"
+                "$ref": "#/components/schemas/RetryDepositByIdRequestBody"
               }
             }
           }
         },
         "responses": {
           "200": {
-            "description": "Deposit retries initiated",
+            "description": "Deposit retry initiated",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RetryDepositResponse"
+                  "$ref": "#/components/schemas/RetryDepositByIdResponse"
                 }
               }
             }
           },
           "400": {
-            "description": "Invalid request or account not found",
+            "description": "Deposit not in a retryable state, a Tron deposit, settlement-layer override given for a non-EVM deposit, or the Solana deposit has no output-token route",
             "content": {
               "application/json": {
                 "schema": {
@@ -3523,7 +3521,27 @@
             }
           },
           "403": {
-            "description": "Unauthorized - credential does not belong to the client that registered the account, or API key lacks write scope",
+            "description": "Unauthorized - API key lacks write scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Deposit not found or not owned by the caller",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "HyperCore leg 1 already completed (Core funds swept to HyperEVM) — a leg-2 refund/fill concern, not a leg-1 retry",
             "content": {
               "application/json": {
                 "schema": {
@@ -3535,14 +3553,26 @@
         }
       }
     },
-    "/deposits/refund": {
+    "/deposits/{id}/refund": {
       "post": {
         "tags": [
           "Processing"
         ],
-        "summary": "Refund a failed deposit",
-        "description": "Transfer the funds from a failed deposit back to a user-provided address on the same chain. Authenticate with an `x-api-key` (write scope) or a Bearer platform token; the credential must belong to the client that registered the account. On a supported chain the deposit must already be `failed` or `rejected`; if no such deposit exists the call returns 400 (a deposit still being processed is not refundable). On a chain this service does not take deposits from (`deposit: false` on `/chains`), where no deposit record can ever be created, the deposit is instead reconstructed from the on-chain transaction receipt — the receipt must show that `txHash` credited `account` with `token`, or the same 400 is returned.",
+        "summary": "Refund a failed deposit by id",
+        "description": "Transfer the funds from a failed deposit back to a caller-provided address on the same chain, addressing the deposit by the stable id returned by `GET /deposits`. Authenticate with an `x-api-key` (write scope) or a Bearer platform token. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404. The deposit must be `failed` or `rejected`; operator-only states (`ignored`, `delayed`) are refundable through the admin endpoint only.",
         "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Deposit id. Returned by GET /deposits.",
+              "example": "12345"
+            },
+            "required": true,
+            "description": "Deposit id. Returned by GET /deposits.",
+            "name": "id",
+            "in": "path"
+          },
           {
             "schema": {
               "type": "string",
@@ -3570,7 +3600,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/RefundDepositRequestBody"
+                "$ref": "#/components/schemas/RefundDepositByIdRequestBody"
               }
             }
           }
@@ -3587,7 +3617,7 @@
             }
           },
           "400": {
-            "description": "Invalid request, deposit not found, or not eligible for refund",
+            "description": "Invalid deposit id or recipient, or deposit not eligible for refund",
             "content": {
               "application/json": {
                 "schema": {
@@ -3608,6 +3638,16 @@
           },
           "403": {
             "description": "Unauthorized - credential does not belong to the client that registered the account, or API key lacks write scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Deposit not found or not owned by the caller",
             "content": {
               "application/json": {
                 "schema": {
@@ -3807,7 +3847,6 @@
                 "expecting_refund",
                 "refunded",
                 "delayed",
-                "awaiting_sweep",
                 "reconciliation_required"
               ],
               "description": "Filter by deposit status",
@@ -3934,6 +3973,103 @@
           },
           "403": {
             "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/deposits/{id}": {
+      "get": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "Get a single deposit by id",
+        "description": "Returns one of the authenticated client's deposits by its stable id, in the same item shape as `GET /deposits`. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d+$",
+              "description": "Deposit id. Returned by GET /deposits.",
+              "example": "12345"
+            },
+            "required": true,
+            "description": "Deposit id. Returned by GET /deposits.",
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication (omit when sending Authorization)",
+              "example": "your-api-key"
+            },
+            "required": false,
+            "description": "API key for authentication (omit when sending Authorization)",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The deposit",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DepositListItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid deposit id",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required, or invalid API key / platform token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Deposit not found or not owned by the caller",
             "content": {
               "application/json": {
                 "schema": {
