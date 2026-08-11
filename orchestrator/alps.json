@@ -100,13 +100,61 @@
                           "decimals"
                         ],
                         "description": "The wrapped-native token (e.g. WETH) for the chain. Lets clients resolve the wrapped-native address without bundling a token registry."
+                      },
+                      "nativeToken": {
+                        "type": "object",
+                        "properties": {
+                          "symbol": {
+                            "type": "string"
+                          },
+                          "address": {
+                            "type": "string",
+                            "minLength": 1,
+                            "description": "Token contract address (format depends on the chain)"
+                          },
+                          "decimals": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "symbol",
+                          "address",
+                          "decimals"
+                        ],
+                        "description": "The chain's gas asset. Lets a client name a native-value transfer without assuming ETH — a wallet on a non-ETH chain would otherwise label AVAX or BNB as ETH in every review and receipt."
+                      },
+                      "explorer": {
+                        "type": "object",
+                        "properties": {
+                          "url": {
+                            "type": "string",
+                            "example": "https://basescan.org"
+                          },
+                          "addressPath": {
+                            "type": "string",
+                            "example": "/address/"
+                          },
+                          "txPath": {
+                            "type": "string",
+                            "example": "/tx/"
+                          }
+                        },
+                        "required": [
+                          "url",
+                          "addressPath",
+                          "txPath"
+                        ],
+                        "nullable": true,
+                        "description": "Block explorer, or null for a chain that has none. Lets a client link a transaction on a chain it was never compiled against, instead of bundling a per-chain URL table."
                       }
                     },
                     "required": [
                       "name",
                       "testnet",
                       "supportedTokens",
-                      "wrappedNativeToken"
+                      "wrappedNativeToken",
+                      "nativeToken",
+                      "explorer"
                     ]
                   },
                   "description": "Supported chains and tokens, keyed by numeric chain id"
@@ -3423,6 +3471,10 @@
                                     "description": "Address of the token used to pay the app fee.",
                                     "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
                                   },
+                                  "collector": {
+                                    "type": "string",
+                                    "description": "Collector encoded into the carve transfer. Absent only on legacy in-flight quotes; submit derives it from their signed execution."
+                                  },
                                   "usdValue": {
                                     "type": "number",
                                     "minimum": 0,
@@ -3494,6 +3546,10 @@
                                         "type": "string",
                                         "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
                                         "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                      },
+                                      "collector": {
+                                        "type": "string",
+                                        "description": "Collector encoded into the shared carve transfer. Absent only on legacy in-flight quotes."
                                       },
                                       "usdValue": {
                                         "type": "number",
@@ -3692,6 +3748,60 @@
                                   "surchargeBaseUsd",
                                   "sponsoredProtocolFeeUsd"
                                 ]
+                              },
+                              "swapFees": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "direction": {
+                                      "type": "string",
+                                      "enum": [
+                                        "origin",
+                                        "destination"
+                                      ]
+                                    },
+                                    "chainId": {
+                                      "type": "integer"
+                                    },
+                                    "tokenIn": {
+                                      "type": "string"
+                                    },
+                                    "tokenOut": {
+                                      "type": "string"
+                                    },
+                                    "amountIn": {
+                                      "type": "string",
+                                      "pattern": "^\\d{1,78}$"
+                                    },
+                                    "amountOut": {
+                                      "type": "string",
+                                      "pattern": "^\\d{1,78}$"
+                                    },
+                                    "providerFee": {
+                                      "type": "string",
+                                      "pattern": "^\\d{1,78}$"
+                                    },
+                                    "clientFee": {
+                                      "type": "string",
+                                      "pattern": "^\\d{1,78}$"
+                                    },
+                                    "quoter": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "direction",
+                                    "chainId",
+                                    "tokenIn",
+                                    "tokenOut",
+                                    "amountIn",
+                                    "amountOut",
+                                    "providerFee",
+                                    "clientFee",
+                                    "quoter"
+                                  ]
+                                }
                               }
                             },
                             "description": "Accounting facts derived from the selected plan and used for IntentOperation persistence. Excluded from the legacy serverSignature HMAC surface for rolling-deploy compatibility; submit integrity comes from the stored quote session."
@@ -5865,6 +5975,10 @@
                                       "description": "Address of the token used to pay the app fee.",
                                       "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
                                     },
+                                    "collector": {
+                                      "type": "string",
+                                      "description": "Collector encoded into the carve transfer. Absent only on legacy in-flight quotes; submit derives it from their signed execution."
+                                    },
                                     "usdValue": {
                                       "type": "number",
                                       "minimum": 0,
@@ -5936,6 +6050,10 @@
                                           "type": "string",
                                           "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
                                           "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                        },
+                                        "collector": {
+                                          "type": "string",
+                                          "description": "Collector encoded into the shared carve transfer. Absent only on legacy in-flight quotes."
                                         },
                                         "usdValue": {
                                           "type": "number",
@@ -6135,6 +6253,60 @@
                                     "surchargeBaseUsd",
                                     "sponsoredProtocolFeeUsd"
                                   ]
+                                },
+                                "swapFees": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "object",
+                                    "properties": {
+                                      "direction": {
+                                        "type": "string",
+                                        "enum": [
+                                          "origin",
+                                          "destination"
+                                        ]
+                                      },
+                                      "chainId": {
+                                        "type": "integer"
+                                      },
+                                      "tokenIn": {
+                                        "type": "string"
+                                      },
+                                      "tokenOut": {
+                                        "type": "string"
+                                      },
+                                      "amountIn": {
+                                        "type": "string",
+                                        "pattern": "^\\d{1,78}$"
+                                      },
+                                      "amountOut": {
+                                        "type": "string",
+                                        "pattern": "^\\d{1,78}$"
+                                      },
+                                      "providerFee": {
+                                        "type": "string",
+                                        "pattern": "^\\d{1,78}$"
+                                      },
+                                      "clientFee": {
+                                        "type": "string",
+                                        "pattern": "^\\d{1,78}$"
+                                      },
+                                      "quoter": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "direction",
+                                      "chainId",
+                                      "tokenIn",
+                                      "tokenOut",
+                                      "amountIn",
+                                      "amountOut",
+                                      "providerFee",
+                                      "clientFee",
+                                      "quoter"
+                                    ]
+                                  }
                                 }
                               },
                               "description": "Accounting facts derived from the selected plan and used for IntentOperation persistence. Excluded from the legacy serverSignature HMAC surface for rolling-deploy compatibility; submit integrity comes from the stored quote session."
@@ -6543,6 +6715,10 @@
                                   "description": "Address of the token used to pay the app fee.",
                                   "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
                                 },
+                                "collector": {
+                                  "type": "string",
+                                  "description": "Collector encoded into the carve transfer. Absent only on legacy in-flight quotes; submit derives it from their signed execution."
+                                },
                                 "usdValue": {
                                   "type": "number",
                                   "minimum": 0,
@@ -6614,6 +6790,10 @@
                                       "type": "string",
                                       "description": "Address of the token used to pay the fee (always the app-fee carrier token).",
                                       "example": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831"
+                                    },
+                                    "collector": {
+                                      "type": "string",
+                                      "description": "Collector encoded into the shared carve transfer. Absent only on legacy in-flight quotes."
                                     },
                                     "usdValue": {
                                       "type": "number",
@@ -7202,13 +7382,7 @@
                           "example": "1000000"
                         },
                         "balance": {
-                          "type": "string",
-                          "enum": [
-                            "spot",
-                            "perp"
-                          ],
-                          "description": "Which HyperCore balance receives this token request — 'spot' (the spot wallet) or 'perp' (the default perp dex's margin account). REQUIRED when destinationChainId is HyperCore, with no default: the two answers credit different accounts, so an unstated venue is rejected rather than guessed. Every tokenRequest in one intent must name the same venue. Rejected on every other destination.",
-                          "example": "spot"
+                          "readOnly": true
                         }
                       },
                       "required": [
@@ -7416,6 +7590,7 @@
                                 "AVAX",
                                 "WAVAX",
                                 "MockUSD",
+                                "ensUSDC",
                                 "TRX",
                                 "WTRX",
                                 "SOL",
@@ -7460,6 +7635,7 @@
                                   "AVAX",
                                   "WAVAX",
                                   "MockUSD",
+                                  "ensUSDC",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -7523,6 +7699,7 @@
                                     "AVAX",
                                     "WAVAX",
                                     "MockUSD",
+                                    "ensUSDC",
                                     "TRX",
                                     "WTRX",
                                     "SOL",
@@ -7567,6 +7744,7 @@
                                       "AVAX",
                                       "WAVAX",
                                       "MockUSD",
+                                      "ensUSDC",
                                       "TRX",
                                       "WTRX",
                                       "SOL",
