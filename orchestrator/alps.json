@@ -2087,6 +2087,29 @@
                                               "description": "Must be NO_FUNDING for INTENT_EXECUTOR",
                                               "example": "NO_FUNDING"
                                             },
+                                            "relayerQuotes": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "quoteId": {
+                                                    "type": "string"
+                                                  },
+                                                  "clientId": {
+                                                    "type": "string"
+                                                  },
+                                                  "connectionId": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "quoteId",
+                                                  "clientId",
+                                                  "connectionId"
+                                                ]
+                                              },
+                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                            },
                                             "gasRefund": {
                                               "type": "object",
                                               "properties": {
@@ -2367,6 +2390,29 @@
                                               "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                               "example": "PERMIT2"
                                             },
+                                            "relayerQuotes": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "quoteId": {
+                                                    "type": "string"
+                                                  },
+                                                  "clientId": {
+                                                    "type": "string"
+                                                  },
+                                                  "connectionId": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "quoteId",
+                                                  "clientId",
+                                                  "connectionId"
+                                                ]
+                                              },
+                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                            },
                                             "bridgeFill": {
                                               "discriminator": {
                                                 "propertyName": "type"
@@ -2586,6 +2632,29 @@
                                               ],
                                               "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                               "example": "PERMIT2"
+                                            },
+                                            "relayerQuotes": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "quoteId": {
+                                                    "type": "string"
+                                                  },
+                                                  "clientId": {
+                                                    "type": "string"
+                                                  },
+                                                  "connectionId": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "quoteId",
+                                                  "clientId",
+                                                  "connectionId"
+                                                ]
+                                              },
+                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                             }
                                           },
                                           "required": [
@@ -2618,6 +2687,29 @@
                                               ],
                                               "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                               "example": "PERMIT2"
+                                            },
+                                            "relayerQuotes": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "quoteId": {
+                                                    "type": "string"
+                                                  },
+                                                  "clientId": {
+                                                    "type": "string"
+                                                  },
+                                                  "connectionId": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "quoteId",
+                                                  "clientId",
+                                                  "connectionId"
+                                                ]
+                                              },
+                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                             },
                                             "provingFee": {
                                               "type": "string",
@@ -2656,6 +2748,29 @@
                                               ],
                                               "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                               "example": "PERMIT2"
+                                            },
+                                            "relayerQuotes": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "quoteId": {
+                                                    "type": "string"
+                                                  },
+                                                  "clientId": {
+                                                    "type": "string"
+                                                  },
+                                                  "connectionId": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "quoteId",
+                                                  "clientId",
+                                                  "connectionId"
+                                                ]
+                                              },
+                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                             },
                                             "requestId": {
                                               "type": "string",
@@ -2712,6 +2827,29 @@
                                               "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                               "example": "PERMIT2"
                                             },
+                                            "relayerQuotes": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "quoteId": {
+                                                    "type": "string"
+                                                  },
+                                                  "clientId": {
+                                                    "type": "string"
+                                                  },
+                                                  "connectionId": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "quoteId",
+                                                  "clientId",
+                                                  "connectionId"
+                                                ]
+                                              },
+                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                            },
                                             "depositAddress": {
                                               "type": "string",
                                               "description": "NEAR-provided deposit address on the origin chain"
@@ -2754,6 +2892,29 @@
                                               "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                               "example": "PERMIT2"
                                             },
+                                            "relayerQuotes": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "quoteId": {
+                                                    "type": "string"
+                                                  },
+                                                  "clientId": {
+                                                    "type": "string"
+                                                  },
+                                                  "connectionId": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "quoteId",
+                                                  "clientId",
+                                                  "connectionId"
+                                                ]
+                                              },
+                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                            },
                                             "quoteId": {
                                               "type": "string",
                                               "description": "Rhino.fi quote identifier — committed quote that becomes the commitmentId for the on-chain deposit"
@@ -2790,6 +2951,29 @@
                                               ],
                                               "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                               "example": "PERMIT2"
+                                            },
+                                            "relayerQuotes": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "quoteId": {
+                                                    "type": "string"
+                                                  },
+                                                  "clientId": {
+                                                    "type": "string"
+                                                  },
+                                                  "connectionId": {
+                                                    "type": "string"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "quoteId",
+                                                  "clientId",
+                                                  "connectionId"
+                                                ]
+                                              },
+                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                             },
                                             "sourceDomainId": {
                                               "type": "number",
@@ -3041,6 +3225,8 @@
                             "enum": [
                               "ACROSS",
                               "ECO",
+                              "RFQ_ACROSS",
+                              "RFQ_ECO",
                               "SAME_CHAIN",
                               "TOKENLESS",
                               "RELAY",
@@ -4591,6 +4777,29 @@
                                                 "description": "Must be NO_FUNDING for INTENT_EXECUTOR",
                                                 "example": "NO_FUNDING"
                                               },
+                                              "relayerQuotes": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "quoteId": {
+                                                      "type": "string"
+                                                    },
+                                                    "clientId": {
+                                                      "type": "string"
+                                                    },
+                                                    "connectionId": {
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "quoteId",
+                                                    "clientId",
+                                                    "connectionId"
+                                                  ]
+                                                },
+                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                              },
                                               "gasRefund": {
                                                 "type": "object",
                                                 "properties": {
@@ -4871,6 +5080,29 @@
                                                 "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                                 "example": "PERMIT2"
                                               },
+                                              "relayerQuotes": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "quoteId": {
+                                                      "type": "string"
+                                                    },
+                                                    "clientId": {
+                                                      "type": "string"
+                                                    },
+                                                    "connectionId": {
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "quoteId",
+                                                    "clientId",
+                                                    "connectionId"
+                                                  ]
+                                                },
+                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                              },
                                               "bridgeFill": {
                                                 "discriminator": {
                                                   "propertyName": "type"
@@ -5090,6 +5322,29 @@
                                                 ],
                                                 "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                                 "example": "PERMIT2"
+                                              },
+                                              "relayerQuotes": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "quoteId": {
+                                                      "type": "string"
+                                                    },
+                                                    "clientId": {
+                                                      "type": "string"
+                                                    },
+                                                    "connectionId": {
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "quoteId",
+                                                    "clientId",
+                                                    "connectionId"
+                                                  ]
+                                                },
+                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                               }
                                             },
                                             "required": [
@@ -5122,6 +5377,29 @@
                                                 ],
                                                 "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                                 "example": "PERMIT2"
+                                              },
+                                              "relayerQuotes": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "quoteId": {
+                                                      "type": "string"
+                                                    },
+                                                    "clientId": {
+                                                      "type": "string"
+                                                    },
+                                                    "connectionId": {
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "quoteId",
+                                                    "clientId",
+                                                    "connectionId"
+                                                  ]
+                                                },
+                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                               },
                                               "provingFee": {
                                                 "type": "string",
@@ -5160,6 +5438,29 @@
                                                 ],
                                                 "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                                 "example": "PERMIT2"
+                                              },
+                                              "relayerQuotes": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "quoteId": {
+                                                      "type": "string"
+                                                    },
+                                                    "clientId": {
+                                                      "type": "string"
+                                                    },
+                                                    "connectionId": {
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "quoteId",
+                                                    "clientId",
+                                                    "connectionId"
+                                                  ]
+                                                },
+                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                               },
                                               "requestId": {
                                                 "type": "string",
@@ -5216,6 +5517,29 @@
                                                 "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                                 "example": "PERMIT2"
                                               },
+                                              "relayerQuotes": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "quoteId": {
+                                                      "type": "string"
+                                                    },
+                                                    "clientId": {
+                                                      "type": "string"
+                                                    },
+                                                    "connectionId": {
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "quoteId",
+                                                    "clientId",
+                                                    "connectionId"
+                                                  ]
+                                                },
+                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                              },
                                               "depositAddress": {
                                                 "type": "string",
                                                 "description": "NEAR-provided deposit address on the origin chain"
@@ -5258,6 +5582,29 @@
                                                 "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                                 "example": "PERMIT2"
                                               },
+                                              "relayerQuotes": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "quoteId": {
+                                                      "type": "string"
+                                                    },
+                                                    "clientId": {
+                                                      "type": "string"
+                                                    },
+                                                    "connectionId": {
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "quoteId",
+                                                    "clientId",
+                                                    "connectionId"
+                                                  ]
+                                                },
+                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                              },
                                               "quoteId": {
                                                 "type": "string",
                                                 "description": "Rhino.fi quote identifier — committed quote that becomes the commitmentId for the on-chain deposit"
@@ -5294,6 +5641,29 @@
                                                 ],
                                                 "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
                                                 "example": "PERMIT2"
+                                              },
+                                              "relayerQuotes": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "quoteId": {
+                                                      "type": "string"
+                                                    },
+                                                    "clientId": {
+                                                      "type": "string"
+                                                    },
+                                                    "connectionId": {
+                                                      "type": "string"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "quoteId",
+                                                    "clientId",
+                                                    "connectionId"
+                                                  ]
+                                                },
+                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                               },
                                               "sourceDomainId": {
                                                 "type": "number",
@@ -5545,6 +5915,8 @@
                               "enum": [
                                 "ACROSS",
                                 "ECO",
+                                "RFQ_ACROSS",
+                                "RFQ_ECO",
                                 "SAME_CHAIN",
                                 "TOKENLESS",
                                 "RELAY",
@@ -8786,6 +9158,14 @@
                               "FAILED"
                             ]
                           },
+                          "grossUsd": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "cutBps": {
+                            "type": "integer",
+                            "nullable": true
+                          },
                           "payoutUsd": {
                             "type": "number"
                           },
@@ -8812,6 +9192,8 @@
                         "required": [
                           "requestNonce",
                           "status",
+                          "grossUsd",
+                          "cutBps",
                           "payoutUsd",
                           "targetChainId",
                           "targetToken",
@@ -9053,6 +9435,14 @@
                         "FAILED"
                       ]
                     },
+                    "grossUsd": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "cutBps": {
+                      "type": "integer",
+                      "nullable": true
+                    },
                     "payoutUsd": {
                       "type": "number"
                     },
@@ -9079,6 +9469,8 @@
                   "required": [
                     "requestNonce",
                     "status",
+                    "grossUsd",
+                    "cutBps",
                     "payoutUsd",
                     "targetChainId",
                     "targetToken",
