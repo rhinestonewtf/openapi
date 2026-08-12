@@ -6252,9 +6252,21 @@
                           "type": "object",
                           "properties": {
                             "chainId": {
-                              "type": "number",
-                              "description": "Chain ID for EIP-7702 delegation, 0 means it can be applied to any chain",
-                              "example": 8453
+                              "oneOf": [
+                                {
+                                  "type": "number",
+                                  "enum": [
+                                    0
+                                  ],
+                                  "description": "Numeric 0 means the EIP-7702 authorization can be applied to any chain."
+                                },
+                                {
+                                  "type": "string",
+                                  "pattern": "^eip155:[0-9]{1,32}$",
+                                  "description": "CAIP-2 chain identifier for a concrete EVM chain using the eip155 namespace.",
+                                  "example": "eip155:8453"
+                                }
+                              ]
                             },
                             "address": {
                               "type": "string",
@@ -6293,7 +6305,7 @@
                             "s"
                           ]
                         },
-                        "description": "EIP-7702 authorizations signed by the sponsor account. Each entry `chainId` is a CAIP-2 string (e.g. `eip155:8453`); the `0` any-chain sentinel is sent as a number."
+                        "description": "EIP-7702 authorizations signed by the sponsor account. Each chain ID is either a concrete eip155 CAIP-2 string or numeric 0 for an authorization valid on any chain."
                       },
                       "recipient": {
                         "type": "array",
@@ -6301,9 +6313,21 @@
                           "type": "object",
                           "properties": {
                             "chainId": {
-                              "type": "number",
-                              "description": "Chain ID for EIP-7702 delegation, 0 means it can be applied to any chain",
-                              "example": 8453
+                              "oneOf": [
+                                {
+                                  "type": "number",
+                                  "enum": [
+                                    0
+                                  ],
+                                  "description": "Numeric 0 means the EIP-7702 authorization can be applied to any chain."
+                                },
+                                {
+                                  "type": "string",
+                                  "pattern": "^eip155:[0-9]{1,32}$",
+                                  "description": "CAIP-2 chain identifier for a concrete EVM chain using the eip155 namespace.",
+                                  "example": "eip155:8453"
+                                }
+                              ]
                             },
                             "address": {
                               "type": "string",
@@ -6342,7 +6366,7 @@
                             "s"
                           ]
                         },
-                        "description": "EIP-7702 authorizations signed by the recipient account. Each entry `chainId` is a CAIP-2 string (e.g. `eip155:8453`); the `0` any-chain sentinel is sent as a number."
+                        "description": "EIP-7702 authorizations signed by the recipient account. Each chain ID is either a concrete eip155 CAIP-2 string or numeric 0 for an authorization valid on any chain."
                       }
                     }
                   }
@@ -14724,6 +14748,14 @@
                               "FAILED"
                             ]
                           },
+                          "grossUsd": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "cutBps": {
+                            "type": "integer",
+                            "nullable": true
+                          },
                           "payoutUsd": {
                             "type": "number"
                           },
@@ -14751,6 +14783,8 @@
                         "required": [
                           "requestNonce",
                           "status",
+                          "grossUsd",
+                          "cutBps",
                           "payoutUsd",
                           "targetChainId",
                           "targetToken",
@@ -15956,6 +15990,14 @@
                         "FAILED"
                       ]
                     },
+                    "grossUsd": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "cutBps": {
+                      "type": "integer",
+                      "nullable": true
+                    },
                     "payoutUsd": {
                       "type": "number"
                     },
@@ -15983,6 +16025,8 @@
                   "required": [
                     "requestNonce",
                     "status",
+                    "grossUsd",
+                    "cutBps",
                     "payoutUsd",
                     "targetChainId",
                     "targetToken",
