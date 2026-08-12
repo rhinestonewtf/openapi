@@ -4880,13 +4880,12 @@
         "parameters": [
           {
             "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "description": "Source chain ID (EVM chain ID)",
-              "example": 1
+              "type": "string",
+              "description": "Chain ID as CAIP-2, or a bare EVM chain id (legacy)",
+              "example": "eip155:8453"
             },
             "required": true,
-            "description": "Source chain ID (EVM chain ID)",
+            "description": "Chain ID as CAIP-2, or a bare EVM chain id (legacy)",
             "name": "sourceChainId",
             "in": "query"
           },
@@ -4904,13 +4903,12 @@
           },
           {
             "schema": {
-              "type": "integer",
-              "exclusiveMinimum": 0,
-              "description": "Destination chain ID (EVM chain ID)",
-              "example": 8453
+              "type": "string",
+              "description": "Chain ID as CAIP-2, or a bare EVM chain id (legacy)",
+              "example": "eip155:8453"
             },
             "required": true,
-            "description": "Destination chain ID (EVM chain ID)",
+            "description": "Chain ID as CAIP-2, or a bare EVM chain id (legacy)",
             "name": "destinationChainId",
             "in": "query"
           },
