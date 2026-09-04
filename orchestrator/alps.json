@@ -558,7 +558,8 @@
                             "OFT",
                             "NEAR",
                             "RHINO",
-                            "CCTP"
+                            "CCTP",
+                            "LZ"
                           ],
                           "nullable": true,
                           "description": "Settlement layer; null if the routing strategy is unrecognized",
@@ -745,19 +746,19 @@
                             },
                             "sponsoredValue": {
                               "type": "string",
-                              "description": "Sponsored value in fee-token base units",
+                              "description": "Sponsored value actually charged, in integer micro-USD (1 USD = 1,000,000 units). Once the intent executes this is reconciled from the receipt (planned gas replaced by executed), so it matches the sponsorship balance and the usage/billing reads rather than the amount reserved at quote time.",
                               "example": "210000"
                             },
                             "protocolFee": {
                               "type": "string",
-                              "description": "Protocol fee in fee-token base units",
+                              "description": "Protocol fee in integer micro-USD (1 USD = 1,000,000 units)",
                               "example": "10000"
                             }
                           },
                           "required": [
                             "sponsored"
                           ],
-                          "description": "Cost summary from the recorded fee sponsorship. Amounts are raw base units; omitted when no sponsorship row exists."
+                          "description": "Cost summary from the recorded fee sponsorship. Amounts are integer micro-USD; omitted when no sponsorship row exists."
                         }
                       },
                       "required": [
@@ -2218,6 +2219,49 @@
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
+                                                        "ECO"
+                                                      ],
+                                                      "description": "Eco solver-network delivery"
+                                                    },
+                                                    "intentHash": {
+                                                      "type": "string",
+                                                      "pattern": "^0x[a-fA-F0-9]*$",
+                                                      "description": "Eco Portal intent hash. Use against Eco's intent status API to resolve the destination delivery transaction."
+                                                    },
+                                                    "providerDestinationChainId": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "exclusiveMinimum": true,
+                                                      "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "destinationChainId",
+                                                    "fillStatusTimeout",
+                                                    "type",
+                                                    "intentHash"
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "destinationChainId": {
+                                                      "type": "number",
+                                                      "description": "Destination chain ID for the bridge fill"
+                                                    },
+                                                    "fillExpirationPeriod": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                    },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "enum": [
                                                         "RELAY"
                                                       ],
                                                       "description": "Relay.link"
@@ -2346,9 +2390,146 @@
                                                     "sourceDomainId",
                                                     "destinationDomainId"
                                                   ]
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "destinationChainId": {
+                                                      "type": "number",
+                                                      "description": "Destination chain ID for the bridge fill"
+                                                    },
+                                                    "fillExpirationPeriod": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                    },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "LZ"
+                                                      ],
+                                                      "description": "LayerZero Value Transfer"
+                                                    },
+                                                    "quoteId": {
+                                                      "type": "string",
+                                                      "description": "LayerZero quote ID. Use against LayerZero's transfer status API to track the destination-chain fill."
+                                                    },
+                                                    "dstChainKey": {
+                                                      "type": "string",
+                                                      "description": "LayerZero's own chain key for the destination (e.g. `base`). Its status response names chains by key rather than id."
+                                                    },
+                                                    "routeTypes": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "string"
+                                                      },
+                                                      "description": "Protocols the quote routed through (e.g. STARGATE_V2_TAXI, CCTP_V2). One transfer can span several."
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "destinationChainId",
+                                                    "fillStatusTimeout",
+                                                    "type",
+                                                    "quoteId",
+                                                    "dstChainKey",
+                                                    "routeTypes"
+                                                  ]
                                                 }
                                               ],
                                               "description": "Bridge-as-fill metadata for cross-chain delivery tracking"
+                                            },
+                                            "ecoBridgeRefund": {
+                                              "type": "object",
+                                              "properties": {
+                                                "settlementLayer": {
+                                                  "type": "string",
+                                                  "enum": [
+                                                    "ECO"
+                                                  ]
+                                                },
+                                                "intentHash": {
+                                                  "type": "string",
+                                                  "pattern": "^0x[a-fA-F0-9]*$"
+                                                },
+                                                "ecoPortal": {
+                                                  "type": "string"
+                                                },
+                                                "refundParams": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "destination": {
+                                                      "type": "string",
+                                                      "format": "uint256"
+                                                    },
+                                                    "routeHash": {
+                                                      "type": "string",
+                                                      "pattern": "^0x[a-fA-F0-9]*$"
+                                                    },
+                                                    "reward": {
+                                                      "type": "object",
+                                                      "properties": {
+                                                        "deadline": {
+                                                          "type": "string",
+                                                          "format": "uint256"
+                                                        },
+                                                        "creator": {
+                                                          "type": "string"
+                                                        },
+                                                        "prover": {
+                                                          "type": "string"
+                                                        },
+                                                        "nativeAmount": {
+                                                          "type": "string",
+                                                          "format": "uint256"
+                                                        },
+                                                        "tokens": {
+                                                          "type": "array",
+                                                          "items": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "token": {
+                                                                "type": "string"
+                                                              },
+                                                              "amount": {
+                                                                "type": "string",
+                                                                "format": "uint256"
+                                                              }
+                                                            },
+                                                            "required": [
+                                                              "token",
+                                                              "amount"
+                                                            ]
+                                                          }
+                                                        }
+                                                      },
+                                                      "required": [
+                                                        "deadline",
+                                                        "creator",
+                                                        "prover",
+                                                        "nativeAmount",
+                                                        "tokens"
+                                                      ]
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "destination",
+                                                    "routeHash",
+                                                    "reward"
+                                                  ]
+                                                }
+                                              },
+                                              "required": [
+                                                "settlementLayer",
+                                                "intentHash",
+                                                "ecoPortal",
+                                                "refundParams"
+                                              ],
+                                              "description": "Deprecated parse-only metadata retained so pre-RHI-6172 ECO_BRIDGE quotes survive Redis reload and HMAC validation. Never emitted by current quote builders."
                                             },
                                             "bridgeDestinationOps": {
                                               "type": "boolean",
@@ -2356,6 +2537,58 @@
                                                 true
                                               ],
                                               "description": "Marks this IE element as the post-bridge destination-ops executor for a bridge-with-destination-ops intent. Distinguishes from same-chain IE elements (both have `bridgeFill === undefined`)."
+                                            },
+                                            "destinationOpsStage": {
+                                              "type": "integer",
+                                              "minimum": 0,
+                                              "description": "Position of this leg among the intent's destination-ops stages, and the order they are dispatched in."
+                                            },
+                                            "hyperCoreAction": {
+                                              "type": "object",
+                                              "properties": {
+                                                "actionJson": {
+                                                  "type": "string",
+                                                  "minLength": 1
+                                                },
+                                                "nonce": {
+                                                  "type": "integer",
+                                                  "minimum": 0,
+                                                  "exclusiveMinimum": true
+                                                }
+                                              },
+                                              "required": [
+                                                "actionJson",
+                                                "nonce"
+                                              ],
+                                              "description": "The Hyperliquid action the agent registered by this leg authorises, serialised, with its nonce. A STRING because msgpack hashes map keys in insertion order and `jsonb` does not preserve it — stored as an object the keys come back sorted, deriving an agent that was never registered. The signature is not stored: forging is deterministic in (action, nonce), so the dispatcher re-derives it."
+                                            },
+                                            "dispatchPrecondition": {
+                                              "type": "string",
+                                              "enum": [
+                                                "CORE_USER_EXISTS"
+                                              ],
+                                              "description": "An off-chain condition that must hold before this leg is dispatched. Set only where the predecessor's fill is not sufficient evidence — a CoreWriter action sent before HyperCore has created the account is silently dropped."
+                                            },
+                                            "multiChainOps": {
+                                              "type": "object",
+                                              "properties": {
+                                                "chainIndex": {
+                                                  "type": "integer",
+                                                  "minimum": 0
+                                                },
+                                                "otherChains": {
+                                                  "type": "array",
+                                                  "items": {
+                                                    "type": "string",
+                                                    "pattern": "^0x[a-fA-F0-9]*$"
+                                                  }
+                                                }
+                                              },
+                                              "required": [
+                                                "chainIndex",
+                                                "otherChains"
+                                              ],
+                                              "description": "This leg's position in the signed `MultiChainOps` set and its siblings' `ChainOps` leaf hashes. Present only when the whole bundle is covered by one signature."
                                             }
                                           },
                                           "required": [
@@ -2469,6 +2702,49 @@
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
+                                                        "ECO"
+                                                      ],
+                                                      "description": "Eco solver-network delivery"
+                                                    },
+                                                    "intentHash": {
+                                                      "type": "string",
+                                                      "pattern": "^0x[a-fA-F0-9]*$",
+                                                      "description": "Eco Portal intent hash. Use against Eco's intent status API to resolve the destination delivery transaction."
+                                                    },
+                                                    "providerDestinationChainId": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "exclusiveMinimum": true,
+                                                      "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "destinationChainId",
+                                                    "fillStatusTimeout",
+                                                    "type",
+                                                    "intentHash"
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "destinationChainId": {
+                                                      "type": "number",
+                                                      "description": "Destination chain ID for the bridge fill"
+                                                    },
+                                                    "fillExpirationPeriod": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                    },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "enum": [
                                                         "RELAY"
                                                       ],
                                                       "description": "Relay.link"
@@ -2597,6 +2873,55 @@
                                                     "sourceDomainId",
                                                     "destinationDomainId"
                                                   ]
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "destinationChainId": {
+                                                      "type": "number",
+                                                      "description": "Destination chain ID for the bridge fill"
+                                                    },
+                                                    "fillExpirationPeriod": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                    },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "LZ"
+                                                      ],
+                                                      "description": "LayerZero Value Transfer"
+                                                    },
+                                                    "quoteId": {
+                                                      "type": "string",
+                                                      "description": "LayerZero quote ID. Use against LayerZero's transfer status API to track the destination-chain fill."
+                                                    },
+                                                    "dstChainKey": {
+                                                      "type": "string",
+                                                      "description": "LayerZero's own chain key for the destination (e.g. `base`). Its status response names chains by key rather than id."
+                                                    },
+                                                    "routeTypes": {
+                                                      "type": "array",
+                                                      "items": {
+                                                        "type": "string"
+                                                      },
+                                                      "description": "Protocols the quote routed through (e.g. STARGATE_V2_TAXI, CCTP_V2). One transfer can span several."
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "destinationChainId",
+                                                    "fillStatusTimeout",
+                                                    "type",
+                                                    "quoteId",
+                                                    "dstChainKey",
+                                                    "routeTypes"
+                                                  ]
                                                 }
                                               ],
                                               "description": "Bridge-as-fill metadata for cross-chain delivery tracking"
@@ -2661,67 +2986,6 @@
                                             "settlementLayer",
                                             "using7579",
                                             "fundingMethod"
-                                          ]
-                                        },
-                                        {
-                                          "type": "object",
-                                          "properties": {
-                                            "settlementLayer": {
-                                              "type": "string",
-                                              "enum": [
-                                                "ECO"
-                                              ],
-                                              "description": "Settlement layer for the qualifier",
-                                              "example": "ECO"
-                                            },
-                                            "using7579": {
-                                              "type": "boolean",
-                                              "description": "True when the originating account is ERC-7579-compatible (smart account). False for EOAs — those settle via MULTICALL execution.",
-                                              "example": false
-                                            },
-                                            "fundingMethod": {
-                                              "type": "string",
-                                              "enum": [
-                                                "PERMIT2",
-                                                "NO_FUNDING"
-                                              ],
-                                              "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
-                                              "example": "PERMIT2"
-                                            },
-                                            "relayerQuotes": {
-                                              "type": "array",
-                                              "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "quoteId": {
-                                                    "type": "string"
-                                                  },
-                                                  "clientId": {
-                                                    "type": "string"
-                                                  },
-                                                  "connectionId": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "quoteId",
-                                                  "clientId",
-                                                  "connectionId"
-                                                ]
-                                              },
-                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
-                                            },
-                                            "provingFee": {
-                                              "type": "string",
-                                              "format": "uint256",
-                                              "description": "Hyperlane relay fee for proof dispatch (in destination chain native token)"
-                                            }
-                                          },
-                                          "required": [
-                                            "settlementLayer",
-                                            "using7579",
-                                            "fundingMethod",
-                                            "provingFee"
                                           ]
                                         },
                                         {
@@ -3226,7 +3490,6 @@
                               "ACROSS",
                               "ECO",
                               "RFQ_ACROSS",
-                              "RFQ_ECO",
                               "SAME_CHAIN",
                               "TOKENLESS",
                               "RELAY",
@@ -3234,7 +3497,8 @@
                               "NEAR",
                               "RHINO",
                               "CCTP_FAST",
-                              "CCTP_CHEAP"
+                              "CCTP_CHEAP",
+                              "LZ"
                             ],
                             "description": "Planning strategy that produced this bundle (e.g. `ACROSS`, `RELAY`, `INTENT_EXECUTOR`). Pinned in metadata so the submission path can dispatch to the matching execution code.",
                             "example": "ACROSS"
@@ -4443,7 +4707,8 @@
                             "OFT",
                             "NEAR",
                             "RHINO",
-                            "CCTP"
+                            "CCTP",
+                            "LZ"
                           ]
                         }
                       },
@@ -4461,7 +4726,8 @@
                                 "OFT",
                                 "NEAR",
                                 "RHINO",
-                                "CCTP"
+                                "CCTP",
+                                "LZ"
                               ]
                             }
                           }
@@ -4485,7 +4751,8 @@
                                 "OFT",
                                 "NEAR",
                                 "RHINO",
-                                "CCTP"
+                                "CCTP",
+                                "LZ"
                               ]
                             }
                           }
@@ -4912,6 +5179,49 @@
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
+                                                          "ECO"
+                                                        ],
+                                                        "description": "Eco solver-network delivery"
+                                                      },
+                                                      "intentHash": {
+                                                        "type": "string",
+                                                        "pattern": "^0x[a-fA-F0-9]*$",
+                                                        "description": "Eco Portal intent hash. Use against Eco's intent status API to resolve the destination delivery transaction."
+                                                      },
+                                                      "providerDestinationChainId": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "exclusiveMinimum": true,
+                                                        "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "destinationChainId",
+                                                      "fillStatusTimeout",
+                                                      "type",
+                                                      "intentHash"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "destinationChainId": {
+                                                        "type": "number",
+                                                        "description": "Destination chain ID for the bridge fill"
+                                                      },
+                                                      "fillExpirationPeriod": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                      },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
+                                                      "type": {
+                                                        "type": "string",
+                                                        "enum": [
                                                           "RELAY"
                                                         ],
                                                         "description": "Relay.link"
@@ -5040,9 +5350,146 @@
                                                       "sourceDomainId",
                                                       "destinationDomainId"
                                                     ]
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "destinationChainId": {
+                                                        "type": "number",
+                                                        "description": "Destination chain ID for the bridge fill"
+                                                      },
+                                                      "fillExpirationPeriod": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                      },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
+                                                      "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "LZ"
+                                                        ],
+                                                        "description": "LayerZero Value Transfer"
+                                                      },
+                                                      "quoteId": {
+                                                        "type": "string",
+                                                        "description": "LayerZero quote ID. Use against LayerZero's transfer status API to track the destination-chain fill."
+                                                      },
+                                                      "dstChainKey": {
+                                                        "type": "string",
+                                                        "description": "LayerZero's own chain key for the destination (e.g. `base`). Its status response names chains by key rather than id."
+                                                      },
+                                                      "routeTypes": {
+                                                        "type": "array",
+                                                        "items": {
+                                                          "type": "string"
+                                                        },
+                                                        "description": "Protocols the quote routed through (e.g. STARGATE_V2_TAXI, CCTP_V2). One transfer can span several."
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "destinationChainId",
+                                                      "fillStatusTimeout",
+                                                      "type",
+                                                      "quoteId",
+                                                      "dstChainKey",
+                                                      "routeTypes"
+                                                    ]
                                                   }
                                                 ],
                                                 "description": "Bridge-as-fill metadata for cross-chain delivery tracking"
+                                              },
+                                              "ecoBridgeRefund": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "settlementLayer": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                      "ECO"
+                                                    ]
+                                                  },
+                                                  "intentHash": {
+                                                    "type": "string",
+                                                    "pattern": "^0x[a-fA-F0-9]*$"
+                                                  },
+                                                  "ecoPortal": {
+                                                    "type": "string"
+                                                  },
+                                                  "refundParams": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "destination": {
+                                                        "type": "string",
+                                                        "format": "uint256"
+                                                      },
+                                                      "routeHash": {
+                                                        "type": "string",
+                                                        "pattern": "^0x[a-fA-F0-9]*$"
+                                                      },
+                                                      "reward": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "deadline": {
+                                                            "type": "string",
+                                                            "format": "uint256"
+                                                          },
+                                                          "creator": {
+                                                            "type": "string"
+                                                          },
+                                                          "prover": {
+                                                            "type": "string"
+                                                          },
+                                                          "nativeAmount": {
+                                                            "type": "string",
+                                                            "format": "uint256"
+                                                          },
+                                                          "tokens": {
+                                                            "type": "array",
+                                                            "items": {
+                                                              "type": "object",
+                                                              "properties": {
+                                                                "token": {
+                                                                  "type": "string"
+                                                                },
+                                                                "amount": {
+                                                                  "type": "string",
+                                                                  "format": "uint256"
+                                                                }
+                                                              },
+                                                              "required": [
+                                                                "token",
+                                                                "amount"
+                                                              ]
+                                                            }
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "deadline",
+                                                          "creator",
+                                                          "prover",
+                                                          "nativeAmount",
+                                                          "tokens"
+                                                        ]
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "destination",
+                                                      "routeHash",
+                                                      "reward"
+                                                    ]
+                                                  }
+                                                },
+                                                "required": [
+                                                  "settlementLayer",
+                                                  "intentHash",
+                                                  "ecoPortal",
+                                                  "refundParams"
+                                                ],
+                                                "description": "Deprecated parse-only metadata retained so pre-RHI-6172 ECO_BRIDGE quotes survive Redis reload and HMAC validation. Never emitted by current quote builders."
                                               },
                                               "bridgeDestinationOps": {
                                                 "type": "boolean",
@@ -5050,6 +5497,58 @@
                                                   true
                                                 ],
                                                 "description": "Marks this IE element as the post-bridge destination-ops executor for a bridge-with-destination-ops intent. Distinguishes from same-chain IE elements (both have `bridgeFill === undefined`)."
+                                              },
+                                              "destinationOpsStage": {
+                                                "type": "integer",
+                                                "minimum": 0,
+                                                "description": "Position of this leg among the intent's destination-ops stages, and the order they are dispatched in."
+                                              },
+                                              "hyperCoreAction": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "actionJson": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                  },
+                                                  "nonce": {
+                                                    "type": "integer",
+                                                    "minimum": 0,
+                                                    "exclusiveMinimum": true
+                                                  }
+                                                },
+                                                "required": [
+                                                  "actionJson",
+                                                  "nonce"
+                                                ],
+                                                "description": "The Hyperliquid action the agent registered by this leg authorises, serialised, with its nonce. A STRING because msgpack hashes map keys in insertion order and `jsonb` does not preserve it — stored as an object the keys come back sorted, deriving an agent that was never registered. The signature is not stored: forging is deterministic in (action, nonce), so the dispatcher re-derives it."
+                                              },
+                                              "dispatchPrecondition": {
+                                                "type": "string",
+                                                "enum": [
+                                                  "CORE_USER_EXISTS"
+                                                ],
+                                                "description": "An off-chain condition that must hold before this leg is dispatched. Set only where the predecessor's fill is not sufficient evidence — a CoreWriter action sent before HyperCore has created the account is silently dropped."
+                                              },
+                                              "multiChainOps": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "chainIndex": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                  },
+                                                  "otherChains": {
+                                                    "type": "array",
+                                                    "items": {
+                                                      "type": "string",
+                                                      "pattern": "^0x[a-fA-F0-9]*$"
+                                                    }
+                                                  }
+                                                },
+                                                "required": [
+                                                  "chainIndex",
+                                                  "otherChains"
+                                                ],
+                                                "description": "This leg's position in the signed `MultiChainOps` set and its siblings' `ChainOps` leaf hashes. Present only when the whole bundle is covered by one signature."
                                               }
                                             },
                                             "required": [
@@ -5163,6 +5662,49 @@
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
+                                                          "ECO"
+                                                        ],
+                                                        "description": "Eco solver-network delivery"
+                                                      },
+                                                      "intentHash": {
+                                                        "type": "string",
+                                                        "pattern": "^0x[a-fA-F0-9]*$",
+                                                        "description": "Eco Portal intent hash. Use against Eco's intent status API to resolve the destination delivery transaction."
+                                                      },
+                                                      "providerDestinationChainId": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "exclusiveMinimum": true,
+                                                        "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "destinationChainId",
+                                                      "fillStatusTimeout",
+                                                      "type",
+                                                      "intentHash"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "destinationChainId": {
+                                                        "type": "number",
+                                                        "description": "Destination chain ID for the bridge fill"
+                                                      },
+                                                      "fillExpirationPeriod": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                      },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
+                                                      "type": {
+                                                        "type": "string",
+                                                        "enum": [
                                                           "RELAY"
                                                         ],
                                                         "description": "Relay.link"
@@ -5291,6 +5833,55 @@
                                                       "sourceDomainId",
                                                       "destinationDomainId"
                                                     ]
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "destinationChainId": {
+                                                        "type": "number",
+                                                        "description": "Destination chain ID for the bridge fill"
+                                                      },
+                                                      "fillExpirationPeriod": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                      },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
+                                                      "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "LZ"
+                                                        ],
+                                                        "description": "LayerZero Value Transfer"
+                                                      },
+                                                      "quoteId": {
+                                                        "type": "string",
+                                                        "description": "LayerZero quote ID. Use against LayerZero's transfer status API to track the destination-chain fill."
+                                                      },
+                                                      "dstChainKey": {
+                                                        "type": "string",
+                                                        "description": "LayerZero's own chain key for the destination (e.g. `base`). Its status response names chains by key rather than id."
+                                                      },
+                                                      "routeTypes": {
+                                                        "type": "array",
+                                                        "items": {
+                                                          "type": "string"
+                                                        },
+                                                        "description": "Protocols the quote routed through (e.g. STARGATE_V2_TAXI, CCTP_V2). One transfer can span several."
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "destinationChainId",
+                                                      "fillStatusTimeout",
+                                                      "type",
+                                                      "quoteId",
+                                                      "dstChainKey",
+                                                      "routeTypes"
+                                                    ]
                                                   }
                                                 ],
                                                 "description": "Bridge-as-fill metadata for cross-chain delivery tracking"
@@ -5355,67 +5946,6 @@
                                               "settlementLayer",
                                               "using7579",
                                               "fundingMethod"
-                                            ]
-                                          },
-                                          {
-                                            "type": "object",
-                                            "properties": {
-                                              "settlementLayer": {
-                                                "type": "string",
-                                                "enum": [
-                                                  "ECO"
-                                                ],
-                                                "description": "Settlement layer for the qualifier",
-                                                "example": "ECO"
-                                              },
-                                              "using7579": {
-                                                "type": "boolean",
-                                                "description": "True when the originating account is ERC-7579-compatible (smart account). False for EOAs — those settle via MULTICALL execution.",
-                                                "example": false
-                                              },
-                                              "fundingMethod": {
-                                                "type": "string",
-                                                "enum": [
-                                                  "PERMIT2",
-                                                  "NO_FUNDING"
-                                                ],
-                                                "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
-                                                "example": "PERMIT2"
-                                              },
-                                              "relayerQuotes": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "quoteId": {
-                                                      "type": "string"
-                                                    },
-                                                    "clientId": {
-                                                      "type": "string"
-                                                    },
-                                                    "connectionId": {
-                                                      "type": "string"
-                                                    }
-                                                  },
-                                                  "required": [
-                                                    "quoteId",
-                                                    "clientId",
-                                                    "connectionId"
-                                                  ]
-                                                },
-                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
-                                              },
-                                              "provingFee": {
-                                                "type": "string",
-                                                "format": "uint256",
-                                                "description": "Hyperlane relay fee for proof dispatch (in destination chain native token)"
-                                              }
-                                            },
-                                            "required": [
-                                              "settlementLayer",
-                                              "using7579",
-                                              "fundingMethod",
-                                              "provingFee"
                                             ]
                                           },
                                           {
@@ -5920,7 +6450,6 @@
                                 "ACROSS",
                                 "ECO",
                                 "RFQ_ACROSS",
-                                "RFQ_ECO",
                                 "SAME_CHAIN",
                                 "TOKENLESS",
                                 "RELAY",
@@ -5928,7 +6457,8 @@
                                 "NEAR",
                                 "RHINO",
                                 "CCTP_FAST",
-                                "CCTP_CHEAP"
+                                "CCTP_CHEAP",
+                                "LZ"
                               ],
                               "description": "Planning strategy that produced this bundle (e.g. `ACROSS`, `RELAY`, `INTENT_EXECUTOR`). Pinned in metadata so the submission path can dispatch to the matching execution code.",
                               "example": "ACROSS"
@@ -7962,6 +8492,8 @@
                                 "WMON",
                                 "S",
                                 "WS",
+                                "OKB",
+                                "WOKB",
                                 "HYPE",
                                 "WHYPE",
                                 "USDG",
@@ -7970,6 +8502,7 @@
                                 "AVAX",
                                 "WAVAX",
                                 "MockUSD",
+                                "XLM",
                                 "ensUSDC",
                                 "TRX",
                                 "WTRX",
@@ -8007,6 +8540,8 @@
                                   "WMON",
                                   "S",
                                   "WS",
+                                  "OKB",
+                                  "WOKB",
                                   "HYPE",
                                   "WHYPE",
                                   "USDG",
@@ -8015,6 +8550,7 @@
                                   "AVAX",
                                   "WAVAX",
                                   "MockUSD",
+                                  "XLM",
                                   "ensUSDC",
                                   "TRX",
                                   "WTRX",
@@ -8071,6 +8607,8 @@
                                     "WMON",
                                     "S",
                                     "WS",
+                                    "OKB",
+                                    "WOKB",
                                     "HYPE",
                                     "WHYPE",
                                     "USDG",
@@ -8079,6 +8617,7 @@
                                     "AVAX",
                                     "WAVAX",
                                     "MockUSD",
+                                    "XLM",
                                     "ensUSDC",
                                     "TRX",
                                     "WTRX",
@@ -8116,6 +8655,8 @@
                                       "WMON",
                                       "S",
                                       "WS",
+                                      "OKB",
+                                      "WOKB",
                                       "HYPE",
                                       "WHYPE",
                                       "USDG",
@@ -8124,6 +8665,7 @@
                                       "AVAX",
                                       "WAVAX",
                                       "MockUSD",
+                                      "XLM",
                                       "ensUSDC",
                                       "TRX",
                                       "WTRX",
@@ -8231,7 +8773,8 @@
                                 "OFT",
                                 "NEAR",
                                 "RHINO",
-                                "CCTP"
+                                "CCTP",
+                                "LZ"
                               ]
                             }
                           },
@@ -8249,7 +8792,8 @@
                                     "OFT",
                                     "NEAR",
                                     "RHINO",
-                                    "CCTP"
+                                    "CCTP",
+                                    "LZ"
                                   ]
                                 }
                               }
@@ -8273,7 +8817,8 @@
                                     "OFT",
                                     "NEAR",
                                     "RHINO",
-                                    "CCTP"
+                                    "CCTP",
+                                    "LZ"
                                   ]
                                 }
                               }
@@ -8288,6 +8833,82 @@
                         "example": {
                           "exclude": [
                             "RELAY"
+                          ]
+                        }
+                      },
+                      "quoters": {
+                        "oneOf": [
+                          {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "1inch",
+                                "0x",
+                                "velora",
+                                "kyberswap",
+                                "fynd",
+                                "fynd-hosted",
+                                "bebop",
+                                "relay"
+                              ]
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "include": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "1inch",
+                                    "0x",
+                                    "velora",
+                                    "kyberswap",
+                                    "fynd",
+                                    "fynd-hosted",
+                                    "bebop",
+                                    "relay"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "include"
+                            ],
+                            "additionalProperties": false
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "exclude": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "1inch",
+                                    "0x",
+                                    "velora",
+                                    "kyberswap",
+                                    "fynd",
+                                    "fynd-hosted",
+                                    "bebop",
+                                    "relay"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "exclude"
+                            ],
+                            "additionalProperties": false
+                          }
+                        ],
+                        "description": "Which swap quoters the orchestrator may source swap routes from. `{ include: [...] }` (allow-list) or `{ exclude: [...] }` (deny-list, inverted against the full quoter set); a bare array means `include`. Use this to keep a swap on the venue a smart-session policy is scoped to. Default unset = every quoter the chain supports.",
+                        "example": {
+                          "include": [
+                            "0x"
                           ]
                         }
                       },
@@ -8416,6 +9037,50 @@
                         "exclusiveMinimum": true,
                         "description": "Absolute unix timestamp (seconds) overriding the on-chain fill deadline. **TOKENLESS intents only.** If the intent resolves to any other route (cross-chain or same-chain), the request is **rejected** with `INVALID_CUSTOM_DEADLINE` (422) rather than silently ignoring the override. Must be between `now + 120s` and `now + 86400s`. The bundle claim/nonce expiry and the response `expiresAt` track this value automatically.",
                         "example": 1893456000
+                      },
+                      "hyperCore": {
+                        "type": "object",
+                        "properties": {
+                          "openPerp": {
+                            "type": "object",
+                            "properties": {
+                              "asset": {
+                                "type": "string",
+                                "minLength": 1,
+                                "description": "Perp ticker as Hyperliquid names it, e.g. `BTC`. Resolved to their asset index at quote time; an unknown ticker is rejected rather than guessed, since sizing against the wrong index would build an order for a different market.",
+                                "example": "BTC"
+                              },
+                              "isBuy": {
+                                "type": "boolean",
+                                "description": "true opens long, false opens short.",
+                                "example": true
+                              },
+                              "notionalUsd": {
+                                "type": "number",
+                                "minimum": 0,
+                                "exclusiveMinimum": true,
+                                "description": "Position size in USD. Hyperliquid rejects orders under ~$10 notional, so smaller values are refused at quote rather than failing at the exchange with nothing to retry.",
+                                "example": 25
+                              },
+                              "slippageBps": {
+                                "type": "integer",
+                                "minimum": 0,
+                                "maximum": 1000,
+                                "description": "How far through the mark price to place the marketable limit, in basis points. Defaults to 50.",
+                                "example": 50
+                              }
+                            },
+                            "required": [
+                              "asset",
+                              "isBuy",
+                              "notionalUsd"
+                            ],
+                            "description": "Open a perp position on HyperCore as part of this intent."
+                          }
+                        },
+                        "required": [
+                          "openPerp"
+                        ]
                       }
                     },
                     "description": "Intent options",
@@ -8423,6 +9088,11 @@
                       "settlementLayers": {
                         "include": [
                           "ECO"
+                        ]
+                      },
+                      "quoters": {
+                        "include": [
+                          "0x"
                         ]
                       },
                       "sponsorSettings": {
