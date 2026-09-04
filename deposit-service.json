@@ -11,7 +11,573 @@
     }
   ],
   "components": {
+    "securitySchemes": {
+      "analyticsIngestBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Optional five-minute analytics ingest token. Omit it to store an unattributed session."
+      }
+    },
     "schemas": {
+      "AnalyticsEventsResponse": {
+        "type": "object",
+        "properties": {
+          "accepted": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 50
+          }
+        },
+        "required": [
+          "accepted"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "array",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ]
+                  }
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "message"
+              ]
+            }
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "AnalyticsConflictResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "enum": [
+              "Analytics event conflict"
+            ]
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "SESSION_ATTRIBUTION_CONFLICT",
+              "SESSION_ENVELOPE_CONFLICT",
+              "EVENT_ID_CONFLICT",
+              "SESSION_SEQUENCE_CONFLICT"
+            ]
+          }
+        },
+        "required": [
+          "error",
+          "code"
+        ]
+      },
+      "AnalyticsEventsRequest": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsEvent"
+            },
+            "minItems": 1,
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "events"
+        ],
+        "additionalProperties": false
+      },
+      "AnalyticsEvent": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "event_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2147483647
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "widget_version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "proxy_origin": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "Canonical HTTP(S) origin only (for example https://app.example.com), without credentials, path, query, fragment, or trailing slash.",
+                "example": "https://app.example.com"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "JSON object limited to 16 KiB serialized, 10 recursive levels, and 4096 characters per key or string value."
+              },
+              "modal": {
+                "type": "string",
+                "enum": [
+                  "deposit"
+                ]
+              },
+              "session_properties": {
+                "type": "object",
+                "properties": {
+                  "enabled_funding_methods": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "wallet",
+                        "transfer",
+                        "fiat_onramp",
+                        "exchange_connect",
+                        "asset_migration"
+                      ]
+                    },
+                    "maxItems": 5
+                  },
+                  "wallet_integration": {
+                    "type": "string",
+                    "enum": [
+                      "modal_connected",
+                      "host_supplied",
+                      "none"
+                    ]
+                  },
+                  "fiat_methods": {
+                    "oneOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": "string",
+                            "enum": [
+                              "backend_resolved"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "source"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "type": "string",
+                            "enum": [
+                              "configured"
+                            ]
+                          },
+                          "identifiers": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "maxLength": 4096
+                            }
+                          }
+                        },
+                        "required": [
+                          "source",
+                          "identifiers"
+                        ],
+                        "additionalProperties": false
+                      }
+                    ]
+                  },
+                  "asset_migration_providers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "maxLength": 4096
+                    }
+                  },
+                  "initial_asset_migration": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 4096
+                  },
+                  "gasless_wallet_flow_enabled": {
+                    "type": "boolean"
+                  },
+                  "presentation": {
+                    "type": "string",
+                    "enum": [
+                      "inline",
+                      "overlay"
+                    ]
+                  },
+                  "overlay_close_enabled": {
+                    "type": "boolean"
+                  },
+                  "target_chain": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+                    "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+                    "example": "eip155:8453"
+                  },
+                  "target_token": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "description": "On-chain token identity for the session target: an EVM or HyperEVM ERC-20 address, a HyperCore spot token id, a Solana mint, a Tron TRC-20 address, a Stellar Asset Contract, or a native-asset sentinel. Hex values are stored lower-cased; base58 and base32 are byte-exact.",
+                    "example": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+                  },
+                  "prefills": {
+                    "type": "object",
+                    "properties": {
+                      "source_chain": {
+                        "type": "boolean"
+                      },
+                      "source_token": {
+                        "type": "boolean"
+                      },
+                      "amount": {
+                        "type": "boolean"
+                      },
+                      "initial_asset_migration": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "source_chain",
+                      "source_token",
+                      "amount",
+                      "initial_asset_migration"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "enabled_funding_methods",
+                  "wallet_integration",
+                  "fiat_methods",
+                  "asset_migration_providers",
+                  "initial_asset_migration",
+                  "gasless_wallet_flow_enabled",
+                  "presentation",
+                  "overlay_close_enabled",
+                  "prefills"
+                ],
+                "additionalProperties": false
+              },
+              "funding_method": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "enum": [
+                  "wallet",
+                  "transfer",
+                  "fiat_onramp",
+                  "exchange_connect",
+                  "asset_migration",
+                  null
+                ]
+              }
+            },
+            "required": [
+              "event_id",
+              "session_id",
+              "sequence",
+              "type",
+              "timestamp",
+              "widget_version",
+              "proxy_origin",
+              "payload",
+              "modal",
+              "session_properties",
+              "funding_method"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "event_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2147483647
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "widget_version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "proxy_origin": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "Canonical HTTP(S) origin only (for example https://app.example.com), without credentials, path, query, fragment, or trailing slash.",
+                "example": "https://app.example.com"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "JSON object limited to 16 KiB serialized, 10 recursive levels, and 4096 characters per key or string value."
+              },
+              "modal": {
+                "type": "string",
+                "enum": [
+                  "withdraw"
+                ]
+              },
+              "session_properties": {
+                "type": "object",
+                "properties": {
+                  "presentation": {
+                    "type": "string",
+                    "enum": [
+                      "inline",
+                      "overlay"
+                    ]
+                  },
+                  "overlay_close_enabled": {
+                    "type": "boolean"
+                  },
+                  "target_chain": {
+                    "type": "string",
+                    "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+                    "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+                    "example": "eip155:8453"
+                  },
+                  "target_token": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "description": "On-chain token identity for the session target: an EVM or HyperEVM ERC-20 address, a HyperCore spot token id, a Solana mint, a Tron TRC-20 address, a Stellar Asset Contract, or a native-asset sentinel. Hex values are stored lower-cased; base58 and base32 are byte-exact.",
+                    "example": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+                  },
+                  "prefills": {
+                    "type": "object",
+                    "properties": {
+                      "target_chain": {
+                        "type": "boolean"
+                      },
+                      "target_token": {
+                        "type": "boolean"
+                      },
+                      "recipient": {
+                        "type": "boolean"
+                      },
+                      "amount": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "target_chain",
+                      "target_token",
+                      "recipient",
+                      "amount"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "presentation",
+                  "overlay_close_enabled",
+                  "prefills"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "event_id",
+              "session_id",
+              "sequence",
+              "type",
+              "timestamp",
+              "widget_version",
+              "proxy_origin",
+              "payload",
+              "modal",
+              "session_properties"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "event_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 2147483647
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "widget_version": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64
+              },
+              "proxy_origin": {
+                "type": "string",
+                "maxLength": 2048,
+                "description": "Canonical HTTP(S) origin only (for example https://app.example.com), without credentials, path, query, fragment, or trailing slash.",
+                "example": "https://app.example.com"
+              },
+              "payload": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "JSON object limited to 16 KiB serialized, 10 recursive levels, and 4096 characters per key or string value."
+              },
+              "modal": {
+                "type": "string",
+                "enum": [
+                  "claim"
+                ]
+              },
+              "session_properties": {
+                "type": "object",
+                "properties": {
+                  "presentation": {
+                    "type": "string",
+                    "enum": [
+                      "inline",
+                      "overlay"
+                    ]
+                  },
+                  "overlay_close_enabled": {
+                    "type": "boolean"
+                  },
+                  "prefills": {
+                    "type": "object",
+                    "properties": {
+                      "transaction_hash": {
+                        "type": "boolean"
+                      },
+                      "refund_destination": {
+                        "type": "boolean"
+                      }
+                    },
+                    "required": [
+                      "transaction_hash",
+                      "refund_destination"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "required": [
+                  "presentation",
+                  "overlay_close_enabled",
+                  "prefills"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "event_id",
+              "session_id",
+              "sequence",
+              "type",
+              "timestamp",
+              "widget_version",
+              "proxy_origin",
+              "payload",
+              "modal",
+              "session_properties"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "AnalyticsIngestTokenResponse": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "Purpose-limited JWT authorizing analytics event ingest for five minutes",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "UTC expiry matching the JWT exp claim",
+            "example": "2026-08-25T14:35:00.000Z"
+          }
+        },
+        "required": [
+          "token",
+          "expiresAt"
+        ]
+      },
       "ChainsResponse": {
         "type": "object",
         "additionalProperties": {
@@ -39,9 +605,10 @@
               "enum": [
                 "evm",
                 "svm",
-                "tvm"
+                "tvm",
+                "stellar"
               ],
-              "description": "Address format the chain uses: 'evm' is 20-byte hex, 'svm' base58, 'tvm' base58check. Validate an address against this rather than inferring from the chain id. HyperCore is 'evm' — it is EVM-addressed without being an EVM execution chain.",
+              "description": "Address format the chain uses: 'evm' is 20-byte hex, 'svm' base58, 'tvm' base58check, 'stellar' base32 strkey. Validate an address against this rather than inferring from the chain id. HyperCore is 'evm' — it is EVM-addressed without being an EVM execution chain. On 'stellar' the format alone is not enough to tell a recipient from a token: an account is a 'G' strkey and an asset its 'C' Soroban contract, distinguished by the version byte the two encode.",
               "example": "evm"
             },
             "nativeToken": {
@@ -284,47 +851,6 @@
           "chain": "eip155:10",
           "symbol": "USDC"
         }
-      },
-      "ErrorResponse": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string"
-          },
-          "details": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "message": {
-                  "type": "string"
-                },
-                "path": {
-                  "type": "array",
-                  "items": {
-                    "anyOf": [
-                      {
-                        "type": "string"
-                      },
-                      {
-                        "type": "number"
-                      }
-                    ]
-                  }
-                },
-                "code": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "message"
-              ]
-            }
-          }
-        },
-        "required": [
-          "error"
-        ]
       },
       "UnsupportedFactoryResponse": {
         "type": "object",
@@ -1141,6 +1667,9 @@
           },
           "isSpam": {
             "type": "boolean"
+          },
+          "timing": {
+            "$ref": "#/components/schemas/DepositTimingEstimate"
           }
         },
         "required": [
@@ -1169,6 +1698,35 @@
           "retryable",
           "isSpam"
         ]
+      },
+      "DepositTimingEstimate": {
+        "type": "object",
+        "properties": {
+          "expectedSeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "How long the deposit is expected to take end to end, in seconds. Derived from qualifying recent completed deposits or the selected route’s indicative estimate; never a deadline or guarantee.",
+            "example": 42
+          },
+          "softDelaySeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Seconds after which the deposit is running slower than usual and a client may reassure the user. Indicative only.",
+            "example": 90
+          },
+          "escalatedDelaySeconds": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Seconds after which the deposit is unusually slow and a client may offer support. Indicative only, not an SLA.",
+            "example": 300
+          }
+        },
+        "required": [
+          "expectedSeconds",
+          "softDelaySeconds",
+          "escalatedDelaySeconds"
+        ],
+        "description": "Indicative, non-contractual duration estimate derived from qualifying recent completed deposits on the corridor or chain pair, falling back to the selected route’s indicative estimate when aggregate data is unavailable. Always `expectedSeconds` <= `softDelaySeconds` <= `escalatedDelaySeconds`. On a deposit the seconds are measured from its `createdAt` and are served only while it is still in flight (`pending`, `processing`, `delayed`); on a quote preview they describe the quoted route. Resolved per request, so it may change between calls, and absent whenever no estimate is available. Never a deadline, an expiry or a guarantee."
       },
       "DepositQuotesResponse": {
         "type": "object",
@@ -1269,7 +1827,12 @@
           },
           "estimatedFillTimeSeconds": {
             "type": "integer",
-            "minimum": 0
+            "minimum": 0,
+            "description": "The orchestrator's estimate for the fill leg, in seconds. Covers bridging only; see `timing.expectedSeconds` for the end-to-end expectation.",
+            "example": 7
+          },
+          "timing": {
+            "$ref": "#/components/schemas/DepositTimingEstimate"
           },
           "fees": {
             "type": "object",
@@ -2100,17 +2663,9 @@
             "minLength": 1
           },
           "targetChain": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "exclusiveMinimum": 0
-              },
-              {
-                "type": "string",
-                "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$"
-              }
-            ],
-            "description": "Chain identifier as a positive integer or CAIP-2 string (e.g. \"eip155:8453\")",
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
             "example": "eip155:8453"
           },
           "recipient": {
@@ -2563,17 +3118,9 @@
         "type": "object",
         "properties": {
           "chainId": {
-            "anyOf": [
-              {
-                "type": "integer",
-                "exclusiveMinimum": 0
-              },
-              {
-                "type": "string",
-                "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$"
-              }
-            ],
-            "description": "Chain identifier as a positive integer or CAIP-2 string (e.g. \"eip155:8453\")",
+            "type": "string",
+            "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
             "example": "eip155:8453"
           },
           "safeAddress": {
@@ -2907,8 +3454,7 @@
               "deposit-rejected",
               "deposit-delayed",
               "deposit-refunded",
-              "onramp-order",
-              "error"
+              "onramp-order"
             ],
             "description": "Which webhook type to simulate",
             "example": "bridge-started"
@@ -3268,6 +3814,127 @@
     "parameters": {}
   },
   "paths": {
+    "/analytics/events": {
+      "post": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Ingest browser analytics events",
+        "description": "Durably stores a bounded browser event batch. Authentication is optional: a purpose-limited analytics ingest bearer token attributes the session, while an omitted credential stores it unattributed. Project API keys are not accepted.",
+        "security": [
+          {
+            "analyticsIngestBearer": []
+          },
+          {}
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnalyticsEventsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The complete batch is durably represented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsEventsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed or invalid batch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "A presented credential is invalid or not permitted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Session attribution, envelope, event ID, or sequence conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsConflictResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Analytics persistence is temporarily unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/analytics/ingest-token": {
+      "post": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Mint an analytics ingest token",
+        "description": "Verifies a project API key and returns a purpose-limited token that authorizes analytics event ingest for five minutes. The project identity is resolved server-side and is not included separately in the response.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Project API key used to resolve analytics attribution",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "Project API key used to resolve analytics attribution",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Analytics ingest token and its expiry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalyticsIngestTokenResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/chains": {
       "get": {
         "tags": [
@@ -4052,8 +4719,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Refund a failed deposit by id",
-        "description": "Transfer the funds from a failed deposit back to a caller-provided address on the same chain, addressing the deposit by the stable id returned by `GET /deposits`. Authenticate with an `x-api-key` (write scope) or a Bearer platform token. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404. The deposit must be `failed` or `rejected`; operator-only states (`ignored`, `delayed`) are refundable through the admin endpoint only.",
+        "summary": "Refund a refundable deposit by id",
+        "description": "Transfer the funds from a failed, rejected, or ignored deposit back to a caller-provided address on the same chain, addressing the deposit by the stable id returned by `GET /deposits`. Authenticate with an `x-api-key` (write scope) or a Bearer platform token. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404. The deposit must be `failed`, `rejected`, or `ignored`; `delayed` remains refundable through the admin endpoint only.",
         "parameters": [
           {
             "schema": {
@@ -4293,7 +4960,7 @@
           "Utilities"
         ],
         "summary": "List deposits for the authenticated client",
-        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, recipient, address, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address); `address` matches the source-chain deposit address or target-chain recipient.",
+        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, recipient, address, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address); `address` matches the source-chain deposit address or target-chain recipient. Deposits that are still in flight may carry `timing`: an estimate derived from qualifying recent completed deposits on the corridor or chain pair, falling back to the selected attempted or succeeded route's indicative estimate, measured from the deposit's `createdAt`, and omitted when no estimate is available.",
         "parameters": [
           {
             "schema": {
@@ -4484,7 +5151,7 @@
           "Utilities"
         ],
         "summary": "Get a single deposit by id",
-        "description": "Returns one of the authenticated client's deposits by its stable id, in the same item shape as `GET /deposits`. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404.",
+        "description": "Returns one of the authenticated client's deposits by its stable id, in the same item shape as `GET /deposits`, including the optional non-contractual `timing` estimate while the deposit is still in flight. Timing uses qualifying corridor or chain-pair outcomes, then the selected attempted or succeeded route's indicative estimate, and may be absent. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404.",
         "parameters": [
           {
             "schema": {
@@ -4657,7 +5324,7 @@
           "Processing"
         ],
         "summary": "Preview a bridge quote before depositing",
-        "description": "Returns the fees and expected output for bridging `amount` of `sourceToken` from `sourceChainId` to the account's registered target, before any funds are deposited. The orchestrator quotes against the supplied amount as if the deposit wallet already held it; the result is indicative and may differ from the quote applied once a real deposit lands. EVM source chains only. Scoped to the caller's tenant.",
+        "description": "Returns the fees, expected output and expected duration for bridging `amount` of `sourceToken` from `sourceChainId` to the account's registered target, before any funds are deposited. The orchestrator quotes against the supplied amount as if the deposit wallet already held it; the result is indicative and may differ from the quote applied once a real deposit lands. `timing` is an end-to-end duration estimate derived from qualifying recent completed deposits on this corridor or chain pair, falling back to the quoted route's indicative estimate — non-contractual, never a deadline or guarantee — and is omitted when no estimate is available; `estimatedFillTimeSeconds` remains the orchestrator's fill-leg estimate. EVM source chains only. Scoped to the caller's tenant.",
         "parameters": [
           {
             "schema": {
