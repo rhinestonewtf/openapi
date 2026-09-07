@@ -1650,7 +1650,8 @@
                                   "properties": {
                                     "token": {
                                       "type": "string",
-                                      "description": "Token address",
+                                      "minLength": 1,
+                                      "description": "Token address, in the format its chain uses (EVM hex, non-EVM base58)",
                                       "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                                     },
                                     "symbol": {
@@ -1726,7 +1727,8 @@
                                 "properties": {
                                   "token": {
                                     "type": "string",
-                                    "description": "Token address",
+                                    "minLength": 1,
+                                    "description": "Token address, in the format its chain uses (EVM hex, non-EVM base58)",
                                     "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                                   },
                                   "symbol": {
@@ -4118,6 +4120,7 @@
                           },
                           "token": {
                             "type": "string",
+                            "minLength": 1,
                             "description": "Intent value token. The token delivered on the destination chain, or the spent token for same-chain intents (which have no persisted delivery).",
                             "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                           },
@@ -7582,6 +7585,9 @@
                               "origin": {
                                 "type": "array",
                                 "items": {
+                                  "discriminator": {
+                                    "propertyName": "kind"
+                                  },
                                   "oneOf": [
                                     {
                                       "type": "object",
@@ -7638,13 +7644,20 @@
                                           "type": "object",
                                           "additionalProperties": {},
                                           "description": "Message values keyed by field name. uint256 fields are encoded as decimal strings on the wire and re-coerced to bigint client-side before signing."
+                                        },
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": [
+                                            "eip712"
+                                          ]
                                         }
                                       },
                                       "required": [
                                         "domain",
                                         "types",
                                         "primaryType",
-                                        "message"
+                                        "message",
+                                        "kind"
                                       ],
                                       "description": "EIP-712 typed data definition ready for `signTypedData`"
                                     },
@@ -7677,7 +7690,7 @@
                                     }
                                   ]
                                 },
-                                "description": "Payloads for the origin legs, in submission order. Sign each entry and submit the signatures in matching order via `signatures.origin`. An entry carrying `kind: \"personalSign\"` is signed as a message, not as typed data."
+                                "description": "Payloads for the origin legs, in submission order. Sign each entry and submit the signatures in matching order via `signatures.origin`. Discriminate on `kind`: `eip712` is signed as typed data, `personalSign` as a message."
                               },
                               "destination": {
                                 "type": "object",
@@ -8211,6 +8224,43 @@
                                   "destinationChainId",
                                   "fillStatusTimeout",
                                   "type"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "destinationChainId": {
+                                    "type": "number",
+                                    "description": "Destination chain ID for the bridge fill"
+                                  },
+                                  "fillExpirationPeriod": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                  },
+                                  "fillStatusTimeout": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                  },
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "ACROSS"
+                                    ],
+                                    "description": "Across spoke-pool deposit. Names a deposit to watch for a refund, not a delivery — an ACROSS intent is filled by our own relayer and tracked as an ordinary fill."
+                                  },
+                                  "depositId": {
+                                    "type": "string",
+                                    "pattern": "^[0-9]{1,78}$",
+                                    "description": "The Across deposit id our claim opens on the origin chain, as a decimal uint256. Derived as keccak(arbiter | sponsor | nonce)."
+                                  }
+                                },
+                                "required": [
+                                  "destinationChainId",
+                                  "fillStatusTimeout",
+                                  "type",
+                                  "depositId"
                                 ]
                               },
                               {

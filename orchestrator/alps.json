@@ -582,7 +582,8 @@
                                   "properties": {
                                     "token": {
                                       "type": "string",
-                                      "description": "Token address",
+                                      "minLength": 1,
+                                      "description": "Token address, in the format its chain uses (EVM hex, non-EVM base58)",
                                       "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                                     },
                                     "amount": {
@@ -644,7 +645,8 @@
                                 "properties": {
                                   "token": {
                                     "type": "string",
-                                    "description": "Token address",
+                                    "minLength": 1,
+                                    "description": "Token address, in the format its chain uses (EVM hex, non-EVM base58)",
                                     "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                                   },
                                   "amount": {
@@ -1405,6 +1407,7 @@
                           },
                           "token": {
                             "type": "string",
+                            "minLength": 1,
                             "description": "Intent value token. The token delivered on the destination chain, or the spent token for same-chain intents (which have no persisted delivery).",
                             "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                           },
@@ -2219,6 +2222,43 @@
                                                     "type": {
                                                       "type": "string",
                                                       "enum": [
+                                                        "ACROSS"
+                                                      ],
+                                                      "description": "Across spoke-pool deposit. Names a deposit to watch for a refund, not a delivery — an ACROSS intent is filled by our own relayer and tracked as an ordinary fill."
+                                                    },
+                                                    "depositId": {
+                                                      "type": "string",
+                                                      "pattern": "^[0-9]{1,78}$",
+                                                      "description": "The Across deposit id our claim opens on the origin chain, as a decimal uint256. Derived as keccak(arbiter | sponsor | nonce)."
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "destinationChainId",
+                                                    "fillStatusTimeout",
+                                                    "type",
+                                                    "depositId"
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "destinationChainId": {
+                                                      "type": "number",
+                                                      "description": "Destination chain ID for the bridge fill"
+                                                    },
+                                                    "fillExpirationPeriod": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                    },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "enum": [
                                                         "ECO"
                                                       ],
                                                       "description": "Eco solver-network delivery"
@@ -2680,6 +2720,43 @@
                                                     "destinationChainId",
                                                     "fillStatusTimeout",
                                                     "type"
+                                                  ]
+                                                },
+                                                {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "destinationChainId": {
+                                                      "type": "number",
+                                                      "description": "Destination chain ID for the bridge fill"
+                                                    },
+                                                    "fillExpirationPeriod": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                    },
+                                                    "fillStatusTimeout": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                    },
+                                                    "type": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "ACROSS"
+                                                      ],
+                                                      "description": "Across spoke-pool deposit. Names a deposit to watch for a refund, not a delivery — an ACROSS intent is filled by our own relayer and tracked as an ordinary fill."
+                                                    },
+                                                    "depositId": {
+                                                      "type": "string",
+                                                      "pattern": "^[0-9]{1,78}$",
+                                                      "description": "The Across deposit id our claim opens on the origin chain, as a decimal uint256. Derived as keccak(arbiter | sponsor | nonce)."
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "destinationChainId",
+                                                    "fillStatusTimeout",
+                                                    "type",
+                                                    "depositId"
                                                   ]
                                                 },
                                                 {
@@ -5179,6 +5256,43 @@
                                                       "type": {
                                                         "type": "string",
                                                         "enum": [
+                                                          "ACROSS"
+                                                        ],
+                                                        "description": "Across spoke-pool deposit. Names a deposit to watch for a refund, not a delivery — an ACROSS intent is filled by our own relayer and tracked as an ordinary fill."
+                                                      },
+                                                      "depositId": {
+                                                        "type": "string",
+                                                        "pattern": "^[0-9]{1,78}$",
+                                                        "description": "The Across deposit id our claim opens on the origin chain, as a decimal uint256. Derived as keccak(arbiter | sponsor | nonce)."
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "destinationChainId",
+                                                      "fillStatusTimeout",
+                                                      "type",
+                                                      "depositId"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "destinationChainId": {
+                                                        "type": "number",
+                                                        "description": "Destination chain ID for the bridge fill"
+                                                      },
+                                                      "fillExpirationPeriod": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                      },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
+                                                      "type": {
+                                                        "type": "string",
+                                                        "enum": [
                                                           "ECO"
                                                         ],
                                                         "description": "Eco solver-network delivery"
@@ -5640,6 +5754,43 @@
                                                       "destinationChainId",
                                                       "fillStatusTimeout",
                                                       "type"
+                                                    ]
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "destinationChainId": {
+                                                        "type": "number",
+                                                        "description": "Destination chain ID for the bridge fill"
+                                                      },
+                                                      "fillExpirationPeriod": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Optional bridge-specific fill deadline duration, in seconds. Preserved on stored quote reload so checksum validation uses the same bridgeFill payload that was signed at quote time."
+                                                      },
+                                                      "fillStatusTimeout": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "description": "Fill-tracker watch window, in seconds. The orchestrator owns this timeout; the fill-tracker reads it here to decide when a bridge fill has timed out."
+                                                      },
+                                                      "type": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "ACROSS"
+                                                        ],
+                                                        "description": "Across spoke-pool deposit. Names a deposit to watch for a refund, not a delivery — an ACROSS intent is filled by our own relayer and tracked as an ordinary fill."
+                                                      },
+                                                      "depositId": {
+                                                        "type": "string",
+                                                        "pattern": "^[0-9]{1,78}$",
+                                                        "description": "The Across deposit id our claim opens on the origin chain, as a decimal uint256. Derived as keccak(arbiter | sponsor | nonce)."
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "destinationChainId",
+                                                      "fillStatusTimeout",
+                                                      "type",
+                                                      "depositId"
                                                     ]
                                                   },
                                                   {
