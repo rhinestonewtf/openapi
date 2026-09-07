@@ -3819,8 +3819,8 @@
         "tags": [
           "Analytics"
         ],
-        "summary": "Ingest browser analytics events",
-        "description": "Durably stores a bounded browser event batch. Authentication is optional: a purpose-limited analytics ingest bearer token attributes the session, while an omitted credential stores it unattributed. Project API keys are not accepted.",
+        "summary": "Record analytics events",
+        "description": "Stores a batch of browser analytics events.",
         "security": [
           {
             "analyticsIngestBearer": []
@@ -3896,8 +3896,8 @@
         "tags": [
           "Analytics"
         ],
-        "summary": "Mint an analytics ingest token",
-        "description": "Verifies a project API key and returns a purpose-limited token that authorizes analytics event ingest for five minutes. The project identity is resolved server-side and is not included separately in the response.",
+        "summary": "Create an analytics token",
+        "description": "Creates a token for submitting analytics events, valid for five minutes.",
         "parameters": [
           {
             "schema": {
@@ -3941,7 +3941,7 @@
           "Utilities"
         ],
         "summary": "List supported chains and tokens",
-        "description": "Returns all chains supported by the deposit service, with their tokens and whether they support deposits, bridging destinations, or both. `deposit` reflects live operator pauses: a chain whose deposits are currently paused reports `deposit: false` while keeping its `destination` and `refund` capabilities, which a pause does not affect. A paused chain is never omitted — absence would mean the chain is not supported at all, which is a different and more permanent claim.",
+        "description": "Returns supported chains and tokens with their deposit and destination availability.",
         "responses": {
           "200": {
             "description": "Supported chains with their tokens",
@@ -3961,8 +3961,8 @@
         "tags": [
           "Accounts"
         ],
-        "summary": "Check if account is registered",
-        "description": "Check if an account is registered and return its target chain and token if registered",
+        "summary": "Check account registration",
+        "description": "Returns whether an account is registered and its target chain and token.",
         "parameters": [
           {
             "schema": {
@@ -4016,8 +4016,8 @@
         "tags": [
           "Clients"
         ],
-        "summary": "Configure client settings",
-        "description": "Configure webhook URL, secret, sponsorship, source-token whitelist, and app-fee rules for a project. Deposit whitelist keys must use CAIP-2 chain identifiers (for example \"eip155:8453\"). App-fee token overrides take precedence over the project fallback; feeBps 0 clears only the fallback, while appFees null clears fallback and overrides.",
+        "summary": "Update client settings",
+        "description": "Updates client configuration for the authenticated project.",
         "parameters": [
           {
             "schema": {
@@ -4120,8 +4120,8 @@
         "tags": [
           "Clients"
         ],
-        "summary": "Read client settings",
-        "description": "Returns the stored client configuration — webhook URL, whether a webhook secret is set, sponsorship rules, source-token whitelist, price-deviation guard, and app-fee rules — for the authenticated project.",
+        "summary": "Get client settings",
+        "description": "Returns the stored client configuration for the authenticated project.",
         "parameters": [
           {
             "schema": {
@@ -4185,8 +4185,8 @@
         "tags": [
           "Accounts"
         ],
-        "summary": "Register a new account",
-        "description": "Register a new account with factory, factory data, session details, and target. `target.chain` must use a CAIP-2 chain identifier (for example \"eip155:8453\").",
+        "summary": "Register an account",
+        "description": "Registers a smart account for deposits.",
         "parameters": [
           {
             "schema": {
@@ -4288,8 +4288,8 @@
         "tags": [
           "Accounts"
         ],
-        "summary": "Fetch or backfill deposit addresses for a registered account",
-        "description": "Return the EVM, Solana, and Tron deposit addresses for an already-registered account. Missing Solana and Tron deposit addresses are backfilled on first call (derivation and Rhino.fi mint as needed) without modifying the account config (session details, target). Idempotent on repeat.",
+        "summary": "Provision deposit addresses",
+        "description": "Returns deposit addresses for a registered account, creating missing addresses as needed.",
         "parameters": [
           {
             "schema": {
@@ -4473,8 +4473,8 @@
         "tags": [
           "Accounts"
         ],
-        "summary": "Create a Solana token account (ATA) for an account",
-        "description": "Create the Solana Associated Token Account (ATA) for a registered account's Solana deposit address and an SPL mint, so transfers from senders that omit a create-ATA instruction (some CEXes) do not bounce on-chain. Allowlisted clients only. Idempotent: returns the existing ATA with created=false if it already exists. Rejects native/wrapped SOL (no ATA needed).",
+        "summary": "Provision a Solana token account",
+        "description": "Creates a token account for a registered account’s Solana deposit address, or returns the existing one.",
         "parameters": [
           {
             "schema": {
@@ -4590,8 +4590,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Retry a failed deposit by id",
-        "description": "Re-drive one failed deposit through the settlement flow, addressing it by the stable id returned by `GET /deposits`. Authenticate with an `x-api-key` (write scope) or a Bearer platform token. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404. The deposit must be `failed` or `rejected`; operator-only states (`ignored`, `delayed`) are retryable through the admin endpoint only. Unlike `POST /deposits/retry`, the error code the deposit failed with does not gate the retry. Optionally pin the settlement layer — EVM only, refused for a Solana or HyperCore deposit rather than silently ignored. Omit the body entirely to retry without pinning a layer. Tron deposits are not retryable. A HyperCore deposit whose first leg already completed is refused with a 409. A 200 means the retry was accepted and re-driven, not that it settled.",
+        "summary": "Retry a deposit",
+        "description": "Retries a failed or rejected deposit.",
         "parameters": [
           {
             "schema": {
@@ -4719,8 +4719,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Refund a refundable deposit by id",
-        "description": "Transfer the funds from a failed, rejected, or ignored deposit back to a caller-provided address on the same chain, addressing the deposit by the stable id returned by `GET /deposits`. Authenticate with an `x-api-key` (write scope) or a Bearer platform token. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404. The deposit must be `failed`, `rejected`, or `ignored`; `delayed` remains refundable through the admin endpoint only.",
+        "summary": "Refund a deposit",
+        "description": "Returns deposit funds to a specified address on the source chain.",
         "parameters": [
           {
             "schema": {
@@ -4835,8 +4835,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Recover a failed deposit with an owner signature",
-        "description": "Return a failed or rejected deposit's source-chain funds to a destination the user signed for, authorized by the deposit RECIPIENT's EIP-712 signature rather than by the API key. The server reconstructs the RecoverDeposit typed data from the stored deposit row and verifies the signature against that row's `recipient` — on the deposit's TARGET chain, where the recipient wallet lives — accepting a raw ECDSA signature (embedded EOA), an ERC-1271 signature (deployed smart account) or an ERC-6492 wrapper (counterfactual account). It then runs the same claim + transfer path as the refund endpoint. Because the signature is the authorization boundary, this route is safe to expose to a browser and a read-scoped `x-api-key` is sufficient. EVM on both source and target chains.",
+        "summary": "Recover a deposit",
+        "description": "Returns funds from a failed or rejected deposit.",
         "parameters": [
           {
             "schema": {
@@ -4959,8 +4959,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "List deposits for the authenticated client",
-        "description": "Returns the authenticated client's deposits, newest first. Supports filtering by account, recipient, address, status, source chain, and transaction hash. The `account` filter accepts an EVM address or a Solana public key (deposit address or swig address); `address` matches the source-chain deposit address or target-chain recipient. Deposits that are still in flight may carry `timing`: an estimate derived from qualifying recent completed deposits on the corridor or chain pair, falling back to the selected attempted or succeeded route's indicative estimate, measured from the deposit's `createdAt`, and omitted when no estimate is available.",
+        "summary": "List deposits",
+        "description": "Returns deposits for the authenticated project, newest first.",
         "parameters": [
           {
             "schema": {
@@ -5150,8 +5150,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "Get a single deposit by id",
-        "description": "Returns one of the authenticated client's deposits by its stable id, in the same item shape as `GET /deposits`, including the optional non-contractual `timing` estimate while the deposit is still in flight. Timing uses qualifying corridor or chain-pair outcomes, then the selected attempted or succeeded route's indicative estimate, and may be absent. Scoped to the caller's tenant: an unknown id and another tenant's id are both a 404.",
+        "summary": "Get a deposit",
+        "description": "Returns a deposit for the authenticated project.",
         "parameters": [
           {
             "schema": {
@@ -5247,8 +5247,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "List candidate quotes considered for a deposit",
-        "description": "Returns every quote the orchestrator (or Solana bridge adapter) returned for this deposit, including which one was attempted and its terminal outcome. Scoped to the caller's tenant.",
+        "summary": "List deposit quotes",
+        "description": "Returns quotes considered for a deposit and their outcomes.",
         "parameters": [
           {
             "schema": {
@@ -5323,8 +5323,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Preview a bridge quote before depositing",
-        "description": "Returns the fees, expected output and expected duration for bridging `amount` of `sourceToken` from `sourceChainId` to the account's registered target, before any funds are deposited. The orchestrator quotes against the supplied amount as if the deposit wallet already held it; the result is indicative and may differ from the quote applied once a real deposit lands. `timing` is an end-to-end duration estimate derived from qualifying recent completed deposits on this corridor or chain pair, falling back to the quoted route's indicative estimate — non-contractual, never a deadline or guarantee — and is omitted when no estimate is available; `estimatedFillTimeSeconds` remains the orchestrator's fill-leg estimate. EVM source chains only. Scoped to the caller's tenant.",
+        "summary": "Get a deposit quote",
+        "description": "Estimates fees, output, and completion time for a deposit.",
         "parameters": [
           {
             "schema": {
@@ -5427,8 +5427,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Prepare a gasless permit deposit",
-        "description": "Experimental. Builds the EIP-712 token-authorization payload the owner signs to authorize their deposit smart account to pull `amount` of `token` from their wallet — no on-chain transfer needed. Selects ERC-3009, ERC-2612, then Permit2; validates the route, session coverage, domain, balance, and allowance before the user is asked to sign. The server chooses replay and deadline fields; submit the signature with the same fields via POST /deposits/permit. EVM source chains only; cross-chain routes only (v1).",
+        "summary": "Prepare a gasless deposit",
+        "description": "Prepares a token authorization for the user to sign. Experimental.",
         "parameters": [
           {
             "schema": {
@@ -5531,8 +5531,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Submit a signed permit deposit",
-        "description": "Experimental. Accepts the owner-signed ERC-3009, ERC-2612, or Permit2 payload prepared by POST /deposits/permit/prepare and immediately starts settlement: the pull from the owner wallet rides inside the bridging intent as a preclaim op, so funds move atomically with the claim. The server reconstructs the typed data from primitive fields and verifies the signature, domain, deadline window, and on-chain replay state before accepting. Returns a synthetic tracking hash usable everywhere a deposit tx hash is until the real source transaction replaces it.",
+        "summary": "Submit a gasless deposit",
+        "description": "Starts a deposit using a signed token authorization. Experimental.",
         "parameters": [
           {
             "schema": {
@@ -5645,8 +5645,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "Aggregated deposit statistics",
-        "description": "Returns aggregated deposit statistics (total deposits, unique depositors, and total USD volume) for the authenticated client over the requested rolling time window. Only completed deposits are counted.",
+        "summary": "Get deposit statistics",
+        "description": "Returns completed deposit counts, unique depositors, and USD volume for the requested period.",
         "parameters": [
           {
             "schema": {
@@ -5736,8 +5736,8 @@
         "tags": [
           "Accounts"
         ],
-        "summary": "Register a server-managed account",
-        "description": "Register a server-owned smart account. Provide a salt for deterministic addressing and a target chain/token.",
+        "summary": "Register a managed account",
+        "description": "Registers a smart account controlled by the server.",
         "parameters": [
           {
             "schema": {
@@ -5839,8 +5839,8 @@
         "tags": [
           "Accounts"
         ],
-        "summary": "Prepare account for registration",
-        "description": "Derive the Rhinestone smart account for (ownerAddress, sessionOwnerAddress), compare against the existing registration and target, and return either the Solana deposit address (if no re-registration is needed) or the unsigned session details and factory parameters the client must sign before calling /register.",
+        "summary": "Prepare account registration",
+        "description": "Returns a deposit address or the details needed to register the account.",
         "parameters": [
           {
             "schema": {
@@ -5925,7 +5925,7 @@
           "Utilities"
         ],
         "summary": "Get a wallet portfolio",
-        "description": "Returns a normalised token portfolio for the given address. If the address is a Solana base58 public key, the Solana portfolio is returned; otherwise the EVM portfolio is aggregated from the orchestrator's `/accounts/:address/portfolio` endpoint and priced via the price service.",
+        "description": "Returns token balances and values for a wallet.",
         "parameters": [
           {
             "schema": {
@@ -6012,8 +6012,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "Get migratable DeFi positions",
-        "description": "Returns the address's DeFi positions in one normalised shape, each carrying the largest amount that can actually be withdrawn right now. `maxWithdrawable` is capped against the venue's full withdraw validation — health factor (with a buffer above the liquidation edge), E-Mode thresholds, zero-LTV collateral, paused reserves and pool liquidity — so a client never asks a user to sign an exit the protocol would reject. Currently covers Aave v3 across every market on the deposit-enabled chains; a `failures` entry appears when a venue could not be reached, so an empty list is distinguishable from a failed lookup.",
+        "summary": "List withdrawable positions",
+        "description": "Returns DeFi positions and the amounts currently available to withdraw.",
         "parameters": [
           {
             "schema": {
@@ -6090,8 +6090,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "Prepare an Aave position unwind",
-        "description": "Returns an **unsigned** `Pool.withdraw` transaction that exits an Aave position straight to the project's deposit address, so the existing deposit pipeline ingests the proceeds. Nothing is executed: the holding EOA owns the aTokens, so only it can authorise the withdraw, and the service holds no key on this path. The amount is capped server-side against Aave's full withdraw validation and is refused outright if the proceeds would fall foul of the project's deposit policy — that check happens here because this is the last point before an irreversible signature.",
+        "summary": "Prepare an Aave withdrawal",
+        "description": "Prepares an unsigned transaction to withdraw an Aave position to a deposit address.",
         "parameters": [
           {
             "schema": {
@@ -6178,7 +6178,7 @@
           "Utilities"
         ],
         "summary": "Get a Solana wallet portfolio",
-        "description": "Returns a normalised SPL portfolio for the given Solana address by paginating through Helius wallet balances.",
+        "description": "Returns token balances and values for a Solana wallet.",
         "parameters": [
           {
             "schema": {
@@ -6254,8 +6254,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "Check route liquidity for an amount",
-        "description": "Returns whether the given source→destination route can fulfil the requested amount, along with the underlying liquidity metadata from the orchestrator.",
+        "summary": "Check route liquidity",
+        "description": "Checks whether a route can fulfil the requested amount.",
         "parameters": [
           {
             "schema": {
@@ -6378,8 +6378,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "Get USD unit prices for token symbols",
-        "description": "Returns USD unit prices keyed by uppercased token symbol. Used to convert a USD amount into estimated destination-token units for tokens not present in the portfolio (e.g. a SOL or ETH destination the user does not hold).",
+        "summary": "Get token prices",
+        "description": "Returns token prices in USD by symbol.",
         "parameters": [
           {
             "schema": {
@@ -6458,8 +6458,8 @@
         "tags": [
           "Utilities"
         ],
-        "summary": "List the QR/transfer token shortlist",
-        "description": "Returns the curated per-chain token shortlist the QR / manual-transfer flow offers as \"what are you sending?\". That flow has no connected wallet to read balances from, so it needs a suggested set rather than a discovered one. Filtered against the authenticated project's `depositWhitelist` when one is configured, so the flow cannot offer a token the client would reject on arrival. This is a suggestion list, not a capability list — `/chains` remains the authority on what the service supports.",
+        "summary": "List suggested deposit tokens",
+        "description": "Returns suggested tokens for QR and manual-transfer deposits.",
         "parameters": [
           {
             "schema": {
@@ -6523,8 +6523,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Relay a Safe withdrawal via shared Nexus relayer",
-        "description": "Relay a signed Safe execTransaction via a shared AWS-owned Nexus account with sponsored gas",
+        "summary": "Relay a Safe withdrawal",
+        "description": "Submits a signed Safe withdrawal with sponsored gas.",
         "parameters": [
           {
             "schema": {
@@ -6608,8 +6608,8 @@
         "tags": [
           "Processing"
         ],
-        "summary": "Relay a Polymarket deposit-wallet withdrawal",
-        "description": "Relay a user-signed Polymarket deposit-wallet `WALLET` batch (approve/unwrap pUSD or transfer USDC.e) through the Polymarket relayer using server-held builder credentials. Submitted calls must target known Polymarket contracts.",
+        "summary": "Relay a Polymarket withdrawal",
+        "description": "Submits a signed withdrawal from a Polymarket deposit wallet.",
         "parameters": [
           {
             "schema": {
@@ -6703,8 +6703,8 @@
         "tags": [
           "Webhooks"
         ],
-        "summary": "List persisted webhook events for the calling client",
-        "description": "Returns webhook events delivered (or attempted) to the caller's webhook URL. Use for backfill or replay verification. Results are id-desc; pass the last `nextCursor` to paginate.",
+        "summary": "List webhook events",
+        "description": "Returns webhook events for the authenticated project, newest first.",
         "parameters": [
           {
             "schema": {
@@ -6816,8 +6816,8 @@
         "tags": [
           "Webhooks"
         ],
-        "summary": "Re-attempt delivery of a stored webhook event",
-        "description": "Re-sends an existing webhook event to the configured webhook URL using its original eventId. Useful for replaying a delivery that failed permanently. Does not allocate a new event id.",
+        "summary": "Resend a webhook",
+        "description": "Resends a webhook event to the configured URL.",
         "parameters": [
           {
             "schema": {
@@ -6901,8 +6901,8 @@
         "tags": [
           "Webhooks"
         ],
-        "summary": "Send a test webhook to the configured URL",
-        "description": "Sends a single webhook with fixture data to the client's configured URL. Uses the client's real webhook secret so signature verification works as in production. Envelope and persisted payload both carry `\"test\": true` so the receiver can filter and the dashboard can mark it.",
+        "summary": "Send a test webhook",
+        "description": "Sends a webhook with test data to the configured URL.",
         "parameters": [
           {
             "schema": {
@@ -6976,8 +6976,8 @@
         "tags": [
           "Onramp"
         ],
-        "summary": "Mint a signed Swapped widget URL (fiat on-ramp)",
-        "description": "Returns a signed Swapped widget URL the modal embeds in an iframe for the fiat on-ramp. The destination asset is fixed server-side (the configured currency code); the caller supplies the smart account that receives the crypto. `methodSelectionSource: \"personalized\"` opts a trusted regional selection into strict merchant-catalog validation; fallback, configured, and legacy selections retain exact-method pass-through.",
+        "summary": "Create a fiat funding URL",
+        "description": "Creates a signed Swapped URL for buying crypto with fiat.",
         "parameters": [
           {
             "schema": {
@@ -7103,8 +7103,8 @@
         "tags": [
           "Onramp"
         ],
-        "summary": "Mint a signed Swapped Connect URL (CEX funding)",
-        "description": "Returns a signed Swapped Connect URL the modal embeds in an iframe so the user can fund from a centralized exchange. Current callers send the exact picker rate as acceptedExchangeFeeBps; omission preserves legacy fee-free delivery, while a stale rate returns 409 before any URL or session state is minted. Requires a configured public webhook callback URL.",
+        "summary": "Create an exchange funding URL",
+        "description": "Creates a signed Swapped Connect URL for funding from a centralized exchange.",
         "parameters": [
           {
             "schema": {
@@ -7240,8 +7240,8 @@
         "tags": [
           "Onramp"
         ],
-        "summary": "List localized Swapped payment methods",
-        "description": "Returns the configured popular method (when merchant-enabled) followed by the supported subset of credit card, bank transfer, and Apple Pay for the trusted edge-resolved x-user-country. A missing/unknown country or unavailable catalog returns the null-country fallback so clients can use their built-in global defaults.",
+        "summary": "List payment methods",
+        "description": "Returns available Swapped payment methods for the user’s country.",
         "parameters": [
           {
             "schema": {
@@ -7348,8 +7348,8 @@
         "tags": [
           "Onramp"
         ],
-        "summary": "Poll the latest Swapped order status for a smart account",
-        "description": "Returns the latest Swapped order recorded for the smart account (from notify webhooks), or `{ ok: false, reason: \"no_order\" }` when none exists yet.",
+        "summary": "Get funding status",
+        "description": "Returns the latest Swapped order for a smart account.",
         "parameters": [
           {
             "schema": {
@@ -7455,8 +7455,8 @@
         "tags": [
           "Onramp"
         ],
-        "summary": "List centralized exchanges for the Connect picker",
-        "description": "Returns the centralized exchanges offered by the Swapped Connect picker. Served from a maintained static list (Swapped exposes no enumeration API).",
+        "summary": "List supported exchanges",
+        "description": "Returns centralized exchanges available for funding through Swapped Connect.",
         "parameters": [
           {
             "schema": {
