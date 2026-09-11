@@ -917,6 +917,9 @@
           "depositWhitelist": {
             "$ref": "#/components/schemas/DepositWhitelist"
           },
+          "swapQuoters": {
+            "$ref": "#/components/schemas/ProjectSwapQuoters"
+          },
           "maxPriceDeviationBps": {
             "type": [
               "integer",
@@ -1023,6 +1026,32 @@
           ]
         }
       },
+      "ProjectSwapQuoters": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "1inch",
+              "0x",
+              "velora",
+              "kyberswap",
+              "fynd",
+              "fynd-hosted",
+              "bebop",
+              "relay"
+            ]
+          }
+        },
+        "description": "List of swap venues we may request quotes from, keyed by the EVM chain the swap is FUNDED FROM (CAIP-2, eip155 only). For every EVM deposit that is the chain it arrived on; a HyperCore-origin deposit swaps on HyperEVM, so key it \"eip155:999\". A routing preference applied when quoting, not a restriction on the account: it does not survive compromise of the executor key, and excluding a venue that would have priced better costs price. Omit a chain to leave it unconstrained. `quoters` applies per intent, so on a cross-chain route the funding chain's list bounds the whole route, and an entry for the destination chain does not constrain a route funded elsewhere.",
+        "example": {
+          "eip155:9745": [
+            "0x",
+            "fynd"
+          ]
+        }
+      },
       "AppFees": {
         "type": [
           "object",
@@ -1104,6 +1133,16 @@
               }
             },
             "description": "Per-source-chain deposit allowlist keyed by CAIP-2 chain identifiers, each mapping allowed tokens to optional raw-unit min/max limits."
+          },
+          "swapQuoters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ProjectSwapQuoters"
+              },
+              {
+                "description": "Swap venues we may request quotes from, keyed by the EVM chain a swap is funded from, as stored. Absent means unconstrained everywhere."
+              }
+            ]
           },
           "maxPriceDeviationBps": {
             "type": "number"
@@ -1205,6 +1244,9 @@
           },
           "sessionDetails": {
             "$ref": "#/components/schemas/EnableSessionDetails"
+          },
+          "sessionScopes": {
+            "$ref": "#/components/schemas/SessionScopes"
           }
         },
         "required": [
@@ -1250,6 +1292,52 @@
         "required": [
           "hashesAndChainIds",
           "signature"
+        ]
+      },
+      "SessionScopes": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/components/schemas/SessionScope"
+        }
+      },
+      "SessionScope": {
+        "type": "object",
+        "properties": {
+          "sellToken": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Token the deposit arrives in.",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "buyToken": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Where value is allowed to end up — normally the account target token.",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "recipient": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Pinned output recipient, so a compromised signer cannot redirect the swap.",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "settler": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The 0x Settler this scope pins. Resolved server-side from 0x's registry and echoed back inside `accountParams`; re-send it unchanged on `/register`, because it is an input to the digest you signed.",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "maxSpend": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Optional cumulative ceiling on what may leave, in base units. The pinned Settler is what bounds the session, so a cap is only needed as a spend ceiling in its own right. It is a LIFETIME total: once reached the account stops converting deposits until it re-registers.",
+            "example": "1000000000000000000"
+          }
+        },
+        "required": [
+          "sellToken",
+          "buyToken",
+          "recipient"
         ]
       },
       "Target": {
@@ -2595,6 +2683,9 @@
                 "pattern": "^0x[a-fA-F0-9]+$",
                 "description": "Hex-encoded string (0x followed by hex characters)",
                 "example": "0x1234abcd"
+              },
+              "sessionScopes": {
+                "$ref": "#/components/schemas/SessionScopes"
               }
             },
             "required": [
@@ -2681,6 +2772,9 @@
             "type": "boolean"
           },
           "postBridgeActions": {},
+          "sessionScopes": {
+            "$ref": "#/components/schemas/SessionScopes"
+          },
           "signerAddress": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
@@ -2862,9 +2956,10 @@
                       "ltv_validation",
                       "available_liquidity",
                       "below_deposit_floor",
-                      "deposit_not_whitelisted"
+                      "deposit_not_whitelisted",
+                      "outside_session_scope"
                     ],
-                    "description": "Why the position cannot be fully migrated. Venue reasons (`health_factor`, `paused_reserve`, `ltv_validation`, `available_liquidity`) cap `maxWithdrawable` itself. `frozen_reserve` is advisory — Aave still permits withdrawing from a frozen reserve. `below_deposit_floor` and `deposit_not_whitelisted` mean the venue would pay out but this project's deposit policy would then reject the proceeds, so they do not reduce `maxWithdrawable`."
+                    "description": "Why the position cannot be fully migrated. Venue reasons (`health_factor`, `paused_reserve`, `ltv_validation`, `available_liquidity`) cap `maxWithdrawable` itself. `frozen_reserve` is advisory — Aave still permits withdrawing from a frozen reserve. `below_deposit_floor`, `deposit_not_whitelisted` and `outside_session_scope` mean the venue would pay out but this project's deposit policy would then reject the proceeds, so they do not reduce `maxWithdrawable`. `outside_session_scope` additionally means the proceeds would strand: a scoped session has no refund action."
                   }
                 }
               },
@@ -3601,6 +3696,33 @@
             "type": "integer",
             "minimum": 0,
             "maximum": 10000
+          },
+          "connections": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "minItems": 1,
+            "maxItems": 26,
+            "example": [
+              "coinbase",
+              "kraken"
+            ]
+          },
+          "merchantName": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "Optional. Overrides the merchant name Swapped Connect shows on its confirm screen — both the \"To:\" row and its tooltip (\"Funds will be delivered to your <name> wallet.\"). Omit it to inherit the Rhinestone default. Send it raw; the service URL-encodes it.",
+            "example": "Superform"
+          },
+          "merchantLogoUrl": {
+            "type": "string",
+            "maxLength": 2048,
+            "format": "uri",
+            "description": "Optional. Publicly accessible HTTPS URL of the merchant's logo, shown beside `merchantName` on the Swapped Connect confirm screen. PNG or SVG recommended. Send it raw; the service URL-encodes it.",
+            "example": "https://cdn.example.com/logo.svg"
           }
         },
         "required": [
@@ -3780,12 +3902,31 @@
                     "string",
                     "null"
                   ]
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "exchange",
+                    "wallet"
+                  ],
+                  "example": "exchange"
+                },
+                "appHandoff": {
+                  "type": "string",
+                  "enum": [
+                    "none",
+                    "https_link",
+                    "custom_scheme"
+                  ],
+                  "example": "none"
                 }
               },
               "required": [
                 "connection",
                 "name",
-                "logoUrl"
+                "logoUrl",
+                "kind",
+                "appHandoff"
               ]
             }
           },
@@ -4022,23 +4163,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           },
           {
@@ -4085,7 +4215,7 @@
             }
           },
           "401": {
-            "description": "Authentication required (missing/invalid API key or token)",
+            "description": "Authentication required, or invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -4105,7 +4235,7 @@
             }
           },
           "503": {
-            "description": "Client credential could not be persisted; retry after the Retry-After delay",
+            "description": "Client configuration could not be persisted; retry after the Retry-After delay",
             "content": {
               "application/json": {
                 "schema": {
@@ -4126,23 +4256,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -4263,7 +4382,7 @@
             }
           },
           "503": {
-            "description": "Webhook provider enrollment is rate limited; retry after the number of seconds in the Retry-After header",
+            "description": "Temporarily unavailable; nothing was stored. Retry after the number of seconds in the Retry-After header.",
             "headers": {
               "Retry-After": {
                 "description": "Seconds to wait before retrying the registration",
@@ -4464,6 +4583,16 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "For a scoped account, the submitted digests could not be verified against the stored scope right now. Nothing was stored; retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }
@@ -4608,23 +4737,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           },
           {
@@ -4737,23 +4855,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -4841,23 +4948,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -5081,23 +5177,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -5123,7 +5208,7 @@
             }
           },
           "401": {
-            "description": "Invalid or expired platform bearer token",
+            "description": "Missing or invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -5168,23 +5253,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -5210,7 +5284,7 @@
             }
           },
           "401": {
-            "description": "Authentication required, or invalid API key / platform token",
+            "description": "Authentication required, or invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -5329,23 +5403,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -5380,7 +5443,7 @@
             }
           },
           "401": {
-            "description": "Missing/invalid API key or expired platform bearer token",
+            "description": "Missing or invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -5433,23 +5496,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -5484,7 +5536,7 @@
             }
           },
           "401": {
-            "description": "Missing/invalid API key or expired platform bearer token",
+            "description": "Missing or invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -5537,23 +5589,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -5588,7 +5629,7 @@
             }
           },
           "401": {
-            "description": "Missing/invalid API key or expired platform bearer token",
+            "description": "Missing or invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -5667,23 +5708,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -5709,7 +5739,7 @@
             }
           },
           "401": {
-            "description": "Invalid or expired platform bearer token",
+            "description": "Missing or invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -6074,6 +6104,16 @@
           },
           "403": {
             "description": "API key lacks the required deposits scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The account could not be read, so migratable positions cannot be determined. Retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6464,23 +6504,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -6982,23 +7011,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           },
           {
@@ -7109,23 +7127,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           },
           {
@@ -7173,7 +7180,7 @@
             }
           },
           "400": {
-            "description": "Invalid request",
+            "description": "Invalid request, including a `connections` allowlist naming an unrecognized slug, declared without the `connection` selection that narrows the session, or one that excludes the selection",
             "content": {
               "application/json": {
                 "schema": {
@@ -7246,23 +7253,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           },
           {
@@ -7366,23 +7362,12 @@
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
+            "required": true,
+            "description": "API key for authentication",
             "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
-            },
-            "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
             "in": "header"
           }
         ],
@@ -7455,39 +7440,62 @@
         "tags": [
           "Onramp"
         ],
-        "summary": "List supported exchanges",
-        "description": "Returns centralized exchanges available for funding through Swapped Connect.",
+        "summary": "List supported exchanges and wallets",
+        "description": "Returns the connections available for funding through Swapped Connect. Defaults to the centralized exchanges; pass `kind=wallet` or `kind=all` for the Web3 wallets, or `connections` to resolve an explicit allowlist.",
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "description": "API key for authentication (omit when sending Authorization)",
-              "example": "your-api-key"
+              "maxLength": 1024,
+              "example": "coinbase,kraken,phantom_wallet"
             },
             "required": false,
-            "description": "API key for authentication (omit when sending Authorization)",
-            "name": "x-api-key",
-            "in": "header"
+            "name": "connections",
+            "in": "query"
           },
           {
             "schema": {
               "type": "string",
-              "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-              "example": "Bearer eyJhbGciOi..."
+              "enum": [
+                "exchange",
+                "wallet",
+                "all"
+              ],
+              "example": "all"
             },
             "required": false,
-            "description": "Bearer platform token (e.g. forwarded by user-service). Takes precedence over `x-api-key` when both are present.",
-            "name": "authorization",
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
             "in": "header"
           }
         ],
         "responses": {
           "200": {
-            "description": "Supported exchanges",
+            "description": "Supported connections",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SwappedConnectExchangesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The `connections` allowlist named a slug outside the catalogue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
