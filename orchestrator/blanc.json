@@ -1544,6 +1544,129 @@
                                   ],
                                   "description": "This operation's transaction spends the account's own tokens. Absent means it moves none of them (a destination fill, or a tokenless intent). Read it together with the operation status: a FAILED intent none of whose debiting operations reached COMPLETED never took the account's funds. Per-operation rather than per-intent because a multi-origin intent has several claims and they can differ.",
                                   "example": true
+                                },
+                                "allocation": {
+                                  "type": "object",
+                                  "properties": {
+                                    "plannedGasMicroUsd": {
+                                      "type": "string",
+                                      "pattern": "^\\d+$",
+                                      "description": "Sponsor-covered gas planned for this operation (micro-USD)",
+                                      "example": "100"
+                                    },
+                                    "fixedCompensationMicroUsd": {
+                                      "type": "string",
+                                      "pattern": "^\\d+$",
+                                      "description": "Fixed non-gas compensation (micro-USD); nonzero only on FILL allocations",
+                                      "example": "0"
+                                    },
+                                    "executedGasMicroUsd": {
+                                      "type": "string",
+                                      "pattern": "^\\d+$",
+                                      "description": "Receipt-derived actual gas (micro-USD); null means the planned fallback applies",
+                                      "example": "80",
+                                      "nullable": true
+                                    },
+                                    "payableMicroUsd": {
+                                      "type": "string",
+                                      "pattern": "^\\d+$",
+                                      "description": "fixedCompensation + (executedGas ?? plannedGas), in micro-USD",
+                                      "example": "80"
+                                    },
+                                    "counterparty": {
+                                      "type": "string",
+                                      "nullable": true,
+                                      "description": "Canonical earner, stamped from the receipt sender this allocation reconciled to; null until earned"
+                                    },
+                                    "nativeTokenPriceUsd": {
+                                      "type": "string",
+                                      "nullable": true,
+                                      "description": "Pinned POST (PATH-fallback) native-token USD price the gas micro-USD was valued at, as a decimal string; null when no price snapshot exists",
+                                      "example": "2000"
+                                    },
+                                    "receipt": {
+                                      "type": "object",
+                                      "properties": {
+                                        "blockHash": {
+                                          "type": "string",
+                                          "nullable": true,
+                                          "description": "Block hash"
+                                        },
+                                        "blockNumber": {
+                                          "type": "string",
+                                          "description": "Block number"
+                                        },
+                                        "gasUsed": {
+                                          "type": "string",
+                                          "nullable": true,
+                                          "description": "Gas used"
+                                        },
+                                        "effectiveGasPriceWei": {
+                                          "type": "string",
+                                          "nullable": true,
+                                          "description": "Effective gas price (wei)"
+                                        },
+                                        "l1FeeWei": {
+                                          "type": "string",
+                                          "nullable": true,
+                                          "description": "L1 fee (wei), OP-stack chains only"
+                                        },
+                                        "blobFeeWei": {
+                                          "type": "string",
+                                          "nullable": true,
+                                          "description": "Blob fee (wei)"
+                                        }
+                                      },
+                                      "required": [
+                                        "blockHash",
+                                        "blockNumber",
+                                        "gasUsed",
+                                        "effectiveGasPriceWei",
+                                        "l1FeeWei",
+                                        "blobFeeWei"
+                                      ],
+                                      "nullable": true,
+                                      "description": "Canonical receipt evidence; txHash/timestamp already sit on the item"
+                                    },
+                                    "payment": {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": [
+                                            "PAYMENT",
+                                            "ADJUSTMENT"
+                                          ]
+                                        },
+                                        "effectiveDate": {
+                                          "type": "string",
+                                          "format": "date-time"
+                                        },
+                                        "createdAt": {
+                                          "type": "string",
+                                          "format": "date-time"
+                                        }
+                                      },
+                                      "required": [
+                                        "kind",
+                                        "effectiveDate",
+                                        "createdAt"
+                                      ],
+                                      "nullable": true,
+                                      "description": "Treasury settlement of this allocation; null until settled. Destinations, references, and operator fields are never exposed."
+                                    }
+                                  },
+                                  "required": [
+                                    "plannedGasMicroUsd",
+                                    "fixedCompensationMicroUsd",
+                                    "executedGasMicroUsd",
+                                    "payableMicroUsd",
+                                    "counterparty",
+                                    "nativeTokenPriceUsd",
+                                    "receipt",
+                                    "payment"
+                                  ],
+                                  "description": "Blanc only. Present only on operations the CALLER earned: the allocation's stamped `counterparty`, or — before conversion stamps one — the operation's canonical receipt sender, is one of the caller's registered `scopes.relayer.fillAddresses`. Holding the relayer scope is not sufficient, because `/intents/:id` is nonce-only and scope alone would disclose another relayer's counterparties, amounts and settlement dates off a guessed intent id. Everything else fails closed. Amounts are micro-USD."
                                 }
                               },
                               "required": [
@@ -1585,6 +1708,28 @@
                         "description": "A bridge refund returned to the account for this intent"
                       },
                       "description": "Bridge refunds observed for this intent — a settlement layer returned the funds to the account instead of delivering them. Not operations: Rhinestone neither built nor broadcast these transactions, and a refund never makes the intent succeed. Omitted when none are known, which is every delivered intent and also a failed one whose refund we have not (or not yet) observed — so its absence is not evidence that funds were kept."
+                    },
+                    "hyperCore": {
+                      "type": "object",
+                      "properties": {
+                        "outcome": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "accepted",
+                            "refused",
+                            "error",
+                            "unknown",
+                            "partial"
+                          ],
+                          "description": "`pending` while the action is still owed — the POST runs after the fill transaction commits, so this is normal for a few seconds after delivery. `accepted` means Hyperliquid took it; an order filled for less than asked is accepted, simply for less. `refused` is the exchange declining a well-formed action — an `Ioc` that no longer crossed by the time the bridge delivered is the expected one — and `error` is it never answering before the intent expired.\n\n`unknown` means a delivery attempt got no response at all, so the action MAY have been applied and only its answer lost. `partial` means some orders of one batch were placed and others rejected — an `order` action carries up to 100 and each is matched independently.\n\nEvery non-`accepted` terminal value reports the intent as FAILED, because reporting success on a maybe is the failure this field exists to prevent. Do NOT re-send a `partial` batch as-is: the orders that filled would open a second time. Check the account on Hyperliquid for `partial` and `unknown` alike — it holds the per-order record, and the funds are in its own HyperCore balance whatever happened.",
+                          "example": "accepted"
+                        }
+                      },
+                      "required": [
+                        "outcome"
+                      ],
+                      "description": "What Hyperliquid did with this intent's `options.hyperCore` action, and the only record of it — the action is the one leg of an intent that is not a transaction. Omitted for every intent that carried none.\n\nIt DECIDES `status` rather than annotating it: an intent whose action was refused reports FAILED even though every operation completed, because the delivery landed and the trade did not. The funds are in the account's own HyperCore balance either way, so a refusal is recoverable by trading again — it is not a loss."
                     },
                     "details": {
                       "type": "object",
@@ -1844,16 +1989,19 @@
                             },
                             "sponsoredValue": {
                               "type": "string",
-                              "description": "Sponsored value actually charged, in integer micro-USD (1 USD = 1,000,000 units). Once the intent executes this is reconciled from the receipt (planned gas replaced by executed), so it matches the sponsorship balance and the usage/billing reads rather than the amount reserved at quote time.",
+                              "pattern": "^\\d+$",
+                              "description": "Sponsored value actually charged, in integer micro-USD (1 USD = 1,000,000 units). Once the intent executes this is reconciled from the receipt (planned gas replaced by executed), so it matches the sponsorship balance and the usage/billing reads rather than the amount reserved at quote time. On an allocation-backed intent this is the sum of its per-operation allocations, which is where reconciliation writes executed gas.",
                               "example": "210000"
                             },
                             "protocolFee": {
                               "type": "string",
-                              "description": "Rhinestone-owed slice of the sponsor charge, in integer micro-USD (1 USD = 1,000,000 units): the sponsor surcharge plus a sponsored protocol fee (`sponsorSettings.protocolFees`) where one applies.",
+                              "pattern": "^\\d+$",
+                              "description": "Rhinestone-owed slice of the sponsor charge, in integer micro-USD (1 USD = 1,000,000 units): the sponsor surcharge plus a sponsored protocol fee (`sponsorSettings.protocolFees`) where one applies. Charged on allocation-backed intents too — the allocation ledger carries the relayer liability only.",
                               "example": "10000"
                             },
                             "sponsorSurcharge": {
                               "type": "string",
+                              "pattern": "^\\d+$",
                               "description": "Rhinestone's surcharge on the sponsored relayer coverage, in integer micro-USD — the pure surcharge slice of `protocolFee` and reconciled with it, as `sponsorSurcharge` on a quote. Omitted where the charge was recorded without the split, which is never inferred by subtraction.",
                               "example": "10000"
                             }
@@ -10217,13 +10365,13 @@
                                         },
                                         "p": {
                                           "type": "string",
-                                          "pattern": "^-?\\d+(\\.\\d+)?$",
+                                          "pattern": "^\\d+(\\.\\d+)?$",
                                           "description": "Limit price. Must satisfy Hyperliquid's tick rules — at most 5 significant figures and at most `6 - szDecimals` decimals for a perp — and is refused there, not here.\n\nThis price is fixed when you sign, and an intent that bridges to HyperCore takes ~30s to deliver. Price it to still cross after that move, or the order is refused with your funds already delivered.",
                                           "example": "64250.5"
                                         },
                                         "s": {
                                           "type": "string",
-                                          "pattern": "^-?\\d+(\\.\\d+)?$",
+                                          "pattern": "^\\d+(\\.\\d+)?$",
                                           "description": "Size in units of the asset, to at most the asset's `szDecimals`. Hyperliquid refuses an order worth under ~$10.",
                                           "example": "0.0002"
                                         },
@@ -10273,7 +10421,7 @@
                                                     },
                                                     "triggerPx": {
                                                       "type": "string",
-                                                      "pattern": "^-?\\d+(\\.\\d+)?$"
+                                                      "pattern": "^\\d+(\\.\\d+)?$"
                                                     },
                                                     "tpsl": {
                                                       "type": "string",
@@ -10491,13 +10639,13 @@
                                       },
                                       "p": {
                                         "type": "string",
-                                        "pattern": "^-?\\d+(\\.\\d+)?$",
+                                        "pattern": "^\\d+(\\.\\d+)?$",
                                         "description": "Limit price. Must satisfy Hyperliquid's tick rules — at most 5 significant figures and at most `6 - szDecimals` decimals for a perp — and is refused there, not here.\n\nThis price is fixed when you sign, and an intent that bridges to HyperCore takes ~30s to deliver. Price it to still cross after that move, or the order is refused with your funds already delivered.",
                                         "example": "64250.5"
                                       },
                                       "s": {
                                         "type": "string",
-                                        "pattern": "^-?\\d+(\\.\\d+)?$",
+                                        "pattern": "^\\d+(\\.\\d+)?$",
                                         "description": "Size in units of the asset, to at most the asset's `szDecimals`. Hyperliquid refuses an order worth under ~$10.",
                                         "example": "0.0002"
                                       },
@@ -10547,7 +10695,7 @@
                                                   },
                                                   "triggerPx": {
                                                     "type": "string",
-                                                    "pattern": "^-?\\d+(\\.\\d+)?$"
+                                                    "pattern": "^\\d+(\\.\\d+)?$"
                                                   },
                                                   "tpsl": {
                                                     "type": "string",
@@ -10652,13 +10800,13 @@
                                             },
                                             "p": {
                                               "type": "string",
-                                              "pattern": "^-?\\d+(\\.\\d+)?$",
+                                              "pattern": "^\\d+(\\.\\d+)?$",
                                               "description": "Limit price. Must satisfy Hyperliquid's tick rules — at most 5 significant figures and at most `6 - szDecimals` decimals for a perp — and is refused there, not here.\n\nThis price is fixed when you sign, and an intent that bridges to HyperCore takes ~30s to deliver. Price it to still cross after that move, or the order is refused with your funds already delivered.",
                                               "example": "64250.5"
                                             },
                                             "s": {
                                               "type": "string",
-                                              "pattern": "^-?\\d+(\\.\\d+)?$",
+                                              "pattern": "^\\d+(\\.\\d+)?$",
                                               "description": "Size in units of the asset, to at most the asset's `szDecimals`. Hyperliquid refuses an order worth under ~$10.",
                                               "example": "0.0002"
                                             },
@@ -10708,7 +10856,7 @@
                                                         },
                                                         "triggerPx": {
                                                           "type": "string",
-                                                          "pattern": "^-?\\d+(\\.\\d+)?$"
+                                                          "pattern": "^\\d+(\\.\\d+)?$"
                                                         },
                                                         "tpsl": {
                                                           "type": "string",
@@ -10843,14 +10991,869 @@
                                 ],
                                 "additionalProperties": false,
                                 "description": "Add or remove margin on an isolated position."
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "twapOrder"
+                                    ]
+                                  },
+                                  "twap": {
+                                    "type": "object",
+                                    "properties": {
+                                      "a": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "description": "Asset index, as for an order.",
+                                        "example": 0
+                                      },
+                                      "b": {
+                                        "type": "boolean",
+                                        "description": "Buy (`true`) or sell (`false`).",
+                                        "example": true
+                                      },
+                                      "s": {
+                                        "type": "string",
+                                        "pattern": "^\\d+(\\.\\d+)?$",
+                                        "description": "Total size to work, in units of the asset.",
+                                        "example": "0.01"
+                                      },
+                                      "r": {
+                                        "type": "boolean",
+                                        "description": "Reduce-only.",
+                                        "example": false
+                                      },
+                                      "m": {
+                                        "type": "integer",
+                                        "minimum": 0,
+                                        "exclusiveMinimum": true,
+                                        "description": "Duration in MINUTES. Hyperliquid enforces its own bounds and refuses a duration outside them (\"Invalid TWAP duration\"), so none are imposed here.",
+                                        "example": 30
+                                      },
+                                      "t": {
+                                        "type": "boolean",
+                                        "description": "Randomize the timing of the sub-orders rather than spacing them evenly.",
+                                        "example": true
+                                      }
+                                    },
+                                    "required": [
+                                      "a",
+                                      "b",
+                                      "s",
+                                      "r",
+                                      "m",
+                                      "t"
+                                    ],
+                                    "additionalProperties": false
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "twap"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Work a position in over `m` minutes rather than in one fill.\n\nCarries NO limit price, which is what makes it the shape to reach for when the bridge delay is the risk: an `Ioc` order is priced at quote time and refused if the book has moved past it by the time the funds land, whereas a TWAP cannot be refused for not crossing.\n\nThe intent completes when Hyperliquid ACCEPTS the TWAP, not when it finishes — the sub-orders run for `m` minutes afterwards, with no further intent and nothing on our side watching them."
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string",
+                                    "enum": [
+                                      "twapCancel"
+                                    ]
+                                  },
+                                  "a": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "description": "Asset index of the running TWAP.",
+                                    "example": 0
+                                  },
+                                  "t": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "description": "The TWAP id, which Hyperliquid returns when it accepts the `twapOrder` and is not echoed on the intent. Read it back from the exchange — the agent that placed the TWAP authorised only that one action, so cancelling is a second intent.",
+                                    "example": 12345
+                                  }
+                                },
+                                "required": [
+                                  "type",
+                                  "a",
+                                  "t"
+                                ],
+                                "additionalProperties": false,
+                                "description": "Stop a running TWAP. Needs no delivered funds."
                               }
                             ],
-                            "description": "The Hyperliquid action to authorise. An action that needs collateral (opening a position) must be paired with `tokenRequests` that deliver it; one that does not (a reduce-only close, a cancel, a leverage change) rides a tokenless intent.\n\nOne action per intent: an agent authorises exactly one, and registering a second evicts the first, so an intent submitted while another is in flight for the same account is refused."
+                            "description": "A single Hyperliquid action to authorise. Shorthand for a one-element `actions`; give one or the other, not both."
+                          },
+                          "actions": {
+                            "type": "array",
+                            "items": {
+                              "discriminator": {
+                                "propertyName": "type"
+                              },
+                              "oneOf": [
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "order"
+                                      ]
+                                    },
+                                    "orders": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "a": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "description": "Asset index. Perps use the index in the `meta` universe; spot uses `10000 + index` from `spotMeta`. This is an INDEX, not a ticker — resolve it from the info endpoint, and note that an index built against the wrong universe places a valid order in the wrong market.",
+                                            "example": 0
+                                          },
+                                          "b": {
+                                            "type": "boolean",
+                                            "description": "Buy (`true`) or sell (`false`).",
+                                            "example": true
+                                          },
+                                          "p": {
+                                            "type": "string",
+                                            "pattern": "^\\d+(\\.\\d+)?$",
+                                            "description": "Limit price. Must satisfy Hyperliquid's tick rules — at most 5 significant figures and at most `6 - szDecimals` decimals for a perp — and is refused there, not here.\n\nThis price is fixed when you sign, and an intent that bridges to HyperCore takes ~30s to deliver. Price it to still cross after that move, or the order is refused with your funds already delivered.",
+                                            "example": "64250.5"
+                                          },
+                                          "s": {
+                                            "type": "string",
+                                            "pattern": "^\\d+(\\.\\d+)?$",
+                                            "description": "Size in units of the asset, to at most the asset's `szDecimals`. Hyperliquid refuses an order worth under ~$10.",
+                                            "example": "0.0002"
+                                          },
+                                          "r": {
+                                            "type": "boolean",
+                                            "description": "Reduce-only. `true` is how a position is CLOSED — pair it with a tokenless intent, since closing needs no delivered collateral.",
+                                            "example": false
+                                          },
+                                          "t": {
+                                            "oneOf": [
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "limit": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "tif": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "Alo",
+                                                          "Ioc",
+                                                          "Gtc"
+                                                        ],
+                                                        "description": "Time in force. `Ioc` fills what it can and cancels the rest, which is how a market order is expressed here — there is no market order type. `Alo` is post-only. `Gtc` rests on the book.\n\nPrefer `Ioc` for anything an intent delivers funds for: a resting order leaves the account holding USDC and no position, and the agent that could have cancelled it is already spent.",
+                                                        "example": "Ioc"
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "tif"
+                                                    ],
+                                                    "additionalProperties": false
+                                                  }
+                                                },
+                                                "required": [
+                                                  "limit"
+                                                ],
+                                                "additionalProperties": false
+                                              },
+                                              {
+                                                "type": "object",
+                                                "properties": {
+                                                  "trigger": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "isMarket": {
+                                                        "type": "boolean"
+                                                      },
+                                                      "triggerPx": {
+                                                        "type": "string",
+                                                        "pattern": "^\\d+(\\.\\d+)?$"
+                                                      },
+                                                      "tpsl": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "tp",
+                                                          "sl"
+                                                        ],
+                                                        "description": "Take-profit or stop-loss.",
+                                                        "example": "sl"
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "isMarket",
+                                                      "triggerPx",
+                                                      "tpsl"
+                                                    ],
+                                                    "additionalProperties": false
+                                                  }
+                                                },
+                                                "required": [
+                                                  "trigger"
+                                                ],
+                                                "additionalProperties": false
+                                              }
+                                            ],
+                                            "description": "Either `{ limit: { tif } }` or `{ trigger: { isMarket, triggerPx, tpsl } }`."
+                                          },
+                                          "c": {
+                                            "type": "string",
+                                            "pattern": "^0x[0-9a-fA-F]{32}$",
+                                            "description": "Optional client order id — 128-bit hex. Your handle on the order afterwards: the exchange echoes it back, so it is the only way to correlate a fill with the intent that placed it without polling by asset.",
+                                            "example": "0x1234567890abcdef1234567890abcdef"
+                                          }
+                                        },
+                                        "required": [
+                                          "a",
+                                          "b",
+                                          "p",
+                                          "s",
+                                          "r",
+                                          "t"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 100
+                                    },
+                                    "grouping": {
+                                      "type": "string",
+                                      "enum": [
+                                        "na",
+                                        "normalTpsl",
+                                        "positionTpsl"
+                                      ],
+                                      "description": "`na` for a plain order. The TP/SL groupings attach the orders as a bracket around a position.",
+                                      "example": "na"
+                                    },
+                                    "builder": {
+                                      "type": "object",
+                                      "properties": {
+                                        "b": {
+                                          "type": "string",
+                                          "pattern": "^0x[0-9a-fA-F]{40}$",
+                                          "description": "Address receiving the builder fee."
+                                        },
+                                        "f": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "description": "Builder fee in TENTHS of a basis point — `10` is 1bp of order notional.",
+                                          "example": 10
+                                        }
+                                      },
+                                      "required": [
+                                        "b",
+                                        "f"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "orders",
+                                    "grouping"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Place one or more orders. Opening a position needs an intent that delivers USDC; a reduce-only close does not."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "cancel"
+                                      ]
+                                    },
+                                    "cancels": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "a": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "description": "Asset index."
+                                          },
+                                          "o": {
+                                            "type": "integer",
+                                            "minimum": 0,
+                                            "description": "Order id."
+                                          }
+                                        },
+                                        "required": [
+                                          "a",
+                                          "o"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 100
+                                    },
+                                    "f": {
+                                      "type": "boolean",
+                                      "description": "Fast cancel."
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "cancels"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Cancel resting orders by order id. Needs no delivered funds, so it rides a tokenless intent."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "cancelByCloid"
+                                      ]
+                                    },
+                                    "cancels": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "asset": {
+                                            "type": "integer",
+                                            "minimum": 0
+                                          },
+                                          "cloid": {
+                                            "type": "string",
+                                            "pattern": "^0x[0-9a-fA-F]{32}$",
+                                            "description": "Optional client order id — 128-bit hex. Your handle on the order afterwards: the exchange echoes it back, so it is the only way to correlate a fill with the intent that placed it without polling by asset.",
+                                            "example": "0x1234567890abcdef1234567890abcdef"
+                                          }
+                                        },
+                                        "required": [
+                                          "asset",
+                                          "cloid"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 100
+                                    },
+                                    "f": {
+                                      "type": "boolean"
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "cancels"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Cancel resting orders by client order id."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "modify"
+                                      ]
+                                    },
+                                    "oid": {
+                                      "oneOf": [
+                                        {
+                                          "type": "integer",
+                                          "minimum": 0
+                                        },
+                                        {
+                                          "type": "string",
+                                          "pattern": "^0x[0-9a-fA-F]{32}$",
+                                          "description": "Optional client order id — 128-bit hex. Your handle on the order afterwards: the exchange echoes it back, so it is the only way to correlate a fill with the intent that placed it without polling by asset.",
+                                          "example": "0x1234567890abcdef1234567890abcdef"
+                                        }
+                                      ]
+                                    },
+                                    "order": {
+                                      "type": "object",
+                                      "properties": {
+                                        "a": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "description": "Asset index. Perps use the index in the `meta` universe; spot uses `10000 + index` from `spotMeta`. This is an INDEX, not a ticker — resolve it from the info endpoint, and note that an index built against the wrong universe places a valid order in the wrong market.",
+                                          "example": 0
+                                        },
+                                        "b": {
+                                          "type": "boolean",
+                                          "description": "Buy (`true`) or sell (`false`).",
+                                          "example": true
+                                        },
+                                        "p": {
+                                          "type": "string",
+                                          "pattern": "^\\d+(\\.\\d+)?$",
+                                          "description": "Limit price. Must satisfy Hyperliquid's tick rules — at most 5 significant figures and at most `6 - szDecimals` decimals for a perp — and is refused there, not here.\n\nThis price is fixed when you sign, and an intent that bridges to HyperCore takes ~30s to deliver. Price it to still cross after that move, or the order is refused with your funds already delivered.",
+                                          "example": "64250.5"
+                                        },
+                                        "s": {
+                                          "type": "string",
+                                          "pattern": "^\\d+(\\.\\d+)?$",
+                                          "description": "Size in units of the asset, to at most the asset's `szDecimals`. Hyperliquid refuses an order worth under ~$10.",
+                                          "example": "0.0002"
+                                        },
+                                        "r": {
+                                          "type": "boolean",
+                                          "description": "Reduce-only. `true` is how a position is CLOSED — pair it with a tokenless intent, since closing needs no delivered collateral.",
+                                          "example": false
+                                        },
+                                        "t": {
+                                          "oneOf": [
+                                            {
+                                              "type": "object",
+                                              "properties": {
+                                                "limit": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "tif": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "Alo",
+                                                        "Ioc",
+                                                        "Gtc"
+                                                      ],
+                                                      "description": "Time in force. `Ioc` fills what it can and cancels the rest, which is how a market order is expressed here — there is no market order type. `Alo` is post-only. `Gtc` rests on the book.\n\nPrefer `Ioc` for anything an intent delivers funds for: a resting order leaves the account holding USDC and no position, and the agent that could have cancelled it is already spent.",
+                                                      "example": "Ioc"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "tif"
+                                                  ],
+                                                  "additionalProperties": false
+                                                }
+                                              },
+                                              "required": [
+                                                "limit"
+                                              ],
+                                              "additionalProperties": false
+                                            },
+                                            {
+                                              "type": "object",
+                                              "properties": {
+                                                "trigger": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "isMarket": {
+                                                      "type": "boolean"
+                                                    },
+                                                    "triggerPx": {
+                                                      "type": "string",
+                                                      "pattern": "^\\d+(\\.\\d+)?$"
+                                                    },
+                                                    "tpsl": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "tp",
+                                                        "sl"
+                                                      ],
+                                                      "description": "Take-profit or stop-loss.",
+                                                      "example": "sl"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "isMarket",
+                                                    "triggerPx",
+                                                    "tpsl"
+                                                  ],
+                                                  "additionalProperties": false
+                                                }
+                                              },
+                                              "required": [
+                                                "trigger"
+                                              ],
+                                              "additionalProperties": false
+                                            }
+                                          ],
+                                          "description": "Either `{ limit: { tif } }` or `{ trigger: { isMarket, triggerPx, tpsl } }`."
+                                        },
+                                        "c": {
+                                          "type": "string",
+                                          "pattern": "^0x[0-9a-fA-F]{32}$",
+                                          "description": "Optional client order id — 128-bit hex. Your handle on the order afterwards: the exchange echoes it back, so it is the only way to correlate a fill with the intent that placed it without polling by asset.",
+                                          "example": "0x1234567890abcdef1234567890abcdef"
+                                        }
+                                      },
+                                      "required": [
+                                        "a",
+                                        "b",
+                                        "p",
+                                        "s",
+                                        "r",
+                                        "t"
+                                      ],
+                                      "additionalProperties": false
+                                    },
+                                    "a": {
+                                      "type": "boolean",
+                                      "enum": [
+                                        true
+                                      ],
+                                      "description": "Place the replacement even if the cancel failed. Omit it entirely for the default — Hyperliquid rejects an action hashed with `a: false`, so `false` is not a legal value."
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "oid",
+                                    "order"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Replace one resting order."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "batchModify"
+                                      ]
+                                    },
+                                    "modifies": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "oid": {
+                                            "oneOf": [
+                                              {
+                                                "type": "integer",
+                                                "minimum": 0
+                                              },
+                                              {
+                                                "type": "string",
+                                                "pattern": "^0x[0-9a-fA-F]{32}$",
+                                                "description": "Optional client order id — 128-bit hex. Your handle on the order afterwards: the exchange echoes it back, so it is the only way to correlate a fill with the intent that placed it without polling by asset.",
+                                                "example": "0x1234567890abcdef1234567890abcdef"
+                                              }
+                                            ]
+                                          },
+                                          "order": {
+                                            "type": "object",
+                                            "properties": {
+                                              "a": {
+                                                "type": "integer",
+                                                "minimum": 0,
+                                                "description": "Asset index. Perps use the index in the `meta` universe; spot uses `10000 + index` from `spotMeta`. This is an INDEX, not a ticker — resolve it from the info endpoint, and note that an index built against the wrong universe places a valid order in the wrong market.",
+                                                "example": 0
+                                              },
+                                              "b": {
+                                                "type": "boolean",
+                                                "description": "Buy (`true`) or sell (`false`).",
+                                                "example": true
+                                              },
+                                              "p": {
+                                                "type": "string",
+                                                "pattern": "^\\d+(\\.\\d+)?$",
+                                                "description": "Limit price. Must satisfy Hyperliquid's tick rules — at most 5 significant figures and at most `6 - szDecimals` decimals for a perp — and is refused there, not here.\n\nThis price is fixed when you sign, and an intent that bridges to HyperCore takes ~30s to deliver. Price it to still cross after that move, or the order is refused with your funds already delivered.",
+                                                "example": "64250.5"
+                                              },
+                                              "s": {
+                                                "type": "string",
+                                                "pattern": "^\\d+(\\.\\d+)?$",
+                                                "description": "Size in units of the asset, to at most the asset's `szDecimals`. Hyperliquid refuses an order worth under ~$10.",
+                                                "example": "0.0002"
+                                              },
+                                              "r": {
+                                                "type": "boolean",
+                                                "description": "Reduce-only. `true` is how a position is CLOSED — pair it with a tokenless intent, since closing needs no delivered collateral.",
+                                                "example": false
+                                              },
+                                              "t": {
+                                                "oneOf": [
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "limit": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "tif": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                              "Alo",
+                                                              "Ioc",
+                                                              "Gtc"
+                                                            ],
+                                                            "description": "Time in force. `Ioc` fills what it can and cancels the rest, which is how a market order is expressed here — there is no market order type. `Alo` is post-only. `Gtc` rests on the book.\n\nPrefer `Ioc` for anything an intent delivers funds for: a resting order leaves the account holding USDC and no position, and the agent that could have cancelled it is already spent.",
+                                                            "example": "Ioc"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "tif"
+                                                        ],
+                                                        "additionalProperties": false
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "limit"
+                                                    ],
+                                                    "additionalProperties": false
+                                                  },
+                                                  {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "trigger": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "isMarket": {
+                                                            "type": "boolean"
+                                                          },
+                                                          "triggerPx": {
+                                                            "type": "string",
+                                                            "pattern": "^\\d+(\\.\\d+)?$"
+                                                          },
+                                                          "tpsl": {
+                                                            "type": "string",
+                                                            "enum": [
+                                                              "tp",
+                                                              "sl"
+                                                            ],
+                                                            "description": "Take-profit or stop-loss.",
+                                                            "example": "sl"
+                                                          }
+                                                        },
+                                                        "required": [
+                                                          "isMarket",
+                                                          "triggerPx",
+                                                          "tpsl"
+                                                        ],
+                                                        "additionalProperties": false
+                                                      }
+                                                    },
+                                                    "required": [
+                                                      "trigger"
+                                                    ],
+                                                    "additionalProperties": false
+                                                  }
+                                                ],
+                                                "description": "Either `{ limit: { tif } }` or `{ trigger: { isMarket, triggerPx, tpsl } }`."
+                                              },
+                                              "c": {
+                                                "type": "string",
+                                                "pattern": "^0x[0-9a-fA-F]{32}$",
+                                                "description": "Optional client order id — 128-bit hex. Your handle on the order afterwards: the exchange echoes it back, so it is the only way to correlate a fill with the intent that placed it without polling by asset.",
+                                                "example": "0x1234567890abcdef1234567890abcdef"
+                                              }
+                                            },
+                                            "required": [
+                                              "a",
+                                              "b",
+                                              "p",
+                                              "s",
+                                              "r",
+                                              "t"
+                                            ],
+                                            "additionalProperties": false
+                                          }
+                                        },
+                                        "required": [
+                                          "oid",
+                                          "order"
+                                        ],
+                                        "additionalProperties": false
+                                      },
+                                      "minItems": 1,
+                                      "maxItems": 100
+                                    },
+                                    "a": {
+                                      "type": "boolean",
+                                      "enum": [
+                                        true
+                                      ],
+                                      "description": "Place the replacement even if the cancel failed. Omit it entirely for the default — Hyperliquid rejects an action hashed with `a: false`, so `false` is not a legal value."
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "modifies"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Replace several resting orders."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "updateLeverage"
+                                      ]
+                                    },
+                                    "asset": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "isCross": {
+                                      "type": "boolean",
+                                      "description": "Cross margin (`true`) or isolated (`false`).",
+                                      "example": true
+                                    },
+                                    "leverage": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "exclusiveMinimum": true,
+                                      "description": "New leverage, capped by the asset's own maximum. Set it BEFORE the intent that opens the position: leverage applied afterwards does not resize an existing one.",
+                                      "example": 5
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "asset",
+                                    "isCross",
+                                    "leverage"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Change the leverage used for an asset. Needs no delivered funds."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "updateIsolatedMargin"
+                                      ]
+                                    },
+                                    "asset": {
+                                      "type": "integer",
+                                      "minimum": 0
+                                    },
+                                    "isBuy": {
+                                      "type": "boolean"
+                                    },
+                                    "ntli": {
+                                      "type": "integer",
+                                      "description": "Margin to add (positive) or remove (negative), in USDC with 6 decimals — `1000000` is 1 USD.",
+                                      "example": 1000000
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "asset",
+                                    "isBuy",
+                                    "ntli"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Add or remove margin on an isolated position."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "twapOrder"
+                                      ]
+                                    },
+                                    "twap": {
+                                      "type": "object",
+                                      "properties": {
+                                        "a": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "description": "Asset index, as for an order.",
+                                          "example": 0
+                                        },
+                                        "b": {
+                                          "type": "boolean",
+                                          "description": "Buy (`true`) or sell (`false`).",
+                                          "example": true
+                                        },
+                                        "s": {
+                                          "type": "string",
+                                          "pattern": "^\\d+(\\.\\d+)?$",
+                                          "description": "Total size to work, in units of the asset.",
+                                          "example": "0.01"
+                                        },
+                                        "r": {
+                                          "type": "boolean",
+                                          "description": "Reduce-only.",
+                                          "example": false
+                                        },
+                                        "m": {
+                                          "type": "integer",
+                                          "minimum": 0,
+                                          "exclusiveMinimum": true,
+                                          "description": "Duration in MINUTES. Hyperliquid enforces its own bounds and refuses a duration outside them (\"Invalid TWAP duration\"), so none are imposed here.",
+                                          "example": 30
+                                        },
+                                        "t": {
+                                          "type": "boolean",
+                                          "description": "Randomize the timing of the sub-orders rather than spacing them evenly.",
+                                          "example": true
+                                        }
+                                      },
+                                      "required": [
+                                        "a",
+                                        "b",
+                                        "s",
+                                        "r",
+                                        "m",
+                                        "t"
+                                      ],
+                                      "additionalProperties": false
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "twap"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Work a position in over `m` minutes rather than in one fill.\n\nCarries NO limit price, which is what makes it the shape to reach for when the bridge delay is the risk: an `Ioc` order is priced at quote time and refused if the book has moved past it by the time the funds land, whereas a TWAP cannot be refused for not crossing.\n\nThe intent completes when Hyperliquid ACCEPTS the TWAP, not when it finishes — the sub-orders run for `m` minutes afterwards, with no further intent and nothing on our side watching them."
+                                },
+                                {
+                                  "type": "object",
+                                  "properties": {
+                                    "type": {
+                                      "type": "string",
+                                      "enum": [
+                                        "twapCancel"
+                                      ]
+                                    },
+                                    "a": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "description": "Asset index of the running TWAP.",
+                                      "example": 0
+                                    },
+                                    "t": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "description": "The TWAP id, which Hyperliquid returns when it accepts the `twapOrder` and is not echoed on the intent. Read it back from the exchange — the agent that placed the TWAP authorised only that one action, so cancelling is a second intent.",
+                                      "example": 12345
+                                    }
+                                  },
+                                  "required": [
+                                    "type",
+                                    "a",
+                                    "t"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Stop a running TWAP. Needs no delivered funds."
+                                }
+                              ],
+                              "description": "A Hyperliquid L1 action, passed through as they define it. Keys are re-emitted in their canonical order before the action is hashed, so the order you send them in does not matter."
+                            },
+                            "minItems": 1,
+                            "maxItems": 3,
+                            "description": "The Hyperliquid actions to authorise, IN ORDER. Each gets its own agent in its own API-wallet slot, registered ONE PER BLOCK, and they are sent to the exchange in the order given once every agent is live — the first refusal stops the rest, so a later action never runs against a state an earlier one failed to reach.\n\nOrder is what makes this more than a batch: `updateLeverage` has to land before the order it applies to, since leverage applied afterwards does not resize an open position. So opening a leveraged position is `[updateLeverage, order]` in ONE intent rather than two.\n\nCapped at three, which is Hyperliquid's: an account has three NAMED API-wallet slots and the unnamed one belongs to the account holder. More than one action requires `tokenRequests`: HyperCore accepts a single agent registration per block, so each rides a dispatch stage of its own and an intent that delivers nothing has only the one. An action that needs collateral must be paired with `tokenRequests` anyway; one that does not (a reduce-only close, a cancel, a leverage change) rides a tokenless intent, one at a time."
                           }
-                        },
-                        "required": [
-                          "action"
-                        ]
+                        }
                       }
                     },
                     "description": "Intent options",
