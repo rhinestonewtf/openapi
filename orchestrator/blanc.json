@@ -9,6 +9,22 @@
       "url": "https://v1.orchestrator.rhinestone.dev"
     }
   ],
+  "components": {
+    "securitySchemes": {
+      "apiKeyAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Project API key."
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Integrator-issued access token (JWT authentication mode)."
+      }
+    }
+  },
   "paths": {
     "/chains": {
       "get": {
@@ -444,6 +460,7 @@
             }
           }
         },
+        "security": [],
         "summary": "Supported chains and tokens",
         "description": "Get supported chains and tokens with additional metadata",
         "tags": [
@@ -466,15 +483,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           },
           {
             "name": "sourceChainId",
@@ -1408,6 +1416,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Route liquidity limit",
         "description": "Returns the largest known fillable amount for a single deposit on the given source→destination route. Relayer-market layers return exact capacity; bridge-backed layers return a conservative probed lower bound.",
         "tags": [
@@ -1430,15 +1446,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           },
           {
             "name": "id",
@@ -1746,7 +1753,8 @@
                         },
                         "recipient": {
                           "type": "string",
-                          "description": "Destination recipient account",
+                          "minLength": 1,
+                          "description": "Destination recipient account, in the destination chain's own address format",
                           "example": "0x3672e268a79bd4acc5ee646bdda652547c7a435c"
                         },
                         "createdAt": {
@@ -3162,6 +3170,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Get Intent",
         "description": "Retrieves the status of an intent along with per-claim progress across chains.",
         "tags": [
@@ -3184,15 +3200,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           },
           {
             "name": "accountAddress",
@@ -4168,6 +4175,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Get Account Portfolio",
         "description": "Retrieves the token balances across all supported chains for a user's abstracted account",
         "tags": [
@@ -4190,15 +4205,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           },
           {
             "name": "cursor",
@@ -5190,6 +5196,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "List Intents",
         "description": "Retrieves a paginated list of the authenticated client's intents, newest first.",
         "tags": [
@@ -5210,15 +5224,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           }
         ],
         "responses": {
@@ -6366,6 +6371,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Create Intent",
         "description": "Submits a quoted intent for execution. Takes the `intentId` from `POST /quotes` (`routes[].intentId`) plus signatures (origin, destination, optionally target-execution) and optional EIP-7702 authorizations.",
         "tags": [
@@ -6589,15 +6602,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           }
         ],
         "responses": {
@@ -7535,6 +7539,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Split Intent by Liquidity",
         "description": "Splits token amounts into multiple intents based on available relayer liquidity. Each returned intent can be filled by a single relayer.",
         "tags": [
@@ -7666,15 +7678,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           }
         ],
         "responses": {
@@ -9526,6 +9529,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Create Quote",
         "description": "Computes a quote for an intent: token transfers, target executions, and cost breakdown. Returns a pre-ranked `routes[]` with per-route `intentId` to pass to `POST /intents` for execution.",
         "tags": [
@@ -9747,6 +9758,9 @@
                               "type": "string"
                             },
                             {
+                              "type": "string"
+                            },
+                            {
                               "type": "string",
                               "enum": [
                                 "ETH",
@@ -9795,6 +9809,9 @@
                                 "type": "string"
                               },
                               {
+                                "type": "string"
+                              },
+                              {
                                 "type": "string",
                                 "enum": [
                                   "ETH",
@@ -9836,7 +9853,7 @@
                         "description": "Tokens keyed by CAIP-2 chain ID.",
                         "example": {
                           "eip155:8453": [
-                            "USDC"
+                            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
                           ]
                         }
                       },
@@ -9852,7 +9869,7 @@
                         "description": "Per-token maximum input amounts keyed by CAIP-2 chain ID.",
                         "example": {
                           "eip155:8453": {
-                            "USDC": "1000000"
+                            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "1000000"
                           }
                         }
                       },
@@ -9872,6 +9889,9 @@
                             "type": "array",
                             "items": {
                               "oneOf": [
+                                {
+                                  "type": "string"
+                                },
                                 {
                                   "type": "string"
                                 },
@@ -9924,6 +9944,9 @@
                                     "type": "string"
                                   },
                                   {
+                                    "type": "string"
+                                  },
+                                  {
                                     "type": "string",
                                     "enum": [
                                       "ETH",
@@ -9965,7 +9988,7 @@
                             "description": "Tokens keyed by CAIP-2 chain ID.",
                             "example": {
                               "eip155:8453": [
-                                "USDC"
+                                "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
                               ]
                             }
                           }
@@ -11851,7 +11874,7 @@
                             },
                             "minItems": 1,
                             "maxItems": 3,
-                            "description": "The Hyperliquid actions to authorise, IN ORDER. Each gets its own agent in its own API-wallet slot, registered ONE PER BLOCK, and they are sent to the exchange in the order given once every agent is live — the first refusal stops the rest, so a later action never runs against a state an earlier one failed to reach.\n\nOrder is what makes this more than a batch: `updateLeverage` has to land before the order it applies to, since leverage applied afterwards does not resize an open position. So opening a leveraged position is `[updateLeverage, order]` in ONE intent rather than two.\n\nCapped at three, which is Hyperliquid's: an account has three NAMED API-wallet slots and the unnamed one belongs to the account holder. More than one action requires `tokenRequests`: HyperCore accepts a single agent registration per block, so each rides a dispatch stage of its own and an intent that delivers nothing has only the one. An action that needs collateral must be paired with `tokenRequests` anyway; one that does not (a reduce-only close, a cancel, a leverage change) rides a tokenless intent, one at a time."
+                            "description": "The Hyperliquid actions to authorise, IN ORDER. Each gets its own agent in its own API-wallet slot, registered ONE AT A TIME and some seconds apart, and they are sent to the exchange in the order given once every agent is live — the first refusal stops the rest, so a later action never runs against a state an earlier one failed to reach.\n\nOrder is what makes this more than a batch: `updateLeverage` has to land before the order it applies to, since leverage applied afterwards does not resize an open position. So opening a leveraged position is `[updateLeverage, order]` in ONE intent rather than two.\n\nCapped at three, which is Hyperliquid's: an account has three NAMED API-wallet slots and the unnamed one belongs to the account holder. More than one action requires `tokenRequests`: HyperCore refuses a registration while the eviction the previous one queued is still pending, so each rides a dispatch stage of its own, released a few seconds after the one before it landed, and an intent that delivers nothing has only the one. An action that needs collateral must be paired with `tokenRequests` anyway; one that does not (a reduce-only close, a cancel, a leverage change) rides a tokenless intent, one at a time — a few seconds after the previous intent's last registration, or it is refused as `HYPERCORE_TRADE_IN_FLIGHT`."
                           }
                         }
                       }
@@ -11910,15 +11933,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           }
         ],
         "responses": {
@@ -13136,6 +13150,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Create Indicative Quote",
         "description": "Computes an indicative (non-binding) quote: ranked route estimates with per-route cost breakdown and fill time. Unlike `POST /quotes`, it returns no `intentId`, `signData`, or `expiresAt` — it cannot be submitted to `POST /intents`. Use it for pre-quote UX (price previews, route discovery) without persisting an intent.",
         "tags": [
@@ -13379,15 +13401,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           }
         ],
         "responses": {
@@ -14257,6 +14270,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Get App-Fee Balances",
         "description": "The authenticated project's app-fee balance as USD totals valued at collection time. `pendingUsd` is the payout value permanently reserved by signed withdrawals whose target-chain FILL has not completed, including failed or expired payouts.",
         "tags": [
@@ -14279,15 +14300,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           }
         ],
         "responses": {
@@ -15478,6 +15490,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Get App-Fee Withdrawal Targets",
         "description": "Get the enabled EVM chains and whitelisted stablecoins currently accepted for app-fee withdrawals.",
         "tags": [
@@ -15500,15 +15520,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           }
         ],
         "responses": {
@@ -16656,6 +16667,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Create App-Fee Withdrawal",
         "description": "Withdraw the authenticated project's full app-fee balance to a whitelisted stablecoin on the chosen chain, paid to the project's registered payout address.",
         "tags": [
@@ -16699,15 +16718,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           }
         ],
         "responses": {
@@ -17915,6 +17925,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "List App-Fee Withdrawals",
         "description": "The authenticated project's app-fee withdrawals (newest first) with each withdrawal's status and USD value paid out.",
         "tags": [
@@ -17937,15 +17955,6 @@
               ]
             },
             "description": "API version. Required; pinned to this document."
-          },
-          {
-            "name": "x-api-key",
-            "in": "header",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "API key."
           },
           {
             "name": "nonce",
@@ -19432,6 +19441,14 @@
             }
           }
         },
+        "security": [
+          {
+            "apiKeyAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ],
         "summary": "Get App-Fee Withdrawal",
         "description": "A single app-fee withdrawal owned by the authenticated project, with its status and USD value paid out.",
         "tags": [
