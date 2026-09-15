@@ -12,6 +12,12 @@
   ],
   "components": {
     "securitySchemes": {
+      "complianceSessionBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Required 15-minute customer-scoped browser session from POST /compliance/sessions. Application keys are not accepted."
+      },
       "analyticsIngestBearer": {
         "type": "http",
         "scheme": "bearer",
@@ -38,6 +44,10 @@
         "properties": {
           "error": {
             "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "description": "Deposit error code (e.g. `TOKEN-3`) when the refusal is one a deposit would also receive."
           },
           "details": {
             "type": "array",
@@ -983,6 +993,12 @@
             ],
             "description": "Fee sponsorship mode",
             "example": "all"
+          },
+          "maxAmountUsd": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "description": "Largest deposit value in USD this entry sponsors. A deposit valued above it, or one that cannot be priced, settles unsponsored: the user pays every fee this entry would otherwise cover. Omit to sponsor deposits of any value.",
+            "example": 30000
           }
         }
       },
@@ -3157,6 +3173,10 @@
       "QrTokensResponse": {
         "type": "object",
         "properties": {
+          "restricted": {
+            "type": "boolean",
+            "description": "True when the project has a deposit whitelist. `tokens` is then the complete accepted set: every chain is reported, a chain absent from `tokens` is not offered, and a token is listed exactly when a deposit of it would be accepted."
+          },
           "tokens": {
             "type": "object",
             "additionalProperties": {
@@ -3176,6 +3196,15 @@
                     "type": "integer",
                     "minimum": 0,
                     "example": 6
+                  },
+                  "minAmount": {
+                    "type": "string",
+                    "description": "Configured whitelist minimum in raw token units (same decimals as `decimals`). Present only when `restricted` is true and the client set one.",
+                    "example": "1000000"
+                  },
+                  "maxAmount": {
+                    "type": "string",
+                    "description": "Configured whitelist maximum in raw token units (same decimals as `decimals`). Present only when `restricted` is true and the client set one."
                   }
                 },
                 "required": [
@@ -3185,10 +3214,11 @@
                 ]
               }
             },
-            "description": "Keyed by EVM chain id as a decimal string, plus \"solana\" and \"hypercore\". An empty array means the deposit whitelist disallows this chain entirely — clients should hide it rather than offer a chain with nothing to send, and it is reported even for chains this shortlist does not curate. An absent chain carries no opinion (it is allowed, but no shortlist is curated for it) and clients should keep whatever default they have for it; the two are not interchangeable."
+            "description": "Keyed by EVM chain id as a decimal string, plus \"solana\" and \"hypercore\". An empty array means the chain is not offered (paused, not depositable, or disallowed by the whitelist) and clients should hide it. When `restricted` is false this is a suggested shortlist, and an absent chain carries no opinion; when `restricted` is true it is exhaustive."
           }
         },
         "required": [
+          "restricted",
           "tokens"
         ]
       },
@@ -4004,6 +4034,81 @@
           "updatedAt": {
             "type": "string",
             "description": "ISO-8601 timestamp of the last status change."
+          },
+          "verification": {
+            "type": "object",
+            "properties": {
+              "actionsRequired": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Outstanding customer actions; resume hosted verification to complete them."
+              },
+              "entities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "entity": {
+                      "type": "string",
+                      "description": "Provider jurisdiction, e.g. Us, Lt."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "Pending",
+                        "Approved",
+                        "Declined"
+                      ]
+                    },
+                    "model": {
+                      "type": "string"
+                    },
+                    "rejectType": {
+                      "type": "string",
+                      "enum": [
+                        "Final",
+                        "Retry"
+                      ],
+                      "description": "Present on a declined entity; Retry means the customer can resubmit."
+                    }
+                  },
+                  "required": [
+                    "entity",
+                    "status",
+                    "model"
+                  ]
+                }
+              },
+              "agreements": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "accepted": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "version",
+                    "accepted"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "actionsRequired",
+              "entities",
+              "agreements"
+            ]
           }
         },
         "required": [
@@ -4014,8 +4119,478 @@
       "ComplianceVerificationStatus": {
         "type": "string",
         "enum": [
-          "not_started"
+          "not_started",
+          "pending",
+          "approved",
+          "declined"
         ]
+      },
+      "ComplianceVerificationSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "failed"
+            ],
+            "description": "pending: present nextAction or await review; completed: already verified; failed: provider rejected. Interaction status only, never settlement."
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nextAction": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "hosted"
+                ]
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "presentation": {
+                "type": "string",
+                "enum": [
+                  "iframe"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "url",
+              "presentation"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "ComplianceVerificationRequestBody": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "USD"
+            ],
+            "description": "Fiat currency the customer is being verified for."
+          }
+        },
+        "required": [
+          "currency"
+        ],
+        "additionalProperties": false
+      },
+      "RampSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "completed",
+              "expired",
+              "failed"
+            ],
+            "description": "Interaction status only; completion never proves settlement"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "nextAction": {
+            "$ref": "#/components/schemas/HostedNextAction"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "HostedNextAction": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "hosted"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "presentation": {
+            "type": "string",
+            "enum": [
+              "iframe"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "url",
+          "presentation"
+        ],
+        "additionalProperties": false
+      },
+      "OnrampSessionRequest": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "USD"
+            ],
+            "description": "Supported ISO 4217 fiat currency"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "bank_transfer"
+            ]
+          },
+          "optionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Opaque Rhinestone selection scoped to customer and intent"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "account_setup"
+            ]
+          }
+        },
+        "required": [
+          "country",
+          "currency",
+          "paymentMethod",
+          "purpose"
+        ],
+        "additionalProperties": false
+      },
+      "RampOption": {
+        "type": "object",
+        "properties": {
+          "optionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "USD"
+            ],
+            "description": "Supported ISO 4217 fiat currency"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "bank_transfer"
+            ]
+          }
+        },
+        "required": [
+          "optionId",
+          "currency",
+          "paymentMethod"
+        ],
+        "additionalProperties": false
+      },
+      "OnrampPayment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "string",
+            "maxLength": 40,
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,2})?$",
+            "description": "Fiat major units actually sent"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "USD"
+            ],
+            "description": "Supported ISO 4217 fiat currency"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "bankReceipt": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "pending",
+              "on_hold",
+              "processing",
+              "submitted",
+              "completed",
+              "failed"
+            ]
+          },
+          "conversion": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "pending",
+              "on_hold",
+              "processing",
+              "submitted",
+              "completed",
+              "failed"
+            ]
+          },
+          "cryptoDelivery": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "pending",
+              "on_hold",
+              "processing",
+              "submitted",
+              "completed",
+              "failed"
+            ]
+          },
+          "refund": {
+            "type": "string",
+            "enum": [
+              "none",
+              "pending",
+              "processing",
+              "completed",
+              "failed"
+            ]
+          },
+          "adjustment": {
+            "type": "string",
+            "enum": [
+              "none",
+              "pending",
+              "processing",
+              "completed",
+              "failed"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "createdAt",
+          "updatedAt",
+          "bankReceipt",
+          "conversion",
+          "cryptoDelivery",
+          "refund",
+          "adjustment"
+        ],
+        "additionalProperties": false
+      },
+      "OnrampAccount": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "USD"
+            ],
+            "description": "Supported ISO 4217 fiat currency"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "bank_transfer"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "disabled"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "currency",
+          "paymentMethod",
+          "status"
+        ],
+        "additionalProperties": false
+      },
+      "OfframpSessionRequest": {
+        "type": "object",
+        "properties": {
+          "country": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "USD"
+            ],
+            "description": "Supported ISO 4217 fiat currency"
+          },
+          "paymentMethod": {
+            "type": "string",
+            "enum": [
+              "bank_transfer"
+            ]
+          },
+          "optionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Opaque Rhinestone selection scoped to customer and intent"
+          },
+          "purpose": {
+            "type": "string",
+            "enum": [
+              "beneficiary_collection"
+            ]
+          }
+        },
+        "required": [
+          "country",
+          "currency",
+          "paymentMethod",
+          "purpose"
+        ],
+        "additionalProperties": false
+      },
+      "OfframpPayment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "amount": {
+            "type": "string",
+            "maxLength": 40,
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,2})?$",
+            "description": "Fiat major units the recipient receives"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "EUR",
+              "USD"
+            ],
+            "description": "Supported ISO 4217 fiat currency"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "funding": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "pending",
+              "on_hold",
+              "processing",
+              "submitted",
+              "completed",
+              "failed"
+            ]
+          },
+          "payout": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "pending",
+              "on_hold",
+              "processing",
+              "submitted",
+              "completed",
+              "failed"
+            ]
+          },
+          "reversal": {
+            "type": "string",
+            "enum": [
+              "none",
+              "pending",
+              "processing",
+              "completed",
+              "failed"
+            ]
+          },
+          "cryptoReturn": {
+            "type": "string",
+            "enum": [
+              "none",
+              "pending",
+              "processing",
+              "completed",
+              "failed"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "amount",
+          "currency",
+          "createdAt",
+          "updatedAt",
+          "funding",
+          "payout",
+          "reversal",
+          "cryptoReturn"
+        ],
+        "additionalProperties": false
       }
     },
     "parameters": {}
@@ -5539,7 +6114,7 @@
             }
           },
           "422": {
-            "description": "Route cannot be quoted (token/amount not allowed by the client whitelist, unsupported token route, no session for the source chain, or no available routes)",
+            "description": "Route cannot be quoted (token/amount not allowed by the client whitelist or account session scope, unsupported token route, no session for the source chain, or no available routes). A policy refusal a deposit would also receive carries `code` (`TOKEN-3`, `BALANCE-3`, `BALANCE-4`); the others carry none.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6021,7 +6596,7 @@
           "Utilities"
         ],
         "summary": "Get a wallet portfolio",
-        "description": "Returns token balances and values for a wallet.",
+        "description": "Returns the wallet's balances this project can take as a deposit: tokens on chains currently accepting deposits and, when the project has a deposit whitelist, only whitelisted tokens. `totalUsd` sums the returned tokens.",
         "parameters": [
           {
             "schema": {
@@ -6082,6 +6657,16 @@
           },
           "400": {
             "description": "Invalid request or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Client configuration could not be read",
             "content": {
               "application/json": {
                 "schema": {
@@ -6284,7 +6869,7 @@
           "Utilities"
         ],
         "summary": "Get a Solana wallet portfolio",
-        "description": "Returns token balances and values for a Solana wallet.",
+        "description": "Returns the Solana wallet's balances this project can take as a deposit: nothing while Solana is not accepting deposits and, when the project has a deposit whitelist, only whitelisted tokens (native SOL under the system-program id). `totalUsd` sums the returned tokens.",
         "parameters": [
           {
             "schema": {
@@ -6334,6 +6919,16 @@
           },
           "400": {
             "description": "Invalid Solana address or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Client configuration could not be read",
             "content": {
               "application/json": {
                 "schema": {
@@ -7759,6 +8354,2079 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/compliance/verification": {
+      "post": {
+        "tags": [
+          "Compliance"
+        ],
+        "summary": "Create or resume hosted verification for the session customer",
+        "description": "Browser route. Starts or resumes the provider-hosted verification flow for the compliance customer named by the session bearer. A `pending` result with `nextAction` must be presented in an iframe; `pending` without it means the provider is reviewing and status updates arrive via webhook. The hosted URL is short-lived and is never stored — call again to mint a fresh one.",
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComplianceVerificationRequestBody"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Hosted verification session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceVerificationSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed, or expired session token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Session does not match the resolved customer, or the provider refused verification for this customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Failed to create the verification session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The verification provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Verification provider not configured, or sessions paused",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/sessions": {
+      "post": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OnrampSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Interaction session, not a payment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RampSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Customer has no bound smart account to pin as destination",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/sessions/{id}": {
+      "get": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RampSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/options": {
+      "get": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
+            "required": true,
+            "name": "country",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EUR",
+                "USD"
+              ],
+              "description": "Supported ISO 4217 fiat currency"
+            },
+            "required": false,
+            "description": "Supported ISO 4217 fiat currency",
+            "name": "currency",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bank_transfer"
+              ]
+            },
+            "required": true,
+            "name": "paymentMethod",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Opaque Rhinestone selection scoped to customer and intent"
+            },
+            "required": false,
+            "description": "Opaque Rhinestone selection scoped to customer and intent",
+            "name": "optionId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,2})?$",
+              "description": "Fiat major units sent; actual bank transfer determines the payment amount"
+            },
+            "required": false,
+            "description": "Fiat major units sent; actual bank transfer determines the payment amount",
+            "name": "amount",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RampOption"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/payments": {
+      "get": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OnrampPayment"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/payments/{id}": {
+      "get": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnrampPayment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/accounts": {
+      "get": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OnrampAccount"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/accounts/{id}": {
+      "get": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnrampAccount"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/sessions": {
+      "post": {
+        "tags": [
+          "offramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OfframpSessionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Interaction session, not a payment",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RampSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Offramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/sessions/{id}": {
+      "get": {
+        "tags": [
+          "offramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RampSession"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Offramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/options": {
+      "get": {
+        "tags": [
+          "offramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$"
+            },
+            "required": true,
+            "name": "country",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "EUR",
+                "USD"
+              ],
+              "description": "Supported ISO 4217 fiat currency"
+            },
+            "required": true,
+            "description": "Supported ISO 4217 fiat currency",
+            "name": "currency",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "bank_transfer"
+              ]
+            },
+            "required": true,
+            "name": "paymentMethod",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Opaque Rhinestone selection scoped to customer and intent"
+            },
+            "required": false,
+            "description": "Opaque Rhinestone selection scoped to customer and intent",
+            "name": "optionId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 40,
+              "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,2})?$",
+              "description": "Fiat major units the recipient receives, not crypto input"
+            },
+            "required": true,
+            "description": "Fiat major units the recipient receives, not crypto input",
+            "name": "amount",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RampOption"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Offramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/payments": {
+      "get": {
+        "tags": [
+          "offramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resources",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/OfframpPayment"
+                      }
+                    },
+                    "nextCursor": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Offramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/payments/{id}": {
+      "get": {
+        "tags": [
+          "offramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Customer resource",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfframpPayment"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Offramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
