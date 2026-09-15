@@ -9688,6 +9688,69 @@
                     },
                     "description": "Execution calls on the target chain."
                   },
+                  "destinationInstructions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "programId": {
+                          "type": "string",
+                          "description": "Program to invoke, base58.",
+                          "example": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                        },
+                        "accounts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "pubkey": {
+                                "type": "string",
+                                "description": "Account address, base58.",
+                                "example": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                              },
+                              "isSigner": {
+                                "type": "boolean",
+                                "description": "Whether the instruction requires this account to sign."
+                              },
+                              "isWritable": {
+                                "type": "boolean",
+                                "description": "Whether the instruction writes to this account."
+                              }
+                            },
+                            "required": [
+                              "pubkey",
+                              "isSigner",
+                              "isWritable"
+                            ]
+                          },
+                          "maxItems": 64,
+                          "description": "Accounts the instruction reads or writes, in the order the program expects."
+                        },
+                        "data": {
+                          "type": "string",
+                          "description": "Instruction data, base64.",
+                          "example": "CQ=="
+                        }
+                      },
+                      "required": [
+                        "programId",
+                        "accounts",
+                        "data"
+                      ],
+                      "description": "A Solana instruction in the JSON shape `@solana/web3.js` and Jupiter `/swap-instructions` produce, so protocol output passes through unchanged."
+                    },
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "description": "Solana instructions to run, in order, out of the account's own wallet on a Solana destination — the Solana counterpart of `destinationExecutions`, which it cannot be combined with. The wallet executes them, so `recipient` must be omitted: a payee is encoded inside the instructions. No route serves them yet, so a request carrying them is refused with `UNSUPPORTED_DESTINATION_INSTRUCTIONS`."
+                  },
+                  "addressLookupTableAddresses": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "description": "Address lookup tables the `destinationInstructions` resolve accounts through, base58, as Jupiter `/swap-instructions` returns them. Only with `destinationInstructions`."
+                  },
                   "preClaimExecutions": {
                     "type": "object",
                     "additionalProperties": {
