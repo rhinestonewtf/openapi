@@ -2311,6 +2311,12 @@
                                                       "minimum": 0,
                                                       "exclusiveMinimum": true,
                                                       "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                                    },
+                                                    "providerSourceChainId": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "exclusiveMinimum": true,
+                                                      "description": "Eco's own id for the chain the reward was funded on, present only where it differs from the deposit chain (non-EVM origins)."
                                                     }
                                                   },
                                                   "required": [
@@ -2381,8 +2387,16 @@
                                                       "description": "NEAR Intents"
                                                     },
                                                     "depositAddress": {
-                                                      "type": "string",
-                                                      "description": "NEAR Intents deposit address. Track fill status via the NEAR Intents status API keyed on this address."
+                                                      "oneOf": [
+                                                        {
+                                                          "type": "string"
+                                                        },
+                                                        {
+                                                          "type": "string",
+                                                          "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+                                                        }
+                                                      ],
+                                                      "description": "NEAR Intents deposit address on the origin chain, in its native form (EVM 0x or Solana base58). Track fill status via the NEAR Intents status API keyed on this address."
                                                     }
                                                   },
                                                   "required": [
@@ -2941,6 +2955,12 @@
                                                       "minimum": 0,
                                                       "exclusiveMinimum": true,
                                                       "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                                    },
+                                                    "providerSourceChainId": {
+                                                      "type": "integer",
+                                                      "minimum": 0,
+                                                      "exclusiveMinimum": true,
+                                                      "description": "Eco's own id for the chain the reward was funded on, present only where it differs from the deposit chain (non-EVM origins)."
                                                     }
                                                   },
                                                   "required": [
@@ -3011,8 +3031,16 @@
                                                       "description": "NEAR Intents"
                                                     },
                                                     "depositAddress": {
-                                                      "type": "string",
-                                                      "description": "NEAR Intents deposit address. Track fill status via the NEAR Intents status API keyed on this address."
+                                                      "oneOf": [
+                                                        {
+                                                          "type": "string"
+                                                        },
+                                                        {
+                                                          "type": "string",
+                                                          "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+                                                        }
+                                                      ],
+                                                      "description": "NEAR Intents deposit address on the origin chain, in its native form (EVM 0x or Solana base58). Track fill status via the NEAR Intents status API keyed on this address."
                                                     }
                                                   },
                                                   "required": [
@@ -4316,6 +4344,10 @@
                                 "type": "boolean",
                                 "description": "Whether to sponsor swap fees for the intent"
                               },
+                              "swapValue": {
+                                "type": "boolean",
+                                "description": "Whether to sponsor the VALUE of an eligible same-chain swap, so the user trades at par: the user contributes the 1:1 amount and the sponsor pays whatever the market is short. Applies only to pairs where par is a meaningful rate (both sides USD-pegged) and only up to a configured per-swap ceiling; outside those bounds the route plans as an ordinary unsponsored swap. Distinct from `swapFees`, which waives a solver's commission."
+                              },
                               "protocolFees": {
                                 "default": false,
                                 "type": "boolean",
@@ -4425,6 +4457,37 @@
                                   "plannedFillGasPrincipalMicroUsd": {
                                     "type": "string",
                                     "format": "uint256"
+                                  },
+                                  "plannedSwapValueMicroUsd": {
+                                    "type": "string",
+                                    "format": "uint256"
+                                  },
+                                  "plannedSwapValueToken": {
+                                    "type": "object",
+                                    "properties": {
+                                      "amount": {
+                                        "type": "string",
+                                        "format": "uint256"
+                                      },
+                                      "address": {
+                                        "type": "string"
+                                      },
+                                      "fundedInput": {
+                                        "type": "string",
+                                        "format": "uint256"
+                                      },
+                                      "parOutput": {
+                                        "type": "string",
+                                        "format": "uint256"
+                                      },
+                                      "outputAddress": {
+                                        "type": "string"
+                                      }
+                                    },
+                                    "required": [
+                                      "amount",
+                                      "address"
+                                    ]
                                   }
                                 },
                                 "required": [
@@ -5451,6 +5514,12 @@
                                                         "minimum": 0,
                                                         "exclusiveMinimum": true,
                                                         "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                                      },
+                                                      "providerSourceChainId": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "exclusiveMinimum": true,
+                                                        "description": "Eco's own id for the chain the reward was funded on, present only where it differs from the deposit chain (non-EVM origins)."
                                                       }
                                                     },
                                                     "required": [
@@ -5521,8 +5590,16 @@
                                                         "description": "NEAR Intents"
                                                       },
                                                       "depositAddress": {
-                                                        "type": "string",
-                                                        "description": "NEAR Intents deposit address. Track fill status via the NEAR Intents status API keyed on this address."
+                                                        "oneOf": [
+                                                          {
+                                                            "type": "string"
+                                                          },
+                                                          {
+                                                            "type": "string",
+                                                            "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+                                                          }
+                                                        ],
+                                                        "description": "NEAR Intents deposit address on the origin chain, in its native form (EVM 0x or Solana base58). Track fill status via the NEAR Intents status API keyed on this address."
                                                       }
                                                     },
                                                     "required": [
@@ -6081,6 +6158,12 @@
                                                         "minimum": 0,
                                                         "exclusiveMinimum": true,
                                                         "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                                      },
+                                                      "providerSourceChainId": {
+                                                        "type": "integer",
+                                                        "minimum": 0,
+                                                        "exclusiveMinimum": true,
+                                                        "description": "Eco's own id for the chain the reward was funded on, present only where it differs from the deposit chain (non-EVM origins)."
                                                       }
                                                     },
                                                     "required": [
@@ -6151,8 +6234,16 @@
                                                         "description": "NEAR Intents"
                                                       },
                                                       "depositAddress": {
-                                                        "type": "string",
-                                                        "description": "NEAR Intents deposit address. Track fill status via the NEAR Intents status API keyed on this address."
+                                                        "oneOf": [
+                                                          {
+                                                            "type": "string"
+                                                          },
+                                                          {
+                                                            "type": "string",
+                                                            "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+                                                          }
+                                                        ],
+                                                        "description": "NEAR Intents deposit address on the origin chain, in its native form (EVM 0x or Solana base58). Track fill status via the NEAR Intents status API keyed on this address."
                                                       }
                                                     },
                                                     "required": [
@@ -7452,6 +7543,10 @@
                                   "type": "boolean",
                                   "description": "Whether swap fees are sponsored"
                                 },
+                                "swapValueSponsored": {
+                                  "type": "boolean",
+                                  "description": "Whether the swap's value is sponsored, so the user trades at par"
+                                },
                                 "protocolFeesSponsored": {
                                   "type": "boolean",
                                   "description": "Whether the Rhinestone protocol fee is sponsored"
@@ -7566,6 +7661,37 @@
                                     "plannedFillGasPrincipalMicroUsd": {
                                       "type": "string",
                                       "format": "uint256"
+                                    },
+                                    "plannedSwapValueMicroUsd": {
+                                      "type": "string",
+                                      "format": "uint256"
+                                    },
+                                    "plannedSwapValueToken": {
+                                      "type": "object",
+                                      "properties": {
+                                        "amount": {
+                                          "type": "string",
+                                          "format": "uint256"
+                                        },
+                                        "address": {
+                                          "type": "string"
+                                        },
+                                        "fundedInput": {
+                                          "type": "string",
+                                          "format": "uint256"
+                                        },
+                                        "parOutput": {
+                                          "type": "string",
+                                          "format": "uint256"
+                                        },
+                                        "outputAddress": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "required": [
+                                        "amount",
+                                        "address"
+                                      ]
                                     }
                                   },
                                   "required": [
@@ -8826,6 +8952,69 @@
                     },
                     "description": "Execution calls on the target chain."
                   },
+                  "destinationInstructions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "programId": {
+                          "type": "string",
+                          "description": "Program to invoke, base58.",
+                          "example": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                        },
+                        "accounts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "pubkey": {
+                                "type": "string",
+                                "description": "Account address, base58.",
+                                "example": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                              },
+                              "isSigner": {
+                                "type": "boolean",
+                                "description": "Whether the instruction requires this account to sign."
+                              },
+                              "isWritable": {
+                                "type": "boolean",
+                                "description": "Whether the instruction writes to this account."
+                              }
+                            },
+                            "required": [
+                              "pubkey",
+                              "isSigner",
+                              "isWritable"
+                            ]
+                          },
+                          "maxItems": 64,
+                          "description": "Accounts the instruction reads or writes, in the order the program expects."
+                        },
+                        "data": {
+                          "type": "string",
+                          "description": "Instruction data, base64.",
+                          "example": "CQ=="
+                        }
+                      },
+                      "required": [
+                        "programId",
+                        "accounts",
+                        "data"
+                      ],
+                      "description": "A Solana instruction in the JSON shape `@solana/web3.js` and Jupiter `/swap-instructions` produce, so protocol output passes through unchanged."
+                    },
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "description": "Solana instructions to run, in order, out of the account's own wallet on a Solana destination — the Solana counterpart of `destinationExecutions`, which it cannot be combined with. The wallet executes them, so `recipient` must be omitted: a payee is encoded inside the instructions. No route serves them yet, so a request carrying them is refused with `UNSUPPORTED_DESTINATION_INSTRUCTIONS`."
+                  },
+                  "addressLookupTableAddresses": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "description": "Address lookup tables the `destinationInstructions` resolve accounts through, base58, as Jupiter `/swap-instructions` returns them. Only with `destinationInstructions`."
+                  },
                   "preClaimExecutions": {
                     "type": "object",
                     "additionalProperties": {
@@ -8875,247 +9064,6 @@
                     "format": "uint256",
                     "description": "The gas limit for the target chain executions",
                     "example": "100000"
-                  },
-                  "accountAccessList": {
-                    "type": "object",
-                    "properties": {
-                      "chainIds": {
-                        "type": "array",
-                        "items": {
-                          "type": "number",
-                          "minimum": 0
-                        }
-                      },
-                      "tokens": {
-                        "type": "array",
-                        "items": {
-                          "oneOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "ETH",
-                                "USDC",
-                                "WETH",
-                                "USDT",
-                                "USDT0",
-                                "BNB",
-                                "WBNB",
-                                "XDAI",
-                                "WXDAI",
-                                "POL",
-                                "WPOL",
-                                "MON",
-                                "WMON",
-                                "S",
-                                "WS",
-                                "OKB",
-                                "WOKB",
-                                "HYPE",
-                                "WHYPE",
-                                "USDG",
-                                "XPL",
-                                "WXPL",
-                                "AVAX",
-                                "WAVAX",
-                                "MockUSD",
-                                "XLM",
-                                "ensUSDC",
-                                "ensUSDC2",
-                                "TRX",
-                                "WTRX",
-                                "SOL",
-                                "WSOL"
-                              ]
-                            }
-                          ]
-                        }
-                      },
-                      "chainTokens": {
-                        "type": "object",
-                        "additionalProperties": {
-                          "type": "array",
-                          "items": {
-                            "oneOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "string",
-                                "enum": [
-                                  "ETH",
-                                  "USDC",
-                                  "WETH",
-                                  "USDT",
-                                  "USDT0",
-                                  "BNB",
-                                  "WBNB",
-                                  "XDAI",
-                                  "WXDAI",
-                                  "POL",
-                                  "WPOL",
-                                  "MON",
-                                  "WMON",
-                                  "S",
-                                  "WS",
-                                  "OKB",
-                                  "WOKB",
-                                  "HYPE",
-                                  "WHYPE",
-                                  "USDG",
-                                  "XPL",
-                                  "WXPL",
-                                  "AVAX",
-                                  "WAVAX",
-                                  "MockUSD",
-                                  "XLM",
-                                  "ensUSDC",
-                                  "ensUSDC2",
-                                  "TRX",
-                                  "WTRX",
-                                  "SOL",
-                                  "WSOL"
-                                ]
-                              }
-                            ]
-                          }
-                        }
-                      },
-                      "chainTokenAmounts": {
-                        "type": "object",
-                        "additionalProperties": {
-                          "type": "object",
-                          "additionalProperties": {
-                            "type": "string",
-                            "format": "uint256"
-                          }
-                        }
-                      },
-                      "exclude": {
-                        "type": "object",
-                        "properties": {
-                          "chainIds": {
-                            "type": "array",
-                            "items": {
-                              "type": "number",
-                              "minimum": 0
-                            }
-                          },
-                          "tokens": {
-                            "type": "array",
-                            "items": {
-                              "oneOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "ETH",
-                                    "USDC",
-                                    "WETH",
-                                    "USDT",
-                                    "USDT0",
-                                    "BNB",
-                                    "WBNB",
-                                    "XDAI",
-                                    "WXDAI",
-                                    "POL",
-                                    "WPOL",
-                                    "MON",
-                                    "WMON",
-                                    "S",
-                                    "WS",
-                                    "OKB",
-                                    "WOKB",
-                                    "HYPE",
-                                    "WHYPE",
-                                    "USDG",
-                                    "XPL",
-                                    "WXPL",
-                                    "AVAX",
-                                    "WAVAX",
-                                    "MockUSD",
-                                    "XLM",
-                                    "ensUSDC",
-                                    "ensUSDC2",
-                                    "TRX",
-                                    "WTRX",
-                                    "SOL",
-                                    "WSOL"
-                                  ]
-                                }
-                              ]
-                            }
-                          },
-                          "chainTokens": {
-                            "type": "object",
-                            "additionalProperties": {
-                              "type": "array",
-                              "items": {
-                                "oneOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "string",
-                                    "enum": [
-                                      "ETH",
-                                      "USDC",
-                                      "WETH",
-                                      "USDT",
-                                      "USDT0",
-                                      "BNB",
-                                      "WBNB",
-                                      "XDAI",
-                                      "WXDAI",
-                                      "POL",
-                                      "WPOL",
-                                      "MON",
-                                      "WMON",
-                                      "S",
-                                      "WS",
-                                      "OKB",
-                                      "WOKB",
-                                      "HYPE",
-                                      "WHYPE",
-                                      "USDG",
-                                      "XPL",
-                                      "WXPL",
-                                      "AVAX",
-                                      "WAVAX",
-                                      "MockUSD",
-                                      "XLM",
-                                      "ensUSDC",
-                                      "ensUSDC2",
-                                      "TRX",
-                                      "WTRX",
-                                      "SOL",
-                                      "WSOL"
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "description": "Account access list specifying which chains and tokens an account may access"
                   },
                   "recipient": {
                     "type": "object",
@@ -9365,6 +9313,10 @@
                             "default": false,
                             "type": "boolean",
                             "description": "Whether to sponsor swap fees for the intent"
+                          },
+                          "swapValue": {
+                            "type": "boolean",
+                            "description": "Whether to sponsor the VALUE of an eligible same-chain swap, so the user trades at par: the user contributes the 1:1 amount and the sponsor pays whatever the market is short. Applies only to pairs where par is a meaningful rate (both sides USD-pegged) and only up to a configured per-swap ceiling; outside those bounds the route plans as an ordinary unsponsored swap. Distinct from `swapFees`, which waives a solver's commission."
                           },
                           "protocolFees": {
                             "default": false,
@@ -11017,6 +10969,247 @@
                         "swapFees": true
                       }
                     }
+                  },
+                  "accountAccessList": {
+                    "type": "object",
+                    "properties": {
+                      "chainIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "number",
+                          "minimum": 0
+                        }
+                      },
+                      "tokens": {
+                        "type": "array",
+                        "items": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "ETH",
+                                "USDC",
+                                "WETH",
+                                "USDT",
+                                "USDT0",
+                                "BNB",
+                                "WBNB",
+                                "XDAI",
+                                "WXDAI",
+                                "POL",
+                                "WPOL",
+                                "MON",
+                                "WMON",
+                                "S",
+                                "WS",
+                                "OKB",
+                                "WOKB",
+                                "HYPE",
+                                "WHYPE",
+                                "USDG",
+                                "XPL",
+                                "WXPL",
+                                "AVAX",
+                                "WAVAX",
+                                "MockUSD",
+                                "XLM",
+                                "ensUSDC",
+                                "ensUSDC2",
+                                "TRX",
+                                "WTRX",
+                                "SOL",
+                                "WSOL"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "chainTokens": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "ETH",
+                                  "USDC",
+                                  "WETH",
+                                  "USDT",
+                                  "USDT0",
+                                  "BNB",
+                                  "WBNB",
+                                  "XDAI",
+                                  "WXDAI",
+                                  "POL",
+                                  "WPOL",
+                                  "MON",
+                                  "WMON",
+                                  "S",
+                                  "WS",
+                                  "OKB",
+                                  "WOKB",
+                                  "HYPE",
+                                  "WHYPE",
+                                  "USDG",
+                                  "XPL",
+                                  "WXPL",
+                                  "AVAX",
+                                  "WAVAX",
+                                  "MockUSD",
+                                  "XLM",
+                                  "ensUSDC",
+                                  "ensUSDC2",
+                                  "TRX",
+                                  "WTRX",
+                                  "SOL",
+                                  "WSOL"
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "chainTokenAmounts": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "format": "uint256"
+                          }
+                        }
+                      },
+                      "exclude": {
+                        "type": "object",
+                        "properties": {
+                          "chainIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "number",
+                              "minimum": 0
+                            }
+                          },
+                          "tokens": {
+                            "type": "array",
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ETH",
+                                    "USDC",
+                                    "WETH",
+                                    "USDT",
+                                    "USDT0",
+                                    "BNB",
+                                    "WBNB",
+                                    "XDAI",
+                                    "WXDAI",
+                                    "POL",
+                                    "WPOL",
+                                    "MON",
+                                    "WMON",
+                                    "S",
+                                    "WS",
+                                    "OKB",
+                                    "WOKB",
+                                    "HYPE",
+                                    "WHYPE",
+                                    "USDG",
+                                    "XPL",
+                                    "WXPL",
+                                    "AVAX",
+                                    "WAVAX",
+                                    "MockUSD",
+                                    "XLM",
+                                    "ensUSDC",
+                                    "ensUSDC2",
+                                    "TRX",
+                                    "WTRX",
+                                    "SOL",
+                                    "WSOL"
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "chainTokens": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "array",
+                              "items": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "ETH",
+                                      "USDC",
+                                      "WETH",
+                                      "USDT",
+                                      "USDT0",
+                                      "BNB",
+                                      "WBNB",
+                                      "XDAI",
+                                      "WXDAI",
+                                      "POL",
+                                      "WPOL",
+                                      "MON",
+                                      "WMON",
+                                      "S",
+                                      "WS",
+                                      "OKB",
+                                      "WOKB",
+                                      "HYPE",
+                                      "WHYPE",
+                                      "USDG",
+                                      "XPL",
+                                      "WXPL",
+                                      "AVAX",
+                                      "WAVAX",
+                                      "MockUSD",
+                                      "XLM",
+                                      "ensUSDC",
+                                      "ensUSDC2",
+                                      "TRX",
+                                      "WTRX",
+                                      "SOL",
+                                      "WSOL"
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "description": "Account access list specifying which chains and tokens an account may access"
                   }
                 },
                 "required": [

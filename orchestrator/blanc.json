@@ -8453,6 +8453,12 @@
                                     "minimum": 0,
                                     "exclusiveMinimum": true,
                                     "description": "Eco's own id for the delivery chain, present only where it differs from `destinationChainId` (non-EVM destinations). Eco's status API reports fulfilment against this id."
+                                  },
+                                  "providerSourceChainId": {
+                                    "type": "integer",
+                                    "minimum": 0,
+                                    "exclusiveMinimum": true,
+                                    "description": "Eco's own id for the chain the reward was funded on, present only where it differs from the deposit chain (non-EVM origins)."
                                   }
                                 },
                                 "required": [
@@ -8523,8 +8529,16 @@
                                     "description": "NEAR Intents"
                                   },
                                   "depositAddress": {
-                                    "type": "string",
-                                    "description": "NEAR Intents deposit address. Track fill status via the NEAR Intents status API keyed on this address."
+                                    "oneOf": [
+                                      {
+                                        "type": "string"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "pattern": "^[1-9A-HJ-NP-Za-km-z]{32,44}$"
+                                      }
+                                    ],
+                                    "description": "NEAR Intents deposit address on the origin chain, in its native form (EVM 0x or Solana base58). Track fill status via the NEAR Intents status API keyed on this address."
                                   }
                                 },
                                 "required": [
@@ -9688,6 +9702,69 @@
                     },
                     "description": "Execution calls on the target chain."
                   },
+                  "destinationInstructions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "programId": {
+                          "type": "string",
+                          "description": "Program to invoke, base58.",
+                          "example": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                        },
+                        "accounts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "pubkey": {
+                                "type": "string",
+                                "description": "Account address, base58.",
+                                "example": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+                              },
+                              "isSigner": {
+                                "type": "boolean",
+                                "description": "Whether the instruction requires this account to sign."
+                              },
+                              "isWritable": {
+                                "type": "boolean",
+                                "description": "Whether the instruction writes to this account."
+                              }
+                            },
+                            "required": [
+                              "pubkey",
+                              "isSigner",
+                              "isWritable"
+                            ]
+                          },
+                          "maxItems": 64,
+                          "description": "Accounts the instruction reads or writes, in the order the program expects."
+                        },
+                        "data": {
+                          "type": "string",
+                          "description": "Instruction data, base64.",
+                          "example": "CQ=="
+                        }
+                      },
+                      "required": [
+                        "programId",
+                        "accounts",
+                        "data"
+                      ],
+                      "description": "A Solana instruction in the JSON shape `@solana/web3.js` and Jupiter `/swap-instructions` produce, so protocol output passes through unchanged."
+                    },
+                    "minItems": 1,
+                    "maxItems": 32,
+                    "description": "Solana instructions to run, in order, out of the account's own wallet on a Solana destination — the Solana counterpart of `destinationExecutions`, which it cannot be combined with. The wallet executes them, so `recipient` must be omitted: a payee is encoded inside the instructions. No route serves them yet, so a request carrying them is refused with `UNSUPPORTED_DESTINATION_INSTRUCTIONS`."
+                  },
+                  "addressLookupTableAddresses": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "maxItems": 8,
+                    "description": "Address lookup tables the `destinationInstructions` resolve accounts through, base58, as Jupiter `/swap-instructions` returns them. Only with `destinationInstructions`."
+                  },
                   "preClaimExecutions": {
                     "type": "object",
                     "additionalProperties": {
@@ -9737,269 +9814,6 @@
                     "format": "uint256",
                     "description": "The gas limit for the target chain executions",
                     "example": "100000"
-                  },
-                  "accountAccessList": {
-                    "type": "object",
-                    "properties": {
-                      "chainIds": {
-                        "type": "array",
-                        "items": {
-                          "type": "string",
-                          "pattern": "^(eip155|solana|tron|hypercore|stellar):[-_a-zA-Z0-9]{1,32}$",
-                          "description": "CAIP-2 chain identifier (e.g. `eip155:8453`, `solana:…`, `tron:…`, or a HyperCore delivery venue `hypercore:spot` / `hypercore:perp`)",
-                          "example": "eip155:8453"
-                        }
-                      },
-                      "tokens": {
-                        "type": "array",
-                        "items": {
-                          "oneOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "string",
-                              "enum": [
-                                "ETH",
-                                "USDC",
-                                "WETH",
-                                "USDT",
-                                "USDT0",
-                                "BNB",
-                                "WBNB",
-                                "XDAI",
-                                "WXDAI",
-                                "POL",
-                                "WPOL",
-                                "MON",
-                                "WMON",
-                                "S",
-                                "WS",
-                                "OKB",
-                                "WOKB",
-                                "HYPE",
-                                "WHYPE",
-                                "USDG",
-                                "XPL",
-                                "WXPL",
-                                "AVAX",
-                                "WAVAX",
-                                "MockUSD",
-                                "XLM",
-                                "ensUSDC",
-                                "ensUSDC2",
-                                "TRX",
-                                "WTRX",
-                                "SOL",
-                                "WSOL"
-                              ]
-                            }
-                          ]
-                        }
-                      },
-                      "chainTokens": {
-                        "type": "object",
-                        "additionalProperties": {
-                          "type": "array",
-                          "items": {
-                            "oneOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "string",
-                                "enum": [
-                                  "ETH",
-                                  "USDC",
-                                  "WETH",
-                                  "USDT",
-                                  "USDT0",
-                                  "BNB",
-                                  "WBNB",
-                                  "XDAI",
-                                  "WXDAI",
-                                  "POL",
-                                  "WPOL",
-                                  "MON",
-                                  "WMON",
-                                  "S",
-                                  "WS",
-                                  "OKB",
-                                  "WOKB",
-                                  "HYPE",
-                                  "WHYPE",
-                                  "USDG",
-                                  "XPL",
-                                  "WXPL",
-                                  "AVAX",
-                                  "WAVAX",
-                                  "MockUSD",
-                                  "XLM",
-                                  "ensUSDC",
-                                  "ensUSDC2",
-                                  "TRX",
-                                  "WTRX",
-                                  "SOL",
-                                  "WSOL"
-                                ]
-                              }
-                            ]
-                          }
-                        },
-                        "description": "Tokens keyed by CAIP-2 chain ID.",
-                        "example": {
-                          "eip155:8453": [
-                            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
-                          ]
-                        }
-                      },
-                      "chainTokenAmounts": {
-                        "type": "object",
-                        "additionalProperties": {
-                          "type": "object",
-                          "additionalProperties": {
-                            "type": "string",
-                            "format": "uint256"
-                          }
-                        },
-                        "description": "Per-token maximum input amounts keyed by CAIP-2 chain ID.",
-                        "example": {
-                          "eip155:8453": {
-                            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "1000000"
-                          }
-                        }
-                      },
-                      "exclude": {
-                        "type": "object",
-                        "properties": {
-                          "chainIds": {
-                            "type": "array",
-                            "items": {
-                              "type": "string",
-                              "pattern": "^(eip155|solana|tron|hypercore|stellar):[-_a-zA-Z0-9]{1,32}$",
-                              "description": "CAIP-2 chain identifier (e.g. `eip155:8453`, `solana:…`, `tron:…`, or a HyperCore delivery venue `hypercore:spot` / `hypercore:perp`)",
-                              "example": "eip155:8453"
-                            }
-                          },
-                          "tokens": {
-                            "type": "array",
-                            "items": {
-                              "oneOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "string",
-                                  "enum": [
-                                    "ETH",
-                                    "USDC",
-                                    "WETH",
-                                    "USDT",
-                                    "USDT0",
-                                    "BNB",
-                                    "WBNB",
-                                    "XDAI",
-                                    "WXDAI",
-                                    "POL",
-                                    "WPOL",
-                                    "MON",
-                                    "WMON",
-                                    "S",
-                                    "WS",
-                                    "OKB",
-                                    "WOKB",
-                                    "HYPE",
-                                    "WHYPE",
-                                    "USDG",
-                                    "XPL",
-                                    "WXPL",
-                                    "AVAX",
-                                    "WAVAX",
-                                    "MockUSD",
-                                    "XLM",
-                                    "ensUSDC",
-                                    "ensUSDC2",
-                                    "TRX",
-                                    "WTRX",
-                                    "SOL",
-                                    "WSOL"
-                                  ]
-                                }
-                              ]
-                            }
-                          },
-                          "chainTokens": {
-                            "type": "object",
-                            "additionalProperties": {
-                              "type": "array",
-                              "items": {
-                                "oneOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "string",
-                                    "enum": [
-                                      "ETH",
-                                      "USDC",
-                                      "WETH",
-                                      "USDT",
-                                      "USDT0",
-                                      "BNB",
-                                      "WBNB",
-                                      "XDAI",
-                                      "WXDAI",
-                                      "POL",
-                                      "WPOL",
-                                      "MON",
-                                      "WMON",
-                                      "S",
-                                      "WS",
-                                      "OKB",
-                                      "WOKB",
-                                      "HYPE",
-                                      "WHYPE",
-                                      "USDG",
-                                      "XPL",
-                                      "WXPL",
-                                      "AVAX",
-                                      "WAVAX",
-                                      "MockUSD",
-                                      "XLM",
-                                      "ensUSDC",
-                                      "ensUSDC2",
-                                      "TRX",
-                                      "WTRX",
-                                      "SOL",
-                                      "WSOL"
-                                    ]
-                                  }
-                                ]
-                              }
-                            },
-                            "description": "Tokens keyed by CAIP-2 chain ID.",
-                            "example": {
-                              "eip155:8453": [
-                                "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
-                              ]
-                            }
-                          }
-                        }
-                      }
-                    },
-                    "description": "Account access list specifying which CAIP-2 chains and tokens an account may access"
                   },
                   "recipient": {
                     "type": "object",
@@ -10249,6 +10063,10 @@
                             "default": false,
                             "type": "boolean",
                             "description": "Whether to sponsor swap fees for the intent"
+                          },
+                          "swapValue": {
+                            "type": "boolean",
+                            "description": "Whether to sponsor the VALUE of an eligible same-chain swap, so the user trades at par: the user contributes the 1:1 amount and the sponsor pays whatever the market is short. Applies only to pairs where par is a meaningful rate (both sides USD-pegged) and only up to a configured per-swap ceiling; outside those bounds the route plans as an ordinary unsponsored swap. Distinct from `swapFees`, which waives a solver's commission."
                           },
                           "protocolFees": {
                             "default": false,
@@ -11896,6 +11714,269 @@
                         "swapFees": true
                       }
                     }
+                  },
+                  "accountAccessList": {
+                    "type": "object",
+                    "properties": {
+                      "chainIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "pattern": "^(eip155|solana|tron|hypercore|stellar):[-_a-zA-Z0-9]{1,32}$",
+                          "description": "CAIP-2 chain identifier (e.g. `eip155:8453`, `solana:…`, `tron:…`, or a HyperCore delivery venue `hypercore:spot` / `hypercore:perp`)",
+                          "example": "eip155:8453"
+                        }
+                      },
+                      "tokens": {
+                        "type": "array",
+                        "items": {
+                          "oneOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "string",
+                              "enum": [
+                                "ETH",
+                                "USDC",
+                                "WETH",
+                                "USDT",
+                                "USDT0",
+                                "BNB",
+                                "WBNB",
+                                "XDAI",
+                                "WXDAI",
+                                "POL",
+                                "WPOL",
+                                "MON",
+                                "WMON",
+                                "S",
+                                "WS",
+                                "OKB",
+                                "WOKB",
+                                "HYPE",
+                                "WHYPE",
+                                "USDG",
+                                "XPL",
+                                "WXPL",
+                                "AVAX",
+                                "WAVAX",
+                                "MockUSD",
+                                "XLM",
+                                "ensUSDC",
+                                "ensUSDC2",
+                                "TRX",
+                                "WTRX",
+                                "SOL",
+                                "WSOL"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "chainTokens": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string"
+                              },
+                              {
+                                "type": "string",
+                                "enum": [
+                                  "ETH",
+                                  "USDC",
+                                  "WETH",
+                                  "USDT",
+                                  "USDT0",
+                                  "BNB",
+                                  "WBNB",
+                                  "XDAI",
+                                  "WXDAI",
+                                  "POL",
+                                  "WPOL",
+                                  "MON",
+                                  "WMON",
+                                  "S",
+                                  "WS",
+                                  "OKB",
+                                  "WOKB",
+                                  "HYPE",
+                                  "WHYPE",
+                                  "USDG",
+                                  "XPL",
+                                  "WXPL",
+                                  "AVAX",
+                                  "WAVAX",
+                                  "MockUSD",
+                                  "XLM",
+                                  "ensUSDC",
+                                  "ensUSDC2",
+                                  "TRX",
+                                  "WTRX",
+                                  "SOL",
+                                  "WSOL"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "description": "Tokens keyed by CAIP-2 chain ID.",
+                        "example": {
+                          "eip155:8453": [
+                            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+                          ]
+                        }
+                      },
+                      "chainTokenAmounts": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "format": "uint256"
+                          }
+                        },
+                        "description": "Per-token maximum input amounts keyed by CAIP-2 chain ID.",
+                        "example": {
+                          "eip155:8453": {
+                            "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913": "1000000"
+                          }
+                        }
+                      },
+                      "exclude": {
+                        "type": "object",
+                        "properties": {
+                          "chainIds": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "pattern": "^(eip155|solana|tron|hypercore|stellar):[-_a-zA-Z0-9]{1,32}$",
+                              "description": "CAIP-2 chain identifier (e.g. `eip155:8453`, `solana:…`, `tron:…`, or a HyperCore delivery venue `hypercore:spot` / `hypercore:perp`)",
+                              "example": "eip155:8453"
+                            }
+                          },
+                          "tokens": {
+                            "type": "array",
+                            "items": {
+                              "oneOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "string",
+                                  "enum": [
+                                    "ETH",
+                                    "USDC",
+                                    "WETH",
+                                    "USDT",
+                                    "USDT0",
+                                    "BNB",
+                                    "WBNB",
+                                    "XDAI",
+                                    "WXDAI",
+                                    "POL",
+                                    "WPOL",
+                                    "MON",
+                                    "WMON",
+                                    "S",
+                                    "WS",
+                                    "OKB",
+                                    "WOKB",
+                                    "HYPE",
+                                    "WHYPE",
+                                    "USDG",
+                                    "XPL",
+                                    "WXPL",
+                                    "AVAX",
+                                    "WAVAX",
+                                    "MockUSD",
+                                    "XLM",
+                                    "ensUSDC",
+                                    "ensUSDC2",
+                                    "TRX",
+                                    "WTRX",
+                                    "SOL",
+                                    "WSOL"
+                                  ]
+                                }
+                              ]
+                            }
+                          },
+                          "chainTokens": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "array",
+                              "items": {
+                                "oneOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "string",
+                                    "enum": [
+                                      "ETH",
+                                      "USDC",
+                                      "WETH",
+                                      "USDT",
+                                      "USDT0",
+                                      "BNB",
+                                      "WBNB",
+                                      "XDAI",
+                                      "WXDAI",
+                                      "POL",
+                                      "WPOL",
+                                      "MON",
+                                      "WMON",
+                                      "S",
+                                      "WS",
+                                      "OKB",
+                                      "WOKB",
+                                      "HYPE",
+                                      "WHYPE",
+                                      "USDG",
+                                      "XPL",
+                                      "WXPL",
+                                      "AVAX",
+                                      "WAVAX",
+                                      "MockUSD",
+                                      "XLM",
+                                      "ensUSDC",
+                                      "ensUSDC2",
+                                      "TRX",
+                                      "WTRX",
+                                      "SOL",
+                                      "WSOL"
+                                    ]
+                                  }
+                                ]
+                              }
+                            },
+                            "description": "Tokens keyed by CAIP-2 chain ID.",
+                            "example": {
+                              "eip155:8453": [
+                                "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "description": "Account access list specifying which CAIP-2 chains and tokens an account may access"
                   }
                 },
                 "required": [
@@ -12872,6 +12953,287 @@
               }
             }
           },
+          "422": {
+            "description": "Sponsorship or a request option refuses the route",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "propertyName": "code"
+                  },
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string",
+                                "description": "Human-readable issue description"
+                              },
+                              "context": {
+                                "type": "object",
+                                "additionalProperties": {},
+                                "description": "Structured issue context (e.g. `{ path: \"body.accountAddress\" }`)"
+                              }
+                            },
+                            "required": [
+                              "message"
+                            ]
+                          },
+                          "description": "Per-field validation issues"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "SIMULATION_FAILED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "nonce": {
+                              "type": "string"
+                            },
+                            "category": {
+                              "type": "string"
+                            },
+                            "errorSelector": {
+                              "type": "string"
+                            },
+                            "errorName": {
+                              "type": "string"
+                            },
+                            "errorArgs": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              }
+                            },
+                            "retryable": {
+                              "type": "boolean"
+                            },
+                            "retryHint": {
+                              "type": "string",
+                              "enum": [
+                                "RE_PREPARE",
+                                "RETRY_LATER"
+                              ]
+                            },
+                            "simulations": {}
+                          },
+                          "required": [
+                            "category",
+                            "errorSelector",
+                            "errorName",
+                            "retryable"
+                          ],
+                          "additionalProperties": true,
+                          "description": "Classified on-chain simulation failure details"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "INSUFFICIENT_LIQUIDITY"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "object",
+                          "properties": {
+                            "availableIntents": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "additionalProperties": {
+                                  "type": "string"
+                                }
+                              },
+                              "description": "Intents fillable with current liquidity"
+                            },
+                            "unfillable": {
+                              "type": "object",
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "description": "Token amounts that cannot be filled"
+                            }
+                          },
+                          "required": [
+                            "availableIntents",
+                            "unfillable"
+                          ],
+                          "description": "Fillable subset and unfillable remainder"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "KEY_SCOPE_DENIED"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "message": {
+                                "type": "string"
+                              },
+                              "context": {
+                                "type": "object",
+                                "properties": {
+                                  "scope": {
+                                    "type": "string",
+                                    "enum": [
+                                      "allowMainnet",
+                                      "intents",
+                                      "deposits"
+                                    ],
+                                    "description": "Which scope rejected the request"
+                                  },
+                                  "required": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Minimum level the endpoint demands"
+                                  },
+                                  "actual": {
+                                    "oneOf": [
+                                      {
+                                        "type": "boolean"
+                                      },
+                                      {
+                                        "type": "string",
+                                        "enum": [
+                                          "none",
+                                          "read",
+                                          "write"
+                                        ]
+                                      }
+                                    ],
+                                    "description": "Level resolved on the key"
+                                  }
+                                },
+                                "required": [
+                                  "scope",
+                                  "required",
+                                  "actual"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "message",
+                              "context"
+                            ]
+                          },
+                          "description": "Single-element list describing the failing scope"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "NOT_FOUND",
+                            "UNAUTHORIZED",
+                            "FORBIDDEN",
+                            "CONFLICT",
+                            "WITHDRAWAL_IN_PROGRESS",
+                            "UNPROCESSABLE_CONTENT",
+                            "TOO_MANY_REQUESTS",
+                            "SETTLEMENT_QUOTE_ERROR",
+                            "SETTLEMENT_EXECUTION_ERROR",
+                            "EXTERNAL_SERVICE_TIMEOUT",
+                            "RELAYER_MARKET_UNAVAILABLE",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string",
+                          "description": "Human-readable error message",
+                          "example": "Invalid input"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
           "500": {
             "description": "Server error",
             "content": {
@@ -13185,13 +13547,14 @@
                   },
                   "sourceChainId": {
                     "type": "string",
-                    "pattern": "^eip155:[0-9]{1,32}$",
-                    "description": "Source chain id (CAIP-2, eip155)",
+                    "pattern": "^(eip155|solana|tron|hypercore|stellar):[-_a-zA-Z0-9]{1,32}$",
+                    "description": "Source chain id (CAIP-2): EVM (`eip155:*`), or `solana:…` where this deployment spends from a Solana origin.",
                     "example": "eip155:8453"
                   },
                   "sourceToken": {
                     "type": "string",
-                    "description": "Source token address",
+                    "minLength": 1,
+                    "description": "Source token address — EVM `0x…`, or a Solana base58 mint.",
                     "example": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
                   },
                   "destinationChainId": {
@@ -13314,13 +13677,17 @@
                             "type": "boolean",
                             "description": "Whether to sponsor swap fees for the intent"
                           },
+                          "swapValue": {
+                            "type": "boolean",
+                            "description": "Whether to sponsor the VALUE of an eligible same-chain swap, so the user trades at par: the user contributes the 1:1 amount and the sponsor pays whatever the market is short. Applies only to pairs where par is a meaningful rate (both sides USD-pegged) and only up to a configured per-swap ceiling; outside those bounds the route plans as an ordinary unsponsored swap. Distinct from `swapFees`, which waives a solver's commission."
+                          },
                           "protocolFees": {
                             "default": false,
                             "type": "boolean",
                             "description": "Whether to sponsor the Rhinestone protocol fee (`options.protocolFees`) for the intent. When `true`, the fee is charged to the integrator's sponsorship balance instead of carved from the user, without the sponsorship surcharge."
                           }
                         },
-                        "description": "Which fee categories to treat as sponsored. Sponsored categories are absorbed by the sponsor and do not reduce the delivered amount.",
+                        "description": "Which fee categories to treat as sponsored. Sponsored categories are absorbed by the sponsor and do not reduce the delivered amount. `swapValue` is NOT accepted here: the estimator prices swaps at market, so an estimate cannot yet reflect a par-sponsored swap and is rejected rather than returning a figure `POST /quotes` would not honour (RHI-7069).",
                         "example": {
                           "gas": true,
                           "bridgeFees": true,
@@ -13383,7 +13750,7 @@
                   "destinationChainId",
                   "destinationToken"
                 ],
-                "description": "Indicative-quote request. Chain ids are eip155 CAIP-2 strings; exactly one of `amountIn`/`amountOut` is required, matching `direction`."
+                "description": "Indicative-quote request. Chain ids are CAIP-2 strings; exactly one of `amountIn`/`amountOut` is required, matching `direction`."
               }
             }
           }
