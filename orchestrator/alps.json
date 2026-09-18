@@ -1885,7 +1885,7 @@
           }
         ],
         "summary": "Create Intent",
-        "description": "Submits a quoted intent for execution. Takes the `intentId` from `POST /quotes` (`routes[].intentId`) plus signatures (origin, destination, optionally target-execution) and optional EIP-7702 authorizations.",
+        "description": "Submits a quoted intent for execution. Takes the `intentId` from `POST /quotes` (`routes[].intentId`) plus the proofs authorizing it: on `2026-09.caucasus` one ordered `proofs[]` answering the quote's `signingRequests[]` position by position; on earlier versions the role-keyed signatures (origin, destination, optionally target-execution) and optional EIP-7702 authorizations.",
         "tags": [
           "Intents"
         ],
@@ -9005,7 +9005,7 @@
                     },
                     "minItems": 1,
                     "maxItems": 32,
-                    "description": "Solana instructions to run, in order, out of the account's own wallet on a Solana destination — the Solana counterpart of `destinationExecutions`, which it cannot be combined with. The wallet executes them, so `recipient` must be omitted: a payee is encoded inside the instructions. No route serves them yet, so a request carrying them is refused with `UNSUPPORTED_DESTINATION_INSTRUCTIONS`."
+                    "description": "Solana instructions to run, in order, out of the account's own Swig wallet on a Solana destination. They carry any transfers and payees, so omit `recipient` and `tokenRequests`; they cannot be combined with `destinationExecutions`. Unsponsored execution is paid from an eligible wallet SOL or SPL balance; `options.sponsorSettings.gas` bills the sponsor instead."
                   },
                   "addressLookupTableAddresses": {
                     "type": "array",
