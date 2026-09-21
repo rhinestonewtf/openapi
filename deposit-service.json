@@ -3,7 +3,7 @@
   "info": {
     "title": "Deposit Service API",
     "version": "1.0.0",
-    "description": "Cross-chain deposit processing service with automatic token bridging and gas sponsorship"
+    "description": "Rhinestone Deposits API: accept deposits from any chain, asset or payment method, and settle them as one token on one chain."
   },
   "servers": [
     {
@@ -1995,6 +1995,35 @@
               "breakdown"
             ]
           },
+          "input": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "string"
+              },
+              "symbol": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "decimals": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "token",
+              "amount",
+              "symbol",
+              "decimals"
+            ]
+          },
           "output": {
             "type": "object",
             "properties": {
@@ -2030,6 +2059,7 @@
           "expiresAt",
           "estimatedFillTimeSeconds",
           "fees",
+          "input",
           "output"
         ]
       },
@@ -2054,6 +2084,24 @@
           "sponsored"
         ]
       },
+      "QuotePreviewRefusal": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/ErrorResponse"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "inputAmount": {
+                "type": "string",
+                "pattern": "^\\d+$",
+                "description": "The deposit the route resolved, in the source token's smallest unit. Present only when an `exactOut` quote was refused by a bound that governs the deposit rather than the delivery.",
+                "example": "1010000"
+              }
+            }
+          }
+        ]
+      },
       "QuotePreviewRequest": {
         "type": "object",
         "properties": {
@@ -2075,18 +2123,33 @@
             "description": "Ethereum address (0x followed by 40 hex characters)",
             "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
           },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "exactIn",
+              "exactOut"
+            ],
+            "default": "exactIn",
+            "description": "`exactIn` fixes the deposited `amount` and quotes what is delivered; `exactOut` fixes the delivered `amountOut` and quotes the deposit that produces it. Defaults to `exactIn`.",
+            "example": "exactIn"
+          },
           "amount": {
             "type": "string",
             "pattern": "^\\d+$",
-            "description": "Numeric string representing a bigint value",
-            "example": "1000000000000000000"
+            "description": "Deposited amount in the source token's smallest unit. Required for (and only valid with) `direction: exactIn`.",
+            "example": "1000000"
+          },
+          "amountOut": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Delivered amount in the destination token's smallest unit. Required for (and only valid with) `direction: exactOut`; the quote's `input.amount` is then the deposit that produces it.",
+            "example": "1000000"
           }
         },
         "required": [
           "account",
           "sourceChainId",
-          "sourceToken",
-          "amount"
+          "sourceToken"
         ]
       },
       "PermitDepositPrepareResponse": {
@@ -6144,11 +6207,11 @@
             }
           },
           "422": {
-            "description": "Route cannot be quoted (token/amount not allowed by the client whitelist or account session scope, unsupported token route, no session for the source chain, or no available routes). A policy refusal a deposit would also receive carries `code` (`TOKEN-3`, `BALANCE-3`, `BALANCE-4`); the others carry none.",
+            "description": "Route cannot be quoted (token/amount not allowed by the client whitelist or account session scope, unsupported token route, no session for the source chain, no available routes, or exact-out asked of a route only the binding quote can price). A policy refusal a deposit would also receive carries `code` (`TOKEN-3`, `BALANCE-3`, `BALANCE-4`); the others carry none. An exact-out refusal on a deposit bound also carries `inputAmount`, the deposit the route resolved.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/QuotePreviewRefusal"
                 }
               }
             }
