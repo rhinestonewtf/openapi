@@ -1198,6 +1198,10 @@
           "maxPriceDeviationBps": {
             "type": "number"
           },
+          "maxPriceDeviationBpsIsDefault": {
+            "type": "boolean",
+            "description": "True when the project stores no maxPriceDeviationBps, so the value above is the platform default and follows it if it changes. Send maxPriceDeviationBps: null to return to it."
+          },
           "priceDeviationTokens": {
             "type": "object",
             "additionalProperties": {
@@ -1237,7 +1241,8 @@
         },
         "required": [
           "hasWebhookSecret",
-          "maxPriceDeviationBps"
+          "maxPriceDeviationBps",
+          "maxPriceDeviationBpsIsDefault"
         ]
       },
       "RegisterResponse": {
