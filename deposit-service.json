@@ -1026,16 +1026,17 @@
               "all",
               "none"
             ],
-            "description": "Fee sponsorship mode",
+            "description": "Ignored: the Rhinestone protocol fee is always paid from your sponsorship balance, never by the user.",
             "example": "all"
           },
           "maxAmountUsd": {
             "type": "number",
             "exclusiveMinimum": 0,
-            "description": "Largest deposit value in USD this entry sponsors. A deposit valued above it, or one that cannot be priced, settles unsponsored: the user pays every fee this entry would otherwise cover. Omit to sponsor deposits of any value.",
+            "description": "Largest deposit value in USD this entry sponsors. A deposit valued above it, or one that cannot be priced, settles without gas, bridge or swap sponsorship: the user pays those fees. Honoured only for organizations allowed to pass fees to their users.",
             "example": 30000
           }
-        }
+        },
+        "description": "Which deposit fees your sponsorship balance pays on a source chain. Unless your organization may pass fees to its users, gas and bridging are always sponsored; unless it may sponsor swaps, swaps never are."
       },
       "DepositWhitelist": {
         "type": "object",
@@ -3693,7 +3694,8 @@
               "deposit-rejected",
               "deposit-delayed",
               "deposit-refunded",
-              "onramp-order"
+              "onramp-order",
+              "onramp-payment"
             ],
             "description": "Which webhook type to simulate",
             "example": "bridge-started"
@@ -3726,10 +3728,6 @@
           },
           "expiresAt": {
             "type": "string"
-          },
-          "exchangeFeeBps": {
-            "type": "integer",
-            "minimum": 0
           }
         },
         "required": [
@@ -3792,23 +3790,6 @@
           "smartAccount"
         ]
       },
-      "SwappedExchangeFeeChangedResponse": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string"
-          },
-          "exchangeFeeBps": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 10000
-          }
-        },
-        "required": [
-          "error",
-          "exchangeFeeBps"
-        ]
-      },
       "SwappedConnectUrlRequestBody": {
         "type": "object",
         "properties": {
@@ -3835,11 +3816,6 @@
           },
           "connection": {
             "type": "string"
-          },
-          "acceptedExchangeFeeBps": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 10000
           },
           "connections": {
             "type": "array",
@@ -4082,10 +4058,6 @@
           },
           "stale": {
             "type": "boolean"
-          },
-          "exchangeFeeBps": {
-            "type": "integer",
-            "minimum": 0
           }
         },
         "required": [
@@ -4311,6 +4283,161 @@
         ],
         "additionalProperties": false
       },
+      "OnrampNativeDetails": {
+        "type": "object",
+        "properties": {
+          "bankDetails": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "type": "number",
+                "enum": [
+                  1
+                ]
+              },
+              "capturedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD",
+                  "EUR"
+                ]
+              },
+              "accountHolderName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bankName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bankAddress": {
+                "type": "object",
+                "properties": {
+                  "street": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "street2": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "city": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "postCode": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "country": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{2}$"
+                  }
+                },
+                "required": [
+                  "street",
+                  "city",
+                  "postCode",
+                  "state",
+                  "country"
+                ],
+                "additionalProperties": false
+              },
+              "reference": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rails": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "BankAch",
+                        "BankFedwire",
+                        "BankSwift",
+                        "BankSepa"
+                      ]
+                    },
+                    "accountNumber": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "bankCode": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fee": {
+                      "type": "object",
+                      "properties": {
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "USD",
+                            "EUR"
+                          ]
+                        },
+                        "base": {
+                          "type": "string",
+                          "maxLength": 38,
+                          "pattern": "^\\+?(?:\\d+(?:\\.\\d*)?|\\.\\d+)$"
+                        },
+                        "percent": {
+                          "type": "string",
+                          "maxLength": 38,
+                          "pattern": "^\\+?(?:\\d+(?:\\.\\d*)?|\\.\\d+)$"
+                        },
+                        "minimum": {
+                          "type": "string",
+                          "maxLength": 38,
+                          "pattern": "^\\+?(?:\\d+(?:\\.\\d*)?|\\.\\d+)$"
+                        }
+                      },
+                      "required": [
+                        "currency",
+                        "base",
+                        "percent",
+                        "minimum"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "accountNumber",
+                    "bankCode",
+                    "fee"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "capturedAt",
+              "currency",
+              "accountHolderName",
+              "rails"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "bankDetails"
+        ],
+        "additionalProperties": false
+      },
       "OnrampSetup": {
         "type": "object",
         "properties": {
@@ -4344,12 +4471,6 @@
             ],
             "description": "Supported ISO 4217 fiat currency"
           },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "bank_transfer"
-            ]
-          },
           "status": {
             "type": "string",
             "enum": [
@@ -4362,7 +4483,6 @@
         "required": [
           "id",
           "currency",
-          "paymentMethod",
           "status"
         ],
         "additionalProperties": false
@@ -4370,10 +4490,6 @@
       "OnrampSessionRequest": {
         "type": "object",
         "properties": {
-          "country": {
-            "type": "string",
-            "pattern": "^[A-Z]{2}$"
-          },
           "currency": {
             "type": "string",
             "enum": [
@@ -4382,29 +4498,14 @@
             ],
             "description": "Supported ISO 4217 fiat currency"
           },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "bank_transfer"
-            ]
-          },
           "optionId": {
             "type": "string",
             "format": "uuid",
             "description": "Opaque Rhinestone selection scoped to customer and intent"
-          },
-          "purpose": {
-            "type": "string",
-            "enum": [
-              "account_setup"
-            ]
           }
         },
         "required": [
-          "country",
-          "currency",
-          "paymentMethod",
-          "purpose"
+          "currency"
         ],
         "additionalProperties": false
       },
@@ -4422,18 +4523,11 @@
               "USD"
             ],
             "description": "Supported ISO 4217 fiat currency"
-          },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "bank_transfer"
-            ]
           }
         },
         "required": [
           "optionId",
-          "currency",
-          "paymentMethod"
+          "currency"
         ],
         "additionalProperties": false
       },
@@ -4537,45 +4631,6 @@
         ],
         "additionalProperties": false
       },
-      "OnrampAccountDetails": {
-        "type": "object",
-        "properties": {
-          "nextAction": {
-            "$ref": "#/components/schemas/HostedNextAction"
-          }
-        },
-        "required": [
-          "nextAction"
-        ],
-        "additionalProperties": false
-      },
-      "HostedNextAction": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": [
-              "hosted"
-            ]
-          },
-          "url": {
-            "type": "string",
-            "format": "uri"
-          },
-          "presentation": {
-            "type": "string",
-            "enum": [
-              "iframe"
-            ]
-          }
-        },
-        "required": [
-          "type",
-          "url",
-          "presentation"
-        ],
-        "additionalProperties": false
-      },
       "RampSession": {
         "type": "object",
         "properties": {
@@ -4608,13 +4663,36 @@
         ],
         "additionalProperties": false
       },
+      "HostedNextAction": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "hosted"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "presentation": {
+            "type": "string",
+            "enum": [
+              "iframe"
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "url",
+          "presentation"
+        ],
+        "additionalProperties": false
+      },
       "OfframpSessionRequest": {
         "type": "object",
         "properties": {
-          "country": {
-            "type": "string",
-            "pattern": "^[A-Z]{2}$"
-          },
           "currency": {
             "type": "string",
             "enum": [
@@ -4623,29 +4701,14 @@
             ],
             "description": "Supported ISO 4217 fiat currency"
           },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "bank_transfer"
-            ]
-          },
           "optionId": {
             "type": "string",
             "format": "uuid",
             "description": "Opaque Rhinestone selection scoped to customer and intent"
-          },
-          "purpose": {
-            "type": "string",
-            "enum": [
-              "beneficiary_collection"
-            ]
           }
         },
         "required": [
-          "country",
-          "currency",
-          "paymentMethod",
-          "purpose"
+          "currency"
         ],
         "additionalProperties": false
       },
@@ -5010,7 +5073,7 @@
             }
           },
           "403": {
-            "description": "API key lacks the required deposits:admin scope",
+            "description": "API key lacks the required deposits:admin scope, or the organization can't be billed (no card or approved contract, or suspended)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5020,7 +5083,7 @@
             }
           },
           "503": {
-            "description": "Client configuration could not be persisted; retry after the Retry-After delay",
+            "description": "Client configuration could not be persisted, or the organization's fee configuration could not be read; retry",
             "content": {
               "application/json": {
                 "schema": {
@@ -5147,7 +5210,7 @@
             }
           },
           "403": {
-            "description": "API key lacks required deposits scope",
+            "description": "API key lacks required deposits scope, or the organization can't be billed",
             "content": {
               "application/json": {
                 "schema": {
@@ -5253,7 +5316,7 @@
             }
           },
           "403": {
-            "description": "Unauthorized - API key does not belong to the client that registered the account",
+            "description": "Unauthorized - API key does not belong to the client that registered the account, or the organization can't be billed",
             "content": {
               "application/json": {
                 "schema": {
@@ -6609,7 +6672,7 @@
             }
           },
           "403": {
-            "description": "API key lacks required deposits scope",
+            "description": "API key lacks required deposits scope, or the organization can't be billed",
             "content": {
               "application/json": {
                 "schema": {
@@ -8014,16 +8077,6 @@
               }
             }
           },
-          "409": {
-            "description": "The Exchange Fee changed after the caller loaded the picker; the returned rate must be disclosed and accepted before retrying",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwappedExchangeFeeChangedResponse"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Server misconfigured or signing failed",
             "content": {
@@ -8035,7 +8088,7 @@
             }
           },
           "503": {
-            "description": "Swapped on-ramp is not configured",
+            "description": "Swapped on-ramp is not configured, or the organization's fee configuration or exchange deposit address is unavailable; retry",
             "content": {
               "application/json": {
                 "schema": {
@@ -8568,6 +8621,16 @@
               }
             }
           },
+          "404": {
+            "description": "Bank transfer by virtual account is not provisioned for this project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Failed to create the verification session",
             "content": {
@@ -8594,6 +8657,185 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/noah/accounts/{id}/details": {
+      "get": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bank instructions for transfers into this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnrampNativeDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The account predates snapshot capture and has not been backfilled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -8687,7 +8929,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -8866,7 +9108,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -8954,15 +9196,6 @@
           {
             "schema": {
               "type": "string",
-              "pattern": "^[A-Z]{2}$"
-            },
-            "required": true,
-            "name": "country",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
               "enum": [
                 "EUR",
                 "USD"
@@ -8972,17 +9205,6 @@
             "required": false,
             "description": "Supported ISO 4217 fiat currency",
             "name": "currency",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": [
-                "bank_transfer"
-              ]
-            },
-            "required": true,
-            "name": "paymentMethod",
             "in": "query"
           },
           {
@@ -9091,7 +9313,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9279,7 +9501,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9440,7 +9662,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9628,7 +9850,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9789,168 +10011,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Internal failure serving the request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "502": {
-            "description": "The onramp provider rejected or failed the request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Onramp is not configured",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/onramp/noah/accounts/{id}/details": {
-      "post": {
-        "tags": [
-          "onramp"
-        ],
-        "security": [
-          {
-            "complianceSessionBearer": []
-          }
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "name": "id",
-            "in": "path"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Hosted session for the customer to read bank details from",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OnrampAccountDetails"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid customer intent",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Invalid or expired browser bearer",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "Customer scope mismatch",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -10287,15 +10348,6 @@
           {
             "schema": {
               "type": "string",
-              "pattern": "^[A-Z]{2}$"
-            },
-            "required": true,
-            "name": "country",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
               "enum": [
                 "EUR",
                 "USD"
@@ -10305,17 +10357,6 @@
             "required": true,
             "description": "Supported ISO 4217 fiat currency",
             "name": "currency",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": [
-                "bank_transfer"
-              ]
-            },
-            "required": true,
-            "name": "paymentMethod",
             "in": "query"
           },
           {
