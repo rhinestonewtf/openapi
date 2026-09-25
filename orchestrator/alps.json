@@ -757,7 +757,7 @@
                             "sponsoredValue": {
                               "type": "string",
                               "pattern": "^\\d+$",
-                              "description": "Sponsored value actually charged, in integer micro-USD (1 USD = 1,000,000 units). Once the intent executes this is reconciled from the receipt (planned gas replaced by executed), so it matches the sponsorship balance and the usage/billing reads rather than the amount reserved at quote time. On an allocation-backed intent this is the sum of its per-operation allocations, which is where reconciliation writes executed gas.",
+                              "description": "Sponsored value actually charged, in integer micro-USD (1 USD = 1,000,000 units). Once the intent executes this is reconciled from the receipt (planned gas replaced by executed), so it matches the sponsorship balance and the usage/billing reads rather than the amount reserved at quote time. On an allocation-backed intent this is the sum of its per-operation allocations, which is where reconciliation writes executed gas. Includes Relay's subsidy of its own bridge fee, charged at par.",
                               "example": "210000"
                             },
                             "protocolFee": {
@@ -1439,12 +1439,12 @@
                           "token": {
                             "type": "string",
                             "minLength": 1,
-                            "description": "Intent value token. The token delivered on the destination chain, or the spent token for same-chain intents (which have no persisted delivery).",
+                            "description": "Intent value token. Prefers the planned token delivered on the destination chain; falls back to the spent token when historical same-chain output accounting is unavailable.",
                             "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                           },
                           "amount": {
                             "type": "string",
-                            "description": "Intent value in base units — delivered on the destination chain, or spent for same-chain intents (which have no persisted delivery; for same-chain swaps this is the input, not the received amount).",
+                            "description": "Intent value in base units — the planned destination output when available, or the spent amount when historical same-chain output accounting is unavailable.",
                             "example": "1000000"
                           },
                           "account": {
@@ -1797,6 +1797,46 @@
           },
           "404": {
             "description": "The quoted intent has expired or was already submitted. Request a new route to retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The intent or its shared sponsorship authorization was already used.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2301,6 +2341,11 @@
                                                       ],
                                                       "description": "Eco solver-network delivery"
                                                     },
+                                                    "quoteId": {
+                                                      "type": "string",
+                                                      "pattern": "^quote:[0-9a-f-]{36}$",
+                                                      "description": "Eco v1 quote ID for detailed delivery and refund tracking."
+                                                    },
                                                     "intentHash": {
                                                       "type": "string",
                                                       "pattern": "^0x[a-fA-F0-9]*$",
@@ -2764,6 +2809,28 @@
                                               "minItems": 1,
                                               "description": "The actions this leg registers agents for, IN THE ORDER they are sent, serialised. Each is a STRING because msgpack hashes map keys in insertion order and `jsonb` does not preserve it — stored as an object the keys come back sorted, deriving an agent that was never registered. Each carries its forged agent, which is committed on-chain by the registration op: one site forges it, every reader replays it.\n\nOrder is the contract: the poster stops at the first refusal, so a later action never runs against a state an earlier one failed to reach."
                                             },
+                                            "hyperCoreRegistration": {
+                                              "type": "object",
+                                              "properties": {
+                                                "actionIndex": {
+                                                  "type": "integer",
+                                                  "minimum": 0
+                                                },
+                                                "agent": {
+                                                  "type": "string"
+                                                },
+                                                "slot": {
+                                                  "type": "string",
+                                                  "minLength": 1
+                                                }
+                                              },
+                                              "required": [
+                                                "actionIndex",
+                                                "agent",
+                                                "slot"
+                                              ],
+                                              "description": "The registration this leg performs: which `hyperCoreActions` entry it is for, the agent it installs and the API-wallet slot it goes in. Names what the registration call the user signs already commits to, so the signing request can disclose it without decoding CoreWriter calldata."
+                                            },
                                             "dispatchPrecondition": {
                                               "type": "string",
                                               "enum": [
@@ -2944,6 +3011,11 @@
                                                         "ECO"
                                                       ],
                                                       "description": "Eco solver-network delivery"
+                                                    },
+                                                    "quoteId": {
+                                                      "type": "string",
+                                                      "pattern": "^quote:[0-9a-f-]{36}$",
+                                                      "description": "Eco v1 quote ID for detailed delivery and refund tracking."
                                                     },
                                                     "intentHash": {
                                                       "type": "string",
@@ -4122,7 +4194,7 @@
                                   "providerSubsidy": {
                                     "type": "number",
                                     "minimum": 0,
-                                    "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
+                                    "description": "Bridge-provider subsidy Relay advances from a budget Rhinestone funds: charged to the sponsor and surcharged like any coverage, but excluded from relayer repayment. Absent on legacy quotes.",
                                     "example": 0
                                   }
                                 },
@@ -4350,7 +4422,7 @@
                                 "description": "Whether to sponsor the Rhinestone protocol fee (`options.protocolFees`) for the intent. When `true`, the fee is charged to the integrator's sponsorship balance instead of carved from the user, without the sponsorship surcharge."
                               }
                             },
-                            "description": "Sponsor settings requested at quote time. Used during submit to distinguish sponsored zero-segment setup-only fills from unsponsored fallback fills."
+                            "description": "Sponsor settings the quote honoured: the request's when a sponsor was resolved for it, absent otherwise — including when the API key's sponsorship scope denies them. Used during submit to distinguish sponsored zero-segment setup-only fills from unsponsored fallback fills."
                           },
                           "executionTokensReceived": {
                             "type": "array",
@@ -4425,6 +4497,41 @@
                                         "amount"
                                       ]
                                     }
+                                  }
+                                },
+                                "required": [
+                                  "tokensOut"
+                                ]
+                              },
+                              "sameChainFill": {
+                                "type": "object",
+                                "properties": {
+                                  "tokensOut": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "address": {
+                                          "type": "string"
+                                        },
+                                        "chainId": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "exclusiveMinimum": true,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "amount": {
+                                          "type": "string",
+                                          "format": "uint256"
+                                        }
+                                      },
+                                      "required": [
+                                        "address",
+                                        "chainId",
+                                        "amount"
+                                      ]
+                                    },
+                                    "minItems": 1
                                   }
                                 },
                                 "required": [
@@ -4549,6 +4656,42 @@
                               }
                             },
                             "description": "Accounting facts derived from the selected plan and used for IntentOperation persistence. Excluded from the legacy serverSignature HMAC surface for rolling-deploy compatibility; submit integrity comes from the stored quote session."
+                          },
+                          "requestedDestinationChainId": {
+                            "type": "integer",
+                            "description": "The destination chain the caller addressed. Differs from the chain the fill lands on only for a virtual destination: a HyperCore venue settles on HyperEVM. Excluded from the serverSignature HMAC surface for rolling-deploy compatibility.",
+                            "example": 1337002
+                          },
+                          "hyperCoreSettlementCalls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "to": {
+                                  "type": "string",
+                                  "description": "Target contract address for execution",
+                                  "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                                },
+                                "value": {
+                                  "type": "string",
+                                  "format": "uint256",
+                                  "description": "Amount of ETH (in wei) sent in the execution",
+                                  "example": "0"
+                                },
+                                "data": {
+                                  "type": "string",
+                                  "pattern": "^0x[a-fA-F0-9]*$",
+                                  "description": "Encoded function call data",
+                                  "example": "0xa9059cbb000000000000000000000000579d5631f76126991c00fb8fe5467fa9d49e5f6a00000000000000000000000000000000000000000000000000000000000f4240"
+                                }
+                              },
+                              "required": [
+                                "to",
+                                "value",
+                                "data"
+                              ]
+                            },
+                            "description": "The caller's own HyperEVM calls on a HyperCore-destination intent, used to tell them apart from the calls the orchestrator composes around them. Empty when the caller sent none. Excluded from the serverSignature HMAC surface for rolling-deploy compatibility; the calls themselves are inside the signed ops."
                           }
                         },
                         "required": [
@@ -5500,6 +5643,11 @@
                                                         ],
                                                         "description": "Eco solver-network delivery"
                                                       },
+                                                      "quoteId": {
+                                                        "type": "string",
+                                                        "pattern": "^quote:[0-9a-f-]{36}$",
+                                                        "description": "Eco v1 quote ID for detailed delivery and refund tracking."
+                                                      },
                                                       "intentHash": {
                                                         "type": "string",
                                                         "pattern": "^0x[a-fA-F0-9]*$",
@@ -5963,6 +6111,28 @@
                                                 "minItems": 1,
                                                 "description": "The actions this leg registers agents for, IN THE ORDER they are sent, serialised. Each is a STRING because msgpack hashes map keys in insertion order and `jsonb` does not preserve it — stored as an object the keys come back sorted, deriving an agent that was never registered. Each carries its forged agent, which is committed on-chain by the registration op: one site forges it, every reader replays it.\n\nOrder is the contract: the poster stops at the first refusal, so a later action never runs against a state an earlier one failed to reach."
                                               },
+                                              "hyperCoreRegistration": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "actionIndex": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                  },
+                                                  "agent": {
+                                                    "type": "string"
+                                                  },
+                                                  "slot": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                  }
+                                                },
+                                                "required": [
+                                                  "actionIndex",
+                                                  "agent",
+                                                  "slot"
+                                                ],
+                                                "description": "The registration this leg performs: which `hyperCoreActions` entry it is for, the agent it installs and the API-wallet slot it goes in. Names what the registration call the user signs already commits to, so the signing request can disclose it without decoding CoreWriter calldata."
+                                              },
                                               "dispatchPrecondition": {
                                                 "type": "string",
                                                 "enum": [
@@ -6143,6 +6313,11 @@
                                                           "ECO"
                                                         ],
                                                         "description": "Eco solver-network delivery"
+                                                      },
+                                                      "quoteId": {
+                                                        "type": "string",
+                                                        "pattern": "^quote:[0-9a-f-]{36}$",
+                                                        "description": "Eco v1 quote ID for detailed delivery and refund tracking."
                                                       },
                                                       "intentHash": {
                                                         "type": "string",
@@ -7321,7 +7496,7 @@
                                     "providerSubsidy": {
                                       "type": "number",
                                       "minimum": 0,
-                                      "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
+                                      "description": "Bridge-provider subsidy Relay advances from a budget Rhinestone funds: charged to the sponsor and surcharged like any coverage, but excluded from relayer repayment. Absent on legacy quotes.",
                                       "example": 0
                                     }
                                   },
@@ -7631,6 +7806,41 @@
                                     "tokensOut"
                                   ]
                                 },
+                                "sameChainFill": {
+                                  "type": "object",
+                                  "properties": {
+                                    "tokensOut": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "address": {
+                                            "type": "string"
+                                          },
+                                          "chainId": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "exclusiveMinimum": true,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "amount": {
+                                            "type": "string",
+                                            "format": "uint256"
+                                          }
+                                        },
+                                        "required": [
+                                          "address",
+                                          "chainId",
+                                          "amount"
+                                        ]
+                                      },
+                                      "minItems": 1
+                                    }
+                                  },
+                                  "required": [
+                                    "tokensOut"
+                                  ]
+                                },
                                 "sponsorFee": {
                                   "type": "object",
                                   "properties": {
@@ -7749,6 +7959,42 @@
                                 }
                               },
                               "description": "Accounting facts derived from the selected plan and used for IntentOperation persistence. Excluded from the legacy serverSignature HMAC surface for rolling-deploy compatibility; submit integrity comes from the stored quote session."
+                            },
+                            "requestedDestinationChainId": {
+                              "type": "integer",
+                              "description": "The destination chain the caller addressed. Differs from the chain the fill lands on only for a virtual destination: a HyperCore venue settles on HyperEVM. Excluded from the serverSignature HMAC surface for rolling-deploy compatibility.",
+                              "example": 1337002
+                            },
+                            "hyperCoreSettlementCalls": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "to": {
+                                    "type": "string",
+                                    "description": "Target contract address for execution",
+                                    "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "format": "uint256",
+                                    "description": "Amount of ETH (in wei) sent in the execution",
+                                    "example": "0"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "pattern": "^0x[a-fA-F0-9]*$",
+                                    "description": "Encoded function call data",
+                                    "example": "0xa9059cbb000000000000000000000000579d5631f76126991c00fb8fe5467fa9d49e5f6a00000000000000000000000000000000000000000000000000000000000f4240"
+                                  }
+                                },
+                                "required": [
+                                  "to",
+                                  "value",
+                                  "data"
+                                ]
+                              },
+                              "description": "The caller's own HyperEVM calls on a HyperCore-destination intent, used to tell them apart from the calls the orchestrator composes around them. Empty when the caller sent none. Excluded from the serverSignature HMAC surface for rolling-deploy compatibility; the calls themselves are inside the signed ops."
                             }
                           },
                           "required": [
@@ -8111,7 +8357,7 @@
                                 "providerSubsidy": {
                                   "type": "number",
                                   "minimum": 0,
-                                  "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
+                                  "description": "Bridge-provider subsidy Relay advances from a budget Rhinestone funds: charged to the sponsor and surcharged like any coverage, but excluded from relayer repayment. Absent on legacy quotes.",
                                   "example": 0
                                 }
                               },
@@ -11000,15 +11246,19 @@
                                 "WOKB",
                                 "HYPE",
                                 "WHYPE",
+                                "RON",
+                                "WRON",
                                 "USDG",
                                 "XPL",
                                 "WXPL",
                                 "AVAX",
                                 "WAVAX",
                                 "MockUSD",
+                                "USDC_TEST",
                                 "XLM",
                                 "ensUSDC",
                                 "ensUSDC2",
+                                "ensUSDC3",
                                 "TRX",
                                 "WTRX",
                                 "SOL",
@@ -11052,15 +11302,19 @@
                                   "WOKB",
                                   "HYPE",
                                   "WHYPE",
+                                  "RON",
+                                  "WRON",
                                   "USDG",
                                   "XPL",
                                   "WXPL",
                                   "AVAX",
                                   "WAVAX",
                                   "MockUSD",
+                                  "USDC_TEST",
                                   "XLM",
                                   "ensUSDC",
                                   "ensUSDC2",
+                                  "ensUSDC3",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -11123,15 +11377,19 @@
                                     "WOKB",
                                     "HYPE",
                                     "WHYPE",
+                                    "RON",
+                                    "WRON",
                                     "USDG",
                                     "XPL",
                                     "WXPL",
                                     "AVAX",
                                     "WAVAX",
                                     "MockUSD",
+                                    "USDC_TEST",
                                     "XLM",
                                     "ensUSDC",
                                     "ensUSDC2",
+                                    "ensUSDC3",
                                     "TRX",
                                     "WTRX",
                                     "SOL",
@@ -11175,15 +11433,19 @@
                                       "WOKB",
                                       "HYPE",
                                       "WHYPE",
+                                      "RON",
+                                      "WRON",
                                       "USDG",
                                       "XPL",
                                       "WXPL",
                                       "AVAX",
                                       "WAVAX",
                                       "MockUSD",
+                                      "USDC_TEST",
                                       "XLM",
                                       "ensUSDC",
                                       "ensUSDC2",
+                                      "ensUSDC3",
                                       "TRX",
                                       "WTRX",
                                       "SOL",
