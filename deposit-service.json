@@ -588,6 +588,123 @@
           "expiresAt"
         ]
       },
+      "AssetsResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AssetItem"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "AssetItem": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "symbol": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decimals": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "logo": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "price": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "usd": {
+                "type": "string"
+              },
+              "updatedAt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "usd",
+              "updatedAt"
+            ]
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "enum": [
+                  "invalid_id",
+                  "unsupported_chain",
+                  "not_found",
+                  "upstream_error"
+                ]
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "additionalProperties": {}
+      },
+      "AssetsError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "AssetsAuthError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
       "ChainsResponse": {
         "type": "object",
         "additionalProperties": {
@@ -1026,16 +1143,17 @@
               "all",
               "none"
             ],
-            "description": "Fee sponsorship mode",
+            "description": "Ignored: the Rhinestone protocol fee is always paid from your sponsorship balance, never by the user.",
             "example": "all"
           },
           "maxAmountUsd": {
             "type": "number",
             "exclusiveMinimum": 0,
-            "description": "Largest deposit value in USD this entry sponsors. A deposit valued above it, or one that cannot be priced, settles unsponsored: the user pays every fee this entry would otherwise cover. Omit to sponsor deposits of any value.",
+            "description": "Largest deposit value in USD this entry sponsors. A deposit valued above it, or one that cannot be priced, settles without gas, bridge or swap sponsorship: the user pays those fees. Honoured only for organizations allowed to pass fees to their users.",
             "example": 30000
           }
-        }
+        },
+        "description": "Which deposit fees your sponsorship balance pays on a source chain. Unless your organization may pass fees to its users, gas and bridging are always sponsored; unless it may sponsor swaps, swaps never are."
       },
       "DepositWhitelist": {
         "type": "object",
@@ -1271,7 +1389,8 @@
         },
         "required": [
           "account"
-        ]
+        ],
+        "description": "A repeat registration preserves owner, kind and destination. Omitted scopes remain stored; explicitly supplied, signed scopes replace existing-chain scopes and signed sessions. Replacing stored material does not revoke older sessions enabled on-chain."
       },
       "AccountInput": {
         "type": "object",
@@ -1398,7 +1517,7 @@
           "maxSpend": {
             "type": "string",
             "pattern": "^\\d+$",
-            "description": "Optional cumulative ceiling on what may leave, in base units. The pinned Settler is what bounds the session, so a cap is only needed as a spend ceiling in its own right. It is a LIFETIME total: once reached the account stops converting deposits until it re-registers.",
+            "description": "Optional cumulative ceiling on what may leave, in base units. The pinned Settler is what bounds the session, so a cap is only needed as a spend ceiling in its own right. It is a LIFETIME total for the signed session; an explicitly signed replacement can change the stored scope but does not revoke an older session already enabled on-chain.",
             "example": "1000000000000000000"
           }
         },
@@ -1439,7 +1558,7 @@
           "chain",
           "token"
         ],
-        "description": "Destination target configuration. `chain` must be a CAIP-2 chain identifier such as \"eip155:8453\", \"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp\", \"tron:mainnet\" or \"hypercore:mainnet\" — see `destination` on `/chains`. `token` and `recipient` follow the chain's address format: 0x-hex for EVM and HyperCore, base58 for Solana, base58check (T-prefixed) for Tron. Tron and HyperCore destinations require an explicit `recipient`, since the EVM account address is not an address on those chains and cannot be defaulted to. `outputTokenRules` select the final target token per source token; `rejectUnmapped` ignores deposits with no matching rule.",
+        "description": "Destination target configuration. `chain` must be a CAIP-2 chain identifier such as \"eip155:8453\", \"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp\", \"tron:mainnet\" or \"hypercore:mainnet\" — see `destination` on `/chains`. `token` and `recipient` follow the chain's address format: 0x-hex for EVM and HyperCore, base58 for Solana, base58check (T-prefixed) for Tron. Tron and HyperCore destinations require an explicit `recipient`, since the EVM account address is not an address on those chains and cannot be defaulted to. Once registered, the destination chain, token, and effective recipient are immutable: use a new address (or managed-account salt) to change them. The owning project may update `outputTokenRules` and `rejectUnmapped`; they remain subject to existing session scopes.",
         "example": {
           "chain": "eip155:8453",
           "token": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
@@ -2720,7 +2839,8 @@
         },
         "required": [
           "account"
-        ]
+        ],
+        "description": "A repeat using the same salt preserves the derived address, owner, account kind, and destination. Use a new salt to change destination."
       },
       "ManagedAccountInput": {
         "type": "object",
@@ -2927,7 +3047,8 @@
           "sessionOwnerAddress",
           "targetToken",
           "targetChain"
-        ]
+        ],
+        "description": "Preflight for registration. Address owner, kind and destination are immutable; destination changes require a new address. Explicitly supplied scopes on existing chains require a new signature and replace stored scopes; omission preserves them. Replacement does not revoke older on-chain sessions."
       },
       "PortfolioResponse": {
         "type": "object",
@@ -3693,7 +3814,9 @@
               "deposit-rejected",
               "deposit-delayed",
               "deposit-refunded",
-              "onramp-order"
+              "onramp-order",
+              "onramp-payment",
+              "ramp-order"
             ],
             "description": "Which webhook type to simulate",
             "example": "bridge-started"
@@ -3726,10 +3849,6 @@
           },
           "expiresAt": {
             "type": "string"
-          },
-          "exchangeFeeBps": {
-            "type": "integer",
-            "minimum": 0
           }
         },
         "required": [
@@ -3792,23 +3911,6 @@
           "smartAccount"
         ]
       },
-      "SwappedExchangeFeeChangedResponse": {
-        "type": "object",
-        "properties": {
-          "error": {
-            "type": "string"
-          },
-          "exchangeFeeBps": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 10000
-          }
-        },
-        "required": [
-          "error",
-          "exchangeFeeBps"
-        ]
-      },
       "SwappedConnectUrlRequestBody": {
         "type": "object",
         "properties": {
@@ -3835,11 +3937,6 @@
           },
           "connection": {
             "type": "string"
-          },
-          "acceptedExchangeFeeBps": {
-            "type": "integer",
-            "minimum": 0,
-            "maximum": 10000
           },
           "connections": {
             "type": "array",
@@ -4082,10 +4179,6 @@
           },
           "stale": {
             "type": "boolean"
-          },
-          "exchangeFeeBps": {
-            "type": "integer",
-            "minimum": 0
           }
         },
         "required": [
@@ -4311,6 +4404,161 @@
         ],
         "additionalProperties": false
       },
+      "OnrampNativeDetails": {
+        "type": "object",
+        "properties": {
+          "bankDetails": {
+            "type": "object",
+            "properties": {
+              "schemaVersion": {
+                "type": "number",
+                "enum": [
+                  1
+                ]
+              },
+              "capturedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD",
+                  "EUR"
+                ]
+              },
+              "accountHolderName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bankName": {
+                "type": "string",
+                "minLength": 1
+              },
+              "bankAddress": {
+                "type": "object",
+                "properties": {
+                  "street": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "street2": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "city": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "postCode": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "state": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "country": {
+                    "type": "string",
+                    "pattern": "^[A-Z]{2}$"
+                  }
+                },
+                "required": [
+                  "street",
+                  "city",
+                  "postCode",
+                  "state",
+                  "country"
+                ],
+                "additionalProperties": false
+              },
+              "reference": {
+                "type": "string",
+                "minLength": 1
+              },
+              "rails": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "BankAch",
+                        "BankFedwire",
+                        "BankSwift",
+                        "BankSepa"
+                      ]
+                    },
+                    "accountNumber": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "bankCode": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "fee": {
+                      "type": "object",
+                      "properties": {
+                        "currency": {
+                          "type": "string",
+                          "enum": [
+                            "USD",
+                            "EUR"
+                          ]
+                        },
+                        "base": {
+                          "type": "string",
+                          "maxLength": 38,
+                          "pattern": "^\\+?(?:\\d+(?:\\.\\d*)?|\\.\\d+)$"
+                        },
+                        "percent": {
+                          "type": "string",
+                          "maxLength": 38,
+                          "pattern": "^\\+?(?:\\d+(?:\\.\\d*)?|\\.\\d+)$"
+                        },
+                        "minimum": {
+                          "type": "string",
+                          "maxLength": 38,
+                          "pattern": "^\\+?(?:\\d+(?:\\.\\d*)?|\\.\\d+)$"
+                        }
+                      },
+                      "required": [
+                        "currency",
+                        "base",
+                        "percent",
+                        "minimum"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "accountNumber",
+                    "bankCode",
+                    "fee"
+                  ],
+                  "additionalProperties": false
+                },
+                "minItems": 1
+              }
+            },
+            "required": [
+              "schemaVersion",
+              "capturedAt",
+              "currency",
+              "accountHolderName",
+              "rails"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "bankDetails"
+        ],
+        "additionalProperties": false
+      },
       "OnrampSetup": {
         "type": "object",
         "properties": {
@@ -4344,12 +4592,6 @@
             ],
             "description": "Supported ISO 4217 fiat currency"
           },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "bank_transfer"
-            ]
-          },
           "status": {
             "type": "string",
             "enum": [
@@ -4362,7 +4604,6 @@
         "required": [
           "id",
           "currency",
-          "paymentMethod",
           "status"
         ],
         "additionalProperties": false
@@ -4370,10 +4611,6 @@
       "OnrampSessionRequest": {
         "type": "object",
         "properties": {
-          "country": {
-            "type": "string",
-            "pattern": "^[A-Z]{2}$"
-          },
           "currency": {
             "type": "string",
             "enum": [
@@ -4382,29 +4619,14 @@
             ],
             "description": "Supported ISO 4217 fiat currency"
           },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "bank_transfer"
-            ]
-          },
           "optionId": {
             "type": "string",
             "format": "uuid",
             "description": "Opaque Rhinestone selection scoped to customer and intent"
-          },
-          "purpose": {
-            "type": "string",
-            "enum": [
-              "account_setup"
-            ]
           }
         },
         "required": [
-          "country",
-          "currency",
-          "paymentMethod",
-          "purpose"
+          "currency"
         ],
         "additionalProperties": false
       },
@@ -4422,18 +4644,11 @@
               "USD"
             ],
             "description": "Supported ISO 4217 fiat currency"
-          },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "bank_transfer"
-            ]
           }
         },
         "required": [
           "optionId",
-          "currency",
-          "paymentMethod"
+          "currency"
         ],
         "additionalProperties": false
       },
@@ -4537,15 +4752,743 @@
         ],
         "additionalProperties": false
       },
-      "OnrampAccountDetails": {
+      "OnrampOrder": {
         "type": "object",
         "properties": {
-          "nextAction": {
-            "$ref": "#/components/schemas/HostedNextAction"
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "noah",
+              "swapped"
+            ]
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fiat",
+              "exchange"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "completed",
+              "failed",
+              "refunded"
+            ]
+          },
+          "terminal": {
+            "type": "boolean",
+            "description": "No stage will change again"
+          },
+          "stages": {
+            "type": "object",
+            "properties": {
+              "receipt": {
+                "$ref": "#/components/schemas/OnrampReceiptStage"
+              },
+              "conversion": {
+                "$ref": "#/components/schemas/OnrampConversionStage"
+              },
+              "delivery": {
+                "$ref": "#/components/schemas/OnrampDeliveryStage"
+              },
+              "return": {
+                "$ref": "#/components/schemas/OnrampReturnStage"
+              }
+            },
+            "required": [
+              "receipt",
+              "conversion",
+              "delivery",
+              "return"
+            ],
+            "additionalProperties": false
+          },
+          "rail": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "fiat"
+                    ]
+                  },
+                  "method": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "exchange"
+                    ]
+                  },
+                  "connection": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "connection"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "`provider_selected` / `unknown` when the provider did not say"
+          },
+          "fiat": {
+            "type": "object",
+            "properties": {
+              "charged": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "total": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Including fees"
+                  },
+                  "net": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Before fees"
+                  },
+                  "currency": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "total",
+                  "net",
+                  "currency"
+                ],
+                "additionalProperties": false,
+                "description": "What the customer paid, in their own currency"
+              },
+              "eur": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "total": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Including fees"
+                  },
+                  "net": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Before fees"
+                  }
+                },
+                "required": [
+                  "total",
+                  "net"
+                ],
+                "additionalProperties": false,
+                "description": "Comparable across every order"
+              },
+              "usd": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "total": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Including fees"
+                  },
+                  "net": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Before fees"
+                  }
+                },
+                "required": [
+                  "total",
+                  "net"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "charged",
+              "eur",
+              "usd"
+            ],
+            "additionalProperties": false,
+            "description": "Each figure in a fixed currency; null when the provider did not state it"
+          },
+          "crypto": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "asset": {
+                "type": "string"
+              },
+              "network": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "asset",
+              "network",
+              "amount"
+            ],
+            "additionalProperties": false
+          },
+          "account": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "deliveryAddress": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "providerStatus": {
+            "type": "string",
+            "description": "The provider’s own status; informational"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the provider says the order began"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
           }
         },
         "required": [
-          "nextAction"
+          "id",
+          "provider",
+          "kind",
+          "status",
+          "terminal",
+          "stages",
+          "rail",
+          "fiat",
+          "crypto",
+          "account",
+          "deliveryAddress",
+          "providerStatus",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "OnrampReceiptStage": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_started"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "on_hold"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "kyc_required",
+                  "rfi_open",
+                  "review"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "processing"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "completed"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "failed"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "cancelled",
+                  "declined",
+                  "expired",
+                  "provider_error"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "OnrampConversionStage": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_started"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "processing"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "on_hold"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "rfi_open",
+                  "review"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "completed"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "failed"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "sub_fee",
+                  "provider_error"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "OnrampDeliveryStage": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_started"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "on_hold"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "rfi_open",
+                  "review"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "submitted"
+                ]
+              },
+              "txHash": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "status",
+              "txHash"
+            ],
+            "additionalProperties": false,
+            "description": "The provider reported the transfer; not yet seen on chain"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "completed"
+                ]
+              },
+              "txHash": {
+                "type": "string",
+                "pattern": "^0x[0-9a-f]{64}$"
+              },
+              "depositId": {
+                "type": "string",
+                "description": "The deposit it landed as"
+              }
+            },
+            "required": [
+              "status",
+              "txHash",
+              "depositId"
+            ],
+            "additionalProperties": false,
+            "description": "The transfer landed on chain as a deposit"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "failed"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "sub_fee",
+                  "provider_error"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "OnrampReturnStage": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "processing"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "completed"
+                ]
+              },
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "full_refund",
+                  "adjustment",
+                  "unresolved"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "outcome"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "failed"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "OnrampOrderPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OnrampOrder"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
+      },
+      "OnrampOrderStarted": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nextAction": {
+            "$ref": "#/components/schemas/HostedNextAction"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start the checkout before this"
+          }
+        },
+        "required": [
+          "orderId",
+          "nextAction",
+          "expiresAt"
         ],
         "additionalProperties": false
       },
@@ -4575,6 +5518,332 @@
           "presentation"
         ],
         "additionalProperties": false
+      },
+      "CreateOnrampOrderRequest": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/SwappedFiatOrderRequest"
+          },
+          {
+            "$ref": "#/components/schemas/SwappedExchangeOrderRequest"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "fiat": "#/components/schemas/SwappedFiatOrderRequest",
+            "exchange": "#/components/schemas/SwappedExchangeOrderRequest"
+          }
+        }
+      },
+      "SwappedFiatOrderRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "swapped"
+            ]
+          },
+          "account": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The registered account to fund",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "fiat"
+            ]
+          },
+          "email": {
+            "type": "string"
+          },
+          "baseCountry": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$",
+            "description": "ISO-3166-1 alpha-2 country code",
+            "example": "US"
+          },
+          "baseCurrencyCode": {
+            "type": "string",
+            "pattern": "^[A-Z]{3,4}$",
+            "description": "ISO fiat currency code",
+            "example": "USD"
+          },
+          "baseCurrencyAmount": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "locale": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "description": "Optional. Preselects a Swapped payment method (a `payment_group`) in the widget — e.g. \"creditcard\", \"apple-pay\", \"bank-transfer\", \"skrill\", \"pix\", \"sepa-bank-transfer\". Any Swapped-supported value is accepted and forwarded as-is; omit it to let Swapped auto-select the best method for the user based on their location and other signals. See Swapped's Get Payment Methods endpoint for the full, per-region list.",
+            "example": "apple-pay"
+          },
+          "methodSelectionSource": {
+            "type": "string",
+            "enum": [
+              "personalized",
+              "fallback",
+              "configured"
+            ],
+            "description": "How the caller obtained `method`. Use `personalized` only for a method rendered from the regional payment-method response; with a trusted `x-user-country`, this opts into strict catalog validation. `fallback`, `configured`, and omission preserve the legacy exact-method pass-through behavior.",
+            "example": "personalized"
+          }
+        },
+        "required": [
+          "provider",
+          "account",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "SwappedExchangeOrderRequest": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "enum": [
+              "swapped"
+            ]
+          },
+          "account": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The registered account to fund",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "exchange"
+            ]
+          },
+          "baseCountry": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$",
+            "description": "ISO-3166-1 alpha-2 country code",
+            "example": "US"
+          },
+          "baseCurrencyCode": {
+            "type": "string",
+            "pattern": "^[A-Z]{3,4}$",
+            "description": "ISO fiat currency code",
+            "example": "USD"
+          },
+          "locale": {
+            "type": "string"
+          },
+          "connection": {
+            "type": "string"
+          },
+          "connections": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "minItems": 1,
+            "maxItems": 26,
+            "example": [
+              "coinbase",
+              "kraken"
+            ]
+          },
+          "merchantName": {
+            "type": "string",
+            "maxLength": 64,
+            "description": "Optional. Overrides the merchant name Swapped Connect shows on its confirm screen — both the \"To:\" row and its tooltip (\"Funds will be delivered to your <name> wallet.\"). Omit it to inherit the Rhinestone default. Send it raw; the service URL-encodes it.",
+            "example": "Superform"
+          },
+          "merchantLogoUrl": {
+            "type": "string",
+            "maxLength": 2048,
+            "format": "uri",
+            "description": "Optional. Publicly accessible HTTPS URL of the merchant's logo, shown beside `merchantName` on the Swapped Connect confirm screen. PNG or SVG recommended. Send it raw; the service URL-encodes it.",
+            "example": "https://cdn.example.com/logo.svg"
+          }
+        },
+        "required": [
+          "provider",
+          "account",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "OnrampOptions": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "swapped"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "fiat"
+                ]
+              },
+              "country": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "pattern": "^[A-Z]{2}$",
+                "description": "Null when the country or catalogue is unknown; fall back to your own defaults",
+                "example": "US"
+              },
+              "methods": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "iconUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "iconUrlLight": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "minAmount": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0
+                    },
+                    "maxAmount": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0
+                    },
+                    "badge": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "Popular"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "label",
+                    "iconUrl",
+                    "iconUrlLight",
+                    "minAmount",
+                    "maxAmount",
+                    "badge"
+                  ]
+                }
+              },
+              "recommendedMethod": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "provider",
+              "kind",
+              "country",
+              "methods",
+              "recommendedMethod"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "swapped"
+                ]
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "exchange"
+                ]
+              },
+              "connections": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "connection": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "logoUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "exchange",
+                        "wallet"
+                      ],
+                      "example": "exchange"
+                    },
+                    "appHandoff": {
+                      "type": "string",
+                      "enum": [
+                        "none",
+                        "https_link",
+                        "custom_scheme"
+                      ],
+                      "example": "none"
+                    }
+                  },
+                  "required": [
+                    "connection",
+                    "name",
+                    "logoUrl",
+                    "kind",
+                    "appHandoff"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "provider",
+              "kind",
+              "connections"
+            ],
+            "additionalProperties": false
+          }
+        ]
       },
       "RampSession": {
         "type": "object",
@@ -4611,10 +5880,6 @@
       "OfframpSessionRequest": {
         "type": "object",
         "properties": {
-          "country": {
-            "type": "string",
-            "pattern": "^[A-Z]{2}$"
-          },
           "currency": {
             "type": "string",
             "enum": [
@@ -4623,29 +5888,14 @@
             ],
             "description": "Supported ISO 4217 fiat currency"
           },
-          "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "bank_transfer"
-            ]
-          },
           "optionId": {
             "type": "string",
             "format": "uuid",
             "description": "Opaque Rhinestone selection scoped to customer and intent"
-          },
-          "purpose": {
-            "type": "string",
-            "enum": [
-              "beneficiary_collection"
-            ]
           }
         },
         "required": [
-          "country",
-          "currency",
-          "paymentMethod",
-          "purpose"
+          "currency"
         ],
         "additionalProperties": false
       },
@@ -4861,6 +6111,98 @@
         }
       }
     },
+    "/assets": {
+      "get": {
+        "tags": [
+          "Utilities"
+        ],
+        "summary": "Get asset metadata",
+        "description": "Authenticated asset lookup. GET accepts required ids and fields as comma-separated or repeated query parameters; at most 100 IDs before deduplication. Supported fields: name, symbol, decimals, price, logo. QUERY /assets is also supported (not representable as an OpenAPI 3.1 operation): send application/json {\"ids\":[\"eip155:1:native\"],\"fields\":[\"symbol\",\"price\"]}, at most 100 IDs and a 64 KiB body. Both methods return exact submitted ID keys, omit unrequested fields and use null for unresolved requested fields; item errors remain HTTP 200. An invalid request returns 400 with {\"error\":{\"code\":\"invalid_request\",\"message\":\"...\"}}.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Required comma-separated asset IDs (or repeated ids); at most 100 submitted IDs",
+              "example": "eip155:1:native"
+            },
+            "required": true,
+            "description": "Required comma-separated asset IDs (or repeated ids); at most 100 submitted IDs",
+            "name": "ids",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Required comma-separated fields (or repeated fields): name,symbol,decimals,price,logo",
+              "example": "symbol,price"
+            },
+            "required": true,
+            "description": "Required comma-separated fields (or repeated fields): name,symbol,decimals,price,logo",
+            "name": "fields",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Billable project API key"
+            },
+            "required": true,
+            "description": "Billable project API key",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Requested asset fields keyed by exact submitted ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid asset request (or invalid API key)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/AssetsError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AssetsAuthError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Organization is not billable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetsAuthError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Asset upstream unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetsError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/chains": {
       "get": {
         "tags": [
@@ -5010,7 +6352,7 @@
             }
           },
           "403": {
-            "description": "API key lacks the required deposits:admin scope",
+            "description": "API key lacks the required deposits:admin scope, or the organization can't be billed (no card or approved contract, or suspended)",
             "content": {
               "application/json": {
                 "schema": {
@@ -5020,7 +6362,7 @@
             }
           },
           "503": {
-            "description": "Client configuration could not be persisted; retry after the Retry-After delay",
+            "description": "Client configuration could not be persisted, or the organization's fee configuration could not be read; retry",
             "content": {
               "application/json": {
                 "schema": {
@@ -5090,7 +6432,7 @@
           "Accounts"
         ],
         "summary": "Register an account",
-        "description": "Registers a smart account for deposits.",
+        "description": "Registers a smart account for deposits. Registration is idempotent for the registered project and destination: an existing address cannot be reassigned to another project, account kind, chain, token, or recipient. To change destination, derive and register a new address. User-owned registration is limited to enabled organizations; others register managed accounts with `POST /register-managed`.",
         "parameters": [
           {
             "schema": {
@@ -5147,7 +6489,17 @@
             }
           },
           "403": {
-            "description": "API key lacks required deposits scope",
+            "description": "API key lacks required deposits scope, the organization can't be billed, or user-owned accounts are not enabled for the organization (`USER_OWNED_ACCOUNTS_NOT_ENABLED`; use `POST /register-managed`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The address is already registered to a different project, account kind, or destination. Use a new address for a new destination.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5193,7 +6545,7 @@
           "Accounts"
         ],
         "summary": "Provision deposit addresses",
-        "description": "Returns deposit addresses for a registered account, creating missing addresses as needed.",
+        "description": "Returns deposit addresses for a registered account, creating missing addresses as needed. It never changes the account owner or destination.",
         "parameters": [
           {
             "schema": {
@@ -5253,7 +6605,7 @@
             }
           },
           "403": {
-            "description": "Unauthorized - API key does not belong to the client that registered the account",
+            "description": "Unauthorized - API key does not belong to the client that registered the account, or the organization can't be billed",
             "content": {
               "application/json": {
                 "schema": {
@@ -5272,8 +6624,28 @@
               }
             }
           },
+          "409": {
+            "description": "The account and its existing deposit-address mapping disagree on owner or destination. Use a new address; this endpoint will not repair or overwrite the mapping.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Failed to backfill deposit addresses",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Registration is busy; retry shortly",
             "content": {
               "application/json": {
                 "schema": {
@@ -5401,6 +6773,21 @@
             "description": "Ethereum address (0x followed by 40 hex characters)",
             "name": "address",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+                "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
+              ],
+              "description": "Solana source network; defaults to mainnet when omitted",
+              "example": "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
+            },
+            "required": false,
+            "description": "Solana source network; defaults to mainnet when omitted",
+            "name": "chain",
+            "in": "query"
           },
           {
             "schema": {
@@ -5709,8 +7096,28 @@
               }
             }
           },
+          "409": {
+            "description": "A Solana deposit may still be settling on-chain; refund refused until reconciled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Refund transfer failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Settlement evidence for a Solana deposit is unavailable; retry later",
             "content": {
               "application/json": {
                 "schema": {
@@ -6552,7 +7959,7 @@
           "Accounts"
         ],
         "summary": "Register a managed account",
-        "description": "Registers a smart account controlled by the server.",
+        "description": "Registers a smart account controlled by the server. Reusing a salt is idempotent only for the registered project and destination; use a new salt to change destination.",
         "parameters": [
           {
             "schema": {
@@ -6609,7 +8016,17 @@
             }
           },
           "403": {
-            "description": "API key lacks required deposits scope",
+            "description": "API key lacks required deposits scope, or the organization can't be billed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The derived address is already registered to a different project, account kind, or destination. Use a new salt for a new destination.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6655,7 +8072,7 @@
           "Accounts"
         ],
         "summary": "Prepare account registration",
-        "description": "Returns a deposit address or the details needed to register the account.",
+        "description": "Returns a deposit address or the details needed to register the account. Existing account ownership, kind, and destination are immutable; a conflicting request is refused before session details are created.",
         "parameters": [
           {
             "schema": {
@@ -6712,7 +8129,17 @@
             }
           },
           "403": {
-            "description": "API key lacks required deposits scope",
+            "description": "API key lacks required deposits scope, or user-owned accounts are not enabled for the organization (`USER_OWNED_ACCOUNTS_NOT_ENABLED`; use `POST /register-managed`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The derived address is already registered to a different project, account kind, or destination. Use a new address for a new destination.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6723,6 +8150,16 @@
           },
           "500": {
             "description": "Failed to derive account or build sessions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Could not verify the existing mapping; retry shortly",
             "content": {
               "application/json": {
                 "schema": {
@@ -7807,11 +9244,12 @@
     },
     "/onramp/swapped/widget-url": {
       "post": {
+        "deprecated": true,
         "tags": [
           "Onramp"
         ],
         "summary": "Create a fiat funding URL",
-        "description": "Creates a signed Swapped URL for buying crypto with fiat.",
+        "description": "Creates a signed Swapped URL for buying crypto with fiat. Deprecated: use `POST /onramp/orders` with `kind: \"fiat\"`.",
         "parameters": [
           {
             "schema": {
@@ -7923,11 +9361,12 @@
     },
     "/onramp/swapped/connect-url": {
       "post": {
+        "deprecated": true,
         "tags": [
           "Onramp"
         ],
         "summary": "Create an exchange funding URL",
-        "description": "Creates a signed Swapped Connect URL for funding from a centralized exchange.",
+        "description": "Creates a signed Swapped Connect URL for funding from a centralized exchange. Deprecated: use `POST /onramp/orders` with `kind: \"exchange\"`.",
         "parameters": [
           {
             "schema": {
@@ -8014,16 +9453,6 @@
               }
             }
           },
-          "409": {
-            "description": "The Exchange Fee changed after the caller loaded the picker; the returned rate must be disclosed and accepted before retrying",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwappedExchangeFeeChangedResponse"
-                }
-              }
-            }
-          },
           "500": {
             "description": "Server misconfigured or signing failed",
             "content": {
@@ -8035,7 +9464,7 @@
             }
           },
           "503": {
-            "description": "Swapped on-ramp is not configured",
+            "description": "Swapped on-ramp is not configured, or the organization's fee configuration or exchange deposit address is unavailable; retry",
             "content": {
               "application/json": {
                 "schema": {
@@ -8049,11 +9478,12 @@
     },
     "/onramp/swapped/payment-methods": {
       "get": {
+        "deprecated": true,
         "tags": [
           "Onramp"
         ],
         "summary": "List payment methods",
-        "description": "Returns available Swapped payment methods for the user’s country.",
+        "description": "Returns available Swapped payment methods for the user’s country. Deprecated: use `GET /onramp/options` with `kind=fiat`.",
         "parameters": [
           {
             "schema": {
@@ -8146,11 +9576,12 @@
     },
     "/onramp/swapped/status/{smartAccount}": {
       "get": {
+        "deprecated": true,
         "tags": [
           "Onramp"
         ],
         "summary": "Get funding status",
-        "description": "Returns the latest Swapped order for a smart account.",
+        "description": "Returns the latest Swapped order for a smart account. Deprecated: use `GET /onramp/orders` or `GET /onramp/orders/{id}`.",
         "parameters": [
           {
             "schema": {
@@ -8242,11 +9673,12 @@
     },
     "/onramp/swapped/connect-exchanges": {
       "get": {
+        "deprecated": true,
         "tags": [
           "Onramp"
         ],
         "summary": "List supported exchanges and wallets",
-        "description": "Returns the connections available for funding through Swapped Connect. Defaults to the centralized exchanges; pass `kind=wallet` or `kind=all` for the Web3 wallets, or `connections` to resolve an explicit allowlist.",
+        "description": "Returns the connections available for funding through Swapped Connect. Defaults to the centralized exchanges; pass `kind=wallet` or `kind=all` for the Web3 wallets, or `connections` to resolve an explicit allowlist. Deprecated: use `GET /onramp/options` with `kind=exchange`.",
         "parameters": [
           {
             "schema": {
@@ -8568,6 +10000,16 @@
               }
             }
           },
+          "404": {
+            "description": "Bank transfer by virtual account is not provisioned for this project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Failed to create the verification session",
             "content": {
@@ -8594,6 +10036,185 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/noah/accounts/{id}/details": {
+      "get": {
+        "tags": [
+          "onramp"
+        ],
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Bank instructions for transfers into this account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnrampNativeDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid customer intent",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid or expired browser bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Customer scope mismatch",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The account predates snapshot capture and has not been backfilled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The onramp provider rejected or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -8687,7 +10308,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -8866,7 +10487,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -8954,15 +10575,6 @@
           {
             "schema": {
               "type": "string",
-              "pattern": "^[A-Z]{2}$"
-            },
-            "required": true,
-            "name": "country",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
               "enum": [
                 "EUR",
                 "USD"
@@ -8972,17 +10584,6 @@
             "required": false,
             "description": "Supported ISO 4217 fiat currency",
             "name": "currency",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": [
-                "bank_transfer"
-              ]
-            },
-            "required": true,
-            "name": "paymentMethod",
             "in": "query"
           },
           {
@@ -9091,7 +10692,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9279,7 +10880,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9440,7 +11041,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9628,7 +11229,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9789,7 +11390,7 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "Resource not found in customer scope, or bank transfer by virtual account is not provisioned for this project",
             "content": {
               "application/json": {
                 "schema": {
@@ -9863,16 +11464,13 @@
         }
       }
     },
-    "/onramp/noah/accounts/{id}/details": {
-      "post": {
+    "/onramp/orders/{id}": {
+      "get": {
         "tags": [
-          "onramp"
+          "Onramp"
         ],
-        "security": [
-          {
-            "complianceSessionBearer": []
-          }
-        ],
+        "summary": "Get an onramp order",
+        "description": "Accepts the order id, or the reference returned when the order was started. 404 until the provider first reports the order.",
         "parameters": [
           {
             "schema": {
@@ -9882,39 +11480,32 @@
             "required": true,
             "name": "id",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
           }
         ],
         "responses": {
           "200": {
-            "description": "Hosted session for the customer to read bank details from",
+            "description": "The order",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OnrampAccountDetails"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid customer intent",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/OnrampOrder"
                 }
               }
             }
           },
           "401": {
-            "description": "Invalid or expired browser bearer",
+            "description": "Authentication required or invalid API key",
             "content": {
               "application/json": {
                 "schema": {
@@ -9932,7 +11523,7 @@
             }
           },
           "403": {
-            "description": "Customer scope mismatch",
+            "description": "API key lacks deposits:read",
             "content": {
               "application/json": {
                 "schema": {
@@ -9950,7 +11541,266 @@
             }
           },
           "404": {
-            "description": "Resource not found in customer scope",
+            "description": "No such order for this project yet",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/orders": {
+      "get": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "List onramp orders",
+        "description": "Newest first by when each order began.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^0x[a-fA-F0-9]{40}$",
+              "description": "Ethereum address (0x followed by 40 hex characters)",
+              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+            },
+            "required": false,
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "name": "account",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "`nextCursor` of the previous page"
+            },
+            "required": false,
+            "description": "`nextCursor` of the previous page",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnrampOrderPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks deposits:read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "Start an onramp order",
+        "description": "Signs a hosted checkout for the account. The order is visible at `GET /onramp/orders/{orderId}` once the provider first reports it.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+              "example": "PH"
+            },
+            "required": false,
+            "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+            "name": "x-user-country",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+              "example": "203.0.113.7"
+            },
+            "required": false,
+            "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+            "name": "x-client-ip",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOnrampOrderRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Hosted checkout ready",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnrampOrderStarted"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks deposits:read, or the account is not yours",
             "content": {
               "application/json": {
                 "schema": {
@@ -9985,8 +11835,186 @@
               }
             }
           },
-          "502": {
-            "description": "The onramp provider rejected or failed the request",
+          "503": {
+            "description": "Onramp not configured, or a dependency is unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/onramp/options": {
+      "get": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "List onramp options",
+        "description": "What a checkout of this `kind` can offer: fiat payment methods for the caller’s country, or exchange connections.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "swapped"
+              ]
+            },
+            "required": true,
+            "name": "provider",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "fiat",
+                "exchange"
+              ]
+            },
+            "required": true,
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 1024,
+              "description": "`exchange` only. Comma-separated allowlist, served in catalogue order; an unknown slug is a 400"
+            },
+            "required": false,
+            "description": "`exchange` only. Comma-separated allowlist, served in catalogue order; an unknown slug is a 400",
+            "name": "connections",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "exchange",
+                "wallet",
+                "all"
+              ],
+              "description": "`exchange` only, ignored with `connections`"
+            },
+            "required": false,
+            "description": "`exchange` only, ignored with `connections`",
+            "name": "connectionKind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "API key for authentication",
+              "example": "your-api-key"
+            },
+            "required": true,
+            "description": "API key for authentication",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+              "example": "PH"
+            },
+            "required": false,
+            "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
+            "name": "x-user-country",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+              "example": "203.0.113.7"
+            },
+            "required": false,
+            "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
+            "name": "x-client-ip",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The options",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnrampOptions"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid query",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or invalid API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks deposits:read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
             "content": {
               "application/json": {
                 "schema": {
@@ -10004,7 +12032,7 @@
             }
           },
           "503": {
-            "description": "Onramp is not configured",
+            "description": "Onramp not configured",
             "content": {
               "application/json": {
                 "schema": {
@@ -10287,15 +12315,6 @@
           {
             "schema": {
               "type": "string",
-              "pattern": "^[A-Z]{2}$"
-            },
-            "required": true,
-            "name": "country",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
               "enum": [
                 "EUR",
                 "USD"
@@ -10305,17 +12324,6 @@
             "required": true,
             "description": "Supported ISO 4217 fiat currency",
             "name": "currency",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": [
-                "bank_transfer"
-              ]
-            },
-            "required": true,
-            "name": "paymentMethod",
             "in": "query"
           },
           {
