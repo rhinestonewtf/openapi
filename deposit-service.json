@@ -2255,24 +2255,6 @@
           "sponsored"
         ]
       },
-      "QuotePreviewRefusal": {
-        "allOf": [
-          {
-            "$ref": "#/components/schemas/ErrorResponse"
-          },
-          {
-            "type": "object",
-            "properties": {
-              "inputAmount": {
-                "type": "string",
-                "pattern": "^\\d+$",
-                "description": "The deposit the route resolved, in the source token's smallest unit. Present only when an `exactOut` quote was refused by a bound that governs the deposit rather than the delivery.",
-                "example": "1010000"
-              }
-            }
-          }
-        ]
-      },
       "QuotePreviewRequest": {
         "type": "object",
         "properties": {
@@ -3892,7 +3874,7 @@
           },
           "method": {
             "type": "string",
-            "description": "Optional. Preselects a Swapped payment method (a `payment_group`) in the widget — e.g. \"creditcard\", \"apple-pay\", \"bank-transfer\", \"skrill\", \"pix\", \"sepa-bank-transfer\". Any Swapped-supported value is accepted and forwarded as-is; omit it to let Swapped auto-select the best method for the user based on their location and other signals. See Swapped's Get Payment Methods endpoint for the full, per-region list.",
+            "description": "Optional. Preselects a Swapped payment method (a `payment_group`) in the widget — e.g. \"creditcard\", \"apple-pay\", \"bank-transfer\", \"skrill\", \"pix\", \"google-pay\". Any Swapped-supported value is accepted and forwarded as-is; omit it to let Swapped auto-select the best method for the user based on their location and other signals. See Swapped's Get Payment Methods endpoint for the full, per-region list.",
             "example": "apple-pay"
           },
           "methodSelectionSource": {
@@ -4412,11 +4394,66 @@
               "EUR",
               "USD"
             ],
-            "description": "Fiat currency the customer is being verified for."
+            "deprecated": true,
+            "description": "Ignored. The customer is verified for both currencies; the residence they declare decides the account's (EUR inside SEPA, USD elsewhere)."
+          }
+        },
+        "additionalProperties": false
+      },
+      "OnrampProviders": {
+        "type": "object",
+        "properties": {
+          "providers": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "provider": {
+                  "type": "string",
+                  "enum": [
+                    "noah",
+                    "swapped"
+                  ]
+                },
+                "auth": {
+                  "type": "string",
+                  "enum": [
+                    "project",
+                    "customer"
+                  ],
+                  "description": "Which credential its routes take: the project key, or a customer session"
+                },
+                "flow": {
+                  "type": "string",
+                  "enum": [
+                    "hosted",
+                    "funding_account"
+                  ],
+                  "description": "`hosted`: a checkout per order (`POST /onramp/orders`); `funding_account`: reusable bank details (`POST /onramp/accounts`)"
+                },
+                "kinds": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "fiat",
+                      "exchange"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "provider",
+                "auth",
+                "flow",
+                "kinds"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
-          "currency"
+          "providers"
         ],
         "additionalProperties": false
       },
@@ -4659,6 +4696,13 @@
             "description": "Ethereum address (0x followed by 40 hex characters)",
             "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
           },
+          "deliveryChain": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "CAIP-2 chain of the delivery, e.g. `eip155:8453`"
+          },
           "providerStatus": {
             "type": "string",
             "description": "The provider’s own status; informational"
@@ -4685,6 +4729,7 @@
           "crypto",
           "account",
           "deliveryAddress",
+          "deliveryChain",
           "providerStatus",
           "createdAt",
           "updatedAt"
@@ -5249,7 +5294,7 @@
           },
           "method": {
             "type": "string",
-            "description": "Optional. Preselects a Swapped payment method (a `payment_group`) in the widget — e.g. \"creditcard\", \"apple-pay\", \"bank-transfer\", \"skrill\", \"pix\", \"sepa-bank-transfer\". Any Swapped-supported value is accepted and forwarded as-is; omit it to let Swapped auto-select the best method for the user based on their location and other signals. See Swapped's Get Payment Methods endpoint for the full, per-region list.",
+            "description": "Optional. Preselects a Swapped payment method (a `payment_group`) in the widget — e.g. \"creditcard\", \"apple-pay\", \"bank-transfer\", \"skrill\", \"pix\", \"google-pay\". Any Swapped-supported value is accepted and forwarded as-is; omit it to let Swapped auto-select the best method for the user based on their location and other signals. See Swapped's Get Payment Methods endpoint for the full, per-region list.",
             "example": "apple-pay"
           },
           "methodSelectionSource": {
@@ -5443,7 +5488,84 @@
                     "currencies",
                     "badge"
                   ]
-                }
+                },
+                "description": "Curated: the deposit modal’s rows (regional Popular pick, card, bank transfer, Apple Pay)"
+              },
+              "otherMethods": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "method": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "iconUrl": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "iconUrlLight": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "minAmount": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "description": "Smallest order, in EUR whatever the customer pays in"
+                    },
+                    "maxAmount": {
+                      "type": [
+                        "number",
+                        "null"
+                      ],
+                      "minimum": 0,
+                      "description": "Largest order, in EUR whatever the customer pays in"
+                    },
+                    "currencies": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                      },
+                      "description": "ISO 4217 fiat currencies the customer can pay this method in, in this country. Empty when Swapped states none",
+                      "example": [
+                        "EUR",
+                        "USD",
+                        "GBP"
+                      ]
+                    },
+                    "badge": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "Popular"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "method",
+                    "label",
+                    "iconUrl",
+                    "iconUrlLight",
+                    "minAmount",
+                    "maxAmount",
+                    "currencies",
+                    "badge"
+                  ]
+                },
+                "description": "Every other method Swapped offers in the country, in its order; pass any as `method` on `POST /onramp/orders`"
               },
               "recommendedMethod": {
                 "type": [
@@ -5457,6 +5579,7 @@
               "kind",
               "country",
               "methods",
+              "otherMethods",
               "recommendedMethod"
             ],
             "additionalProperties": false
@@ -7501,11 +7624,11 @@
             }
           },
           "422": {
-            "description": "Route cannot be quoted (token/amount not allowed by the client whitelist or account session scope, unsupported token route, no session for the source chain, no available routes, or exact-out asked of a route only the binding quote can price). A policy refusal a deposit would also receive carries `code` (`TOKEN-3`, `BALANCE-3`, `BALANCE-4`); the others carry none. An exact-out refusal on a deposit bound also carries `inputAmount`, the deposit the route resolved.",
+            "description": "Route cannot be priced (the account's output-token rules map the source token to nothing, no available routes, no session to build a binding quote with on a route only the binding quote can price, or exact-out asked of such a route). A quote does not mean a deposit would be accepted: the client whitelist, session coverage and token policy are applied when the deposit arrives.",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/QuotePreviewRefusal"
+                  "$ref": "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -9879,20 +10002,141 @@
         }
       }
     },
+    "/onramp/providers": {
+      "get": {
+        "tags": [
+          "Onramp"
+        ],
+        "summary": "List onramp providers",
+        "description": "The onramps this project can offer, and the credential each takes. A funding-account provider is listed only once it is provisioned for the organization. Ask `GET /onramp/options` what each one offers.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Integrator API key: the project’s orders"
+            },
+            "required": false,
+            "description": "Integrator API key: the project’s orders",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The providers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OnrampProviders"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid API key or bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "API key lacks deposits:read, the bearer no longer matches its customer, or this provider takes the other credential",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/onramp/orders/{id}": {
       "get": {
         "tags": [
           "Onramp"
         ],
         "summary": "Get an onramp order",
-        "description": "Accepts the order id, or the reference returned when the order was started. 404 until the provider first reports the order. A customer bearer reads only that customer’s orders.",
+        "description": "Accepts any id the caller holds: the order `id`, the provider’s order id (e.g. the `orderId` of the legacy `onramp-order` webhook), the `orderId` returned when the checkout was started (when retries share it, the newest order), or the legacy widget-url `externalCustomerId` (`<account>:<reference>`). 404 until the provider first reports the order. A customer bearer reads only that customer’s orders.",
         "parameters": [
           {
             "schema": {
               "type": "string",
-              "format": "uuid"
+              "pattern": "^[A-Za-z0-9._:-]{1,128}$",
+              "description": "Order id, provider order id, checkout reference, or legacy `<account>:<reference>`"
             },
             "required": true,
+            "description": "Order id, provider order id, checkout reference, or legacy `<account>:<reference>`",
             "name": "id",
             "in": "path"
           },
@@ -9938,6 +10182,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -9956,6 +10207,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -9974,6 +10232,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -9992,6 +10257,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10102,6 +10374,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10120,6 +10399,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10138,6 +10424,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10221,6 +10514,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10239,6 +10539,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10257,6 +10564,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10275,6 +10589,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10293,6 +10614,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10444,6 +10772,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10462,6 +10797,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10480,6 +10822,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10490,7 +10839,7 @@
             }
           },
           "404": {
-            "description": "`noah`: bank transfer by virtual account is not provisioned for this project",
+            "description": "`noah`: virtual accounts are not provisioned, or no account currency is available for the supplied country",
             "content": {
               "application/json": {
                 "schema": {
@@ -10498,6 +10847,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10516,6 +10872,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10534,6 +10897,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10552,6 +10922,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10624,6 +11001,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10642,6 +11026,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10660,6 +11051,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10678,6 +11076,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10688,7 +11093,7 @@
             }
           },
           "409": {
-            "description": "No bound smart account, the project is not configured for deposits, or its whitelist or session coverage rejects the delivery route",
+            "description": "No bound smart account, the project is not configured for deposits, its whitelist or session coverage rejects the delivery route, or `VERIFICATION_REQUIRED`: the customer must resume verification for this currency",
             "content": {
               "application/json": {
                 "schema": {
@@ -10696,6 +11101,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10714,6 +11126,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10732,6 +11151,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10750,6 +11176,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10829,6 +11262,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10847,6 +11287,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10865,6 +11312,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10883,6 +11337,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10901,6 +11362,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10919,6 +11387,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -10989,6 +11464,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11007,6 +11489,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11025,6 +11514,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11043,6 +11539,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11061,6 +11564,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11079,6 +11589,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11150,6 +11667,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11168,6 +11692,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11186,6 +11717,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11204,6 +11742,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11222,6 +11767,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11240,6 +11792,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
@@ -11258,6 +11817,13 @@
                   "properties": {
                     "error": {
                       "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
                     }
                   },
                   "required": [
