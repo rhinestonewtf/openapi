@@ -4209,6 +4209,24 @@
           "expiresAt"
         ]
       },
+      "ComplianceSessionNotFound": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER_NOT_FOUND"
+            ]
+          }
+        },
+        "required": [
+          "error",
+          "code"
+        ]
+      },
       "ComplianceSessionConflict": {
         "type": "object",
         "properties": {
@@ -4244,6 +4262,10 @@
             "pattern": "^0x[a-fA-F0-9]{40}$",
             "description": "Ethereum address (0x followed by 40 hex characters)",
             "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "resumeOnly": {
+            "type": "boolean",
+            "description": "Read-only session: never creates a customer or binds an account. 404 `CUSTOMER_NOT_FOUND` unless the customer exists and is bound to `smartAccount` (or no account is given). Needs `deposits:read`."
           }
         },
         "required": [
@@ -9815,6 +9837,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "`resumeOnly`: no customer exists for this id, or it is not bound to the requested account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceSessionNotFound"
                 }
               }
             }
