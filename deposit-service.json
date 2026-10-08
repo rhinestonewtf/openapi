@@ -4209,6 +4209,26 @@
           "expiresAt"
         ]
       },
+      "ComplianceSessionConflict": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "ACCOUNT_ALREADY_LINKED",
+              "ACCOUNT_CHANGE_REQUIRES_MIGRATION"
+            ],
+            "description": "`ACCOUNT_ALREADY_LINKED`: another customer holds the account. `ACCOUNT_CHANGE_REQUIRES_MIGRATION`: the customer is bound to a different account, which cannot change yet"
+          }
+        },
+        "required": [
+          "error",
+          "code"
+        ]
+      },
       "ComplianceSessionRequestBody": {
         "type": "object",
         "properties": {
@@ -9804,7 +9824,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "$ref": "#/components/schemas/ComplianceSessionConflict"
                 }
               }
             }
@@ -10023,11 +10043,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
             "name": "authorization",
             "in": "header"
           }
@@ -10127,7 +10147,7 @@
           "Onramp"
         ],
         "summary": "Get an onramp order",
-        "description": "Accepts any id the caller holds: the order `id`, the provider’s order id (e.g. the `orderId` of the legacy `onramp-order` webhook), the `orderId` returned when the checkout was started (when retries share it, the newest order), or the legacy widget-url `externalCustomerId` (`<account>:<reference>`). 404 until the provider first reports the order. A customer bearer reads only that customer’s orders.",
+        "description": "Accepts any id the caller holds: the order `id`, the provider’s order id (e.g. the `orderId` of the legacy `onramp-order` webhook), the `orderId` returned when the checkout was started (when retries share it, the newest order), or the legacy widget-url `externalCustomerId` (`<account>:<reference>`). 404 until the provider first reports the order. A customer bearer reads that customer’s orders and every order on its bound account.",
         "parameters": [
           {
             "schema": {
@@ -10153,11 +10173,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
             "name": "authorization",
             "in": "header"
           }
@@ -10282,7 +10302,7 @@
           "Onramp"
         ],
         "summary": "List onramp orders",
-        "description": "Newest first by when each order began: the project’s with an API key, the customer’s with a bearer.",
+        "description": "Newest first by when each order began: the project’s with an API key; with a bearer, the customer’s and those on its bound account (card and exchange orders carry no customer).",
         "parameters": [
           {
             "schema": {
@@ -10345,11 +10365,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
             "name": "authorization",
             "in": "header"
           }
@@ -10743,11 +10763,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
             "name": "authorization",
             "in": "header"
           }
@@ -10962,11 +10982,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
             "name": "authorization",
             "in": "header"
           }
@@ -11233,11 +11253,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
             "name": "authorization",
             "in": "header"
           }
@@ -11435,11 +11455,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
             "name": "authorization",
             "in": "header"
           }
@@ -11638,11 +11658,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders only",
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
             "name": "authorization",
             "in": "header"
           }
