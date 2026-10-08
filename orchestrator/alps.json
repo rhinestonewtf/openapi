@@ -162,6 +162,187 @@
                         ],
                         "nullable": true,
                         "description": "Block explorer, or null for a chain that has none. Lets a client link a transaction on a chain it was never compiled against, instead of bundling a per-chain URL table."
+                      },
+                      "settlement": {
+                        "type": "object",
+                        "properties": {
+                          "cctp": {
+                            "type": "object",
+                            "properties": {
+                              "domain": {
+                                "type": "number"
+                              },
+                              "tokenMessenger": {
+                                "type": "string"
+                              },
+                              "usdc": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "domain",
+                              "tokenMessenger",
+                              "usdc"
+                            ]
+                          },
+                          "oft": {
+                            "type": "object",
+                            "properties": {
+                              "adapter": {
+                                "type": "string"
+                              },
+                              "eid": {
+                                "type": "number"
+                              },
+                              "token": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "adapter",
+                              "eid",
+                              "token"
+                            ]
+                          },
+                          "eco": {
+                            "type": "object",
+                            "properties": {
+                              "portal": {
+                                "type": "string"
+                              },
+                              "provers": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "stablecoins": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "required": [
+                              "portal",
+                              "provers",
+                              "stablecoins"
+                            ]
+                          },
+                          "lz": {
+                            "type": "object",
+                            "properties": {
+                              "multiCall": {
+                                "type": "string"
+                              },
+                              "transferDelegate": {
+                                "type": "string"
+                              },
+                              "stargateUsdc": {
+                                "type": "object",
+                                "properties": {
+                                  "pool": {
+                                    "type": "string"
+                                  },
+                                  "token": {
+                                    "type": "string"
+                                  },
+                                  "eid": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "pool",
+                                  "token",
+                                  "eid"
+                                ]
+                              },
+                              "cctp": {
+                                "type": "object",
+                                "properties": {
+                                  "domain": {
+                                    "type": "number"
+                                  },
+                                  "token": {
+                                    "type": "string"
+                                  },
+                                  "feeReceiver": {
+                                    "type": "string"
+                                  },
+                                  "feeless": {
+                                    "type": "boolean",
+                                    "enum": [
+                                      true
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "domain",
+                                  "token",
+                                  "feeReceiver"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "multiCall",
+                              "transferDelegate"
+                            ]
+                          },
+                          "swapper": {
+                            "type": "object",
+                            "properties": {
+                              "swapper": {
+                                "type": "string"
+                              },
+                              "proxy": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "swapper",
+                              "proxy"
+                            ]
+                          },
+                          "fees": {
+                            "type": "object",
+                            "properties": {
+                              "appFeeCollector": {
+                                "type": "string"
+                              },
+                              "paymaster": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "appFeeCollector",
+                              "paymaster"
+                            ]
+                          },
+                          "usdStablecoins": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "address": {
+                                  "type": "string"
+                                },
+                                "symbol": {
+                                  "type": "string"
+                                },
+                                "decimals": {
+                                  "type": "number"
+                                }
+                              },
+                              "required": [
+                                "address",
+                                "symbol",
+                                "decimals"
+                              ]
+                            },
+                            "description": "The USD stablecoins (6 or 18 decimals) a session stable-swap floor treats as 1:1."
+                          }
+                        },
+                        "description": "What an SDK session pins on this chain: the contracts each settlement layer calls, and the USD stablecoins a stable-swap floor treats as 1:1. A layer appears only when every address it needs is known. Absent when the chain has none of these."
                       }
                     },
                     "required": [
@@ -551,8 +732,9 @@
                         },
                         "latencyMs": {
                           "type": "number",
+                          "minimum": 0,
                           "nullable": true,
-                          "description": "Time from creation to the latest leg landing, in ms. Null until any leg lands.",
+                          "description": "Milliseconds from recorded creation to the latest included receipt; null without receipts. Negative intervals clamp to zero, not evidence of instant execution. Receipt times use chain time (possibly second-precision) or server-observation fallbacks. This is not final completion latency or a guarantee of millisecond accuracy.",
                           "example": 8100
                         },
                         "settlementLayer": {
@@ -757,7 +939,7 @@
                             "sponsoredValue": {
                               "type": "string",
                               "pattern": "^\\d+$",
-                              "description": "Sponsored value actually charged, in integer micro-USD (1 USD = 1,000,000 units). Once the intent executes this is reconciled from the receipt (planned gas replaced by executed), so it matches the sponsorship balance and the usage/billing reads rather than the amount reserved at quote time. On an allocation-backed intent this is the sum of its per-operation allocations, which is where reconciliation writes executed gas.",
+                              "description": "Sponsored value actually charged, in integer micro-USD (1 USD = 1,000,000 units). Once the intent executes this is reconciled from the receipt (planned gas replaced by executed), so it matches the sponsorship balance and the usage/billing reads rather than the amount reserved at quote time. On an allocation-backed intent this is the sum of its per-operation allocations, which is where reconciliation writes executed gas. Includes Relay's subsidy of its own bridge fee, charged at par.",
                               "example": "210000"
                             },
                             "protocolFee": {
@@ -1439,12 +1621,12 @@
                           "token": {
                             "type": "string",
                             "minLength": 1,
-                            "description": "Intent value token. The token delivered on the destination chain, or the spent token for same-chain intents (which have no persisted delivery).",
+                            "description": "Intent value token. Prefers the planned token delivered on the destination chain; falls back to the spent token when historical same-chain output accounting is unavailable.",
                             "example": "0x0b2c639c533813f4aa9d7837caf62653d097ff85"
                           },
                           "amount": {
                             "type": "string",
-                            "description": "Intent value in base units — delivered on the destination chain, or spent for same-chain intents (which have no persisted delivery; for same-chain swaps this is the input, not the received amount).",
+                            "description": "Intent value in base units — the planned destination output when available, or the spent amount when historical same-chain output accounting is unavailable.",
                             "example": "1000000"
                           },
                           "account": {
@@ -1797,6 +1979,46 @@
           },
           "404": {
             "description": "The quoted intent has expired or was already submitted. Request a new route to retry.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "errors": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "message": {
+                            "type": "string",
+                            "description": "Error message",
+                            "example": "Invalid input"
+                          },
+                          "context": {
+                            "description": "Additional error context"
+                          }
+                        },
+                        "required": [
+                          "message"
+                        ]
+                      }
+                    },
+                    "traceId": {
+                      "type": "string",
+                      "description": "Trace ID for request correlation. Returned in x-trace-id for all responses and in legacy alps error bodies for compatibility.",
+                      "example": "eb0ba4657f36364b33ec565c15f98368"
+                    }
+                  },
+                  "required": [
+                    "errors",
+                    "traceId"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The intent or its shared sponsorship authorization was already used.",
             "content": {
               "application/json": {
                 "schema": {
@@ -2301,6 +2523,11 @@
                                                       ],
                                                       "description": "Eco solver-network delivery"
                                                     },
+                                                    "quoteId": {
+                                                      "type": "string",
+                                                      "pattern": "^quote:[0-9a-f-]{36}$",
+                                                      "description": "Eco v1 quote ID for detailed delivery and refund tracking."
+                                                    },
                                                     "intentHash": {
                                                       "type": "string",
                                                       "pattern": "^0x[a-fA-F0-9]*$",
@@ -2433,6 +2660,13 @@
                                                     "commitmentId": {
                                                       "type": "string",
                                                       "description": "Rhino.fi commitment ID. Use against Rhino.fi's status API to track the destination-chain fill."
+                                                    },
+                                                    "keyVariant": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "user_fee"
+                                                      ],
+                                                      "description": "Rhino.fi API key variant the commitment was quoted under. Rhino.fi answers a status lookup only under that key, so the fill-tracker asks for the same variant."
                                                     }
                                                   },
                                                   "required": [
@@ -2534,94 +2768,6 @@
                                                 }
                                               ],
                                               "description": "Bridge-as-fill metadata for cross-chain delivery tracking"
-                                            },
-                                            "ecoBridgeRefund": {
-                                              "type": "object",
-                                              "properties": {
-                                                "settlementLayer": {
-                                                  "type": "string",
-                                                  "enum": [
-                                                    "ECO"
-                                                  ]
-                                                },
-                                                "intentHash": {
-                                                  "type": "string",
-                                                  "pattern": "^0x[a-fA-F0-9]*$"
-                                                },
-                                                "ecoPortal": {
-                                                  "type": "string"
-                                                },
-                                                "refundParams": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "destination": {
-                                                      "type": "string",
-                                                      "format": "uint256"
-                                                    },
-                                                    "routeHash": {
-                                                      "type": "string",
-                                                      "pattern": "^0x[a-fA-F0-9]*$"
-                                                    },
-                                                    "reward": {
-                                                      "type": "object",
-                                                      "properties": {
-                                                        "deadline": {
-                                                          "type": "string",
-                                                          "format": "uint256"
-                                                        },
-                                                        "creator": {
-                                                          "type": "string"
-                                                        },
-                                                        "prover": {
-                                                          "type": "string"
-                                                        },
-                                                        "nativeAmount": {
-                                                          "type": "string",
-                                                          "format": "uint256"
-                                                        },
-                                                        "tokens": {
-                                                          "type": "array",
-                                                          "items": {
-                                                            "type": "object",
-                                                            "properties": {
-                                                              "token": {
-                                                                "type": "string"
-                                                              },
-                                                              "amount": {
-                                                                "type": "string",
-                                                                "format": "uint256"
-                                                              }
-                                                            },
-                                                            "required": [
-                                                              "token",
-                                                              "amount"
-                                                            ]
-                                                          }
-                                                        }
-                                                      },
-                                                      "required": [
-                                                        "deadline",
-                                                        "creator",
-                                                        "prover",
-                                                        "nativeAmount",
-                                                        "tokens"
-                                                      ]
-                                                    }
-                                                  },
-                                                  "required": [
-                                                    "destination",
-                                                    "routeHash",
-                                                    "reward"
-                                                  ]
-                                                }
-                                              },
-                                              "required": [
-                                                "settlementLayer",
-                                                "intentHash",
-                                                "ecoPortal",
-                                                "refundParams"
-                                              ],
-                                              "description": "Deprecated parse-only metadata retained so pre-RHI-6172 ECO_BRIDGE quotes survive Redis reload and HMAC validation. Never emitted by current quote builders."
                                             },
                                             "bridgeDestinationOps": {
                                               "type": "boolean",
@@ -2763,6 +2909,28 @@
                                               },
                                               "minItems": 1,
                                               "description": "The actions this leg registers agents for, IN THE ORDER they are sent, serialised. Each is a STRING because msgpack hashes map keys in insertion order and `jsonb` does not preserve it — stored as an object the keys come back sorted, deriving an agent that was never registered. Each carries its forged agent, which is committed on-chain by the registration op: one site forges it, every reader replays it.\n\nOrder is the contract: the poster stops at the first refusal, so a later action never runs against a state an earlier one failed to reach."
+                                            },
+                                            "hyperCoreRegistration": {
+                                              "type": "object",
+                                              "properties": {
+                                                "actionIndex": {
+                                                  "type": "integer",
+                                                  "minimum": 0
+                                                },
+                                                "agent": {
+                                                  "type": "string"
+                                                },
+                                                "slot": {
+                                                  "type": "string",
+                                                  "minLength": 1
+                                                }
+                                              },
+                                              "required": [
+                                                "actionIndex",
+                                                "agent",
+                                                "slot"
+                                              ],
+                                              "description": "The registration this leg performs: which `hyperCoreActions` entry it is for, the agent it installs and the API-wallet slot it goes in. Names what the registration call the user signs already commits to, so the signing request can disclose it without decoding CoreWriter calldata."
                                             },
                                             "dispatchPrecondition": {
                                               "type": "string",
@@ -2945,6 +3113,11 @@
                                                       ],
                                                       "description": "Eco solver-network delivery"
                                                     },
+                                                    "quoteId": {
+                                                      "type": "string",
+                                                      "pattern": "^quote:[0-9a-f-]{36}$",
+                                                      "description": "Eco v1 quote ID for detailed delivery and refund tracking."
+                                                    },
                                                     "intentHash": {
                                                       "type": "string",
                                                       "pattern": "^0x[a-fA-F0-9]*$",
@@ -3077,6 +3250,13 @@
                                                     "commitmentId": {
                                                       "type": "string",
                                                       "description": "Rhino.fi commitment ID. Use against Rhino.fi's status API to track the destination-chain fill."
+                                                    },
+                                                    "keyVariant": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "user_fee"
+                                                      ],
+                                                      "description": "Rhino.fi API key variant the commitment was quoted under. Rhino.fi answers a status lookup only under that key, so the fill-tracker asks for the same variant."
                                                     }
                                                   },
                                                   "required": [
@@ -3239,84 +3419,6 @@
                                             "settlementLayer",
                                             "using7579",
                                             "fundingMethod"
-                                          ]
-                                        },
-                                        {
-                                          "type": "object",
-                                          "properties": {
-                                            "settlementLayer": {
-                                              "type": "string",
-                                              "enum": [
-                                                "RELAY"
-                                              ],
-                                              "description": "Settlement layer for the qualifier",
-                                              "example": "RELAY"
-                                            },
-                                            "using7579": {
-                                              "type": "boolean",
-                                              "description": "True when the originating account is ERC-7579-compatible (smart account). False for EOAs — those settle via MULTICALL execution.",
-                                              "example": false
-                                            },
-                                            "fundingMethod": {
-                                              "type": "string",
-                                              "enum": [
-                                                "PERMIT2",
-                                                "NO_FUNDING"
-                                              ],
-                                              "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
-                                              "example": "PERMIT2"
-                                            },
-                                            "relayerQuotes": {
-                                              "type": "array",
-                                              "items": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "quoteId": {
-                                                    "type": "string"
-                                                  },
-                                                  "clientId": {
-                                                    "type": "string"
-                                                  },
-                                                  "connectionId": {
-                                                    "type": "string"
-                                                  }
-                                                },
-                                                "required": [
-                                                  "quoteId",
-                                                  "clientId",
-                                                  "connectionId"
-                                                ]
-                                              },
-                                              "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
-                                            },
-                                            "requestId": {
-                                              "type": "string",
-                                              "description": "Relay.link request ID for this route. Surfaces in the relayer-market broadcast — opaque to the client."
-                                            },
-                                            "orderId": {
-                                              "type": "string",
-                                              "description": "Relay v2 order ID used in the deposit contract calldata"
-                                            },
-                                            "subsidizedAmount": {
-                                              "type": "string",
-                                              "description": "Relay settlement layer subsidized amount on the intent (denomination in USDC)"
-                                            },
-                                            "multicallData": {
-                                              "type": "string",
-                                              "description": "ABI-encoded params for IRelayRouterV3.multicall, used for origin swaps via Relay contracts"
-                                            },
-                                            "executionValidationGas": {
-                                              "type": "string",
-                                              "format": "uint256",
-                                              "description": "Gas overhead the relayer must reserve for validating the execution on the origin chain. Used internally for origin gas accounting."
-                                            }
-                                          },
-                                          "required": [
-                                            "settlementLayer",
-                                            "using7579",
-                                            "fundingMethod",
-                                            "requestId",
-                                            "orderId"
                                           ]
                                         },
                                         {
@@ -4122,7 +4224,7 @@
                                   "providerSubsidy": {
                                     "type": "number",
                                     "minimum": 0,
-                                    "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
+                                    "description": "Bridge-provider subsidy Relay advances from a budget Rhinestone funds: charged to the sponsor and surcharged like any coverage, but excluded from relayer repayment. Absent on legacy quotes.",
                                     "example": 0
                                   }
                                 },
@@ -4350,7 +4452,7 @@
                                 "description": "Whether to sponsor the Rhinestone protocol fee (`options.protocolFees`) for the intent. When `true`, the fee is charged to the integrator's sponsorship balance instead of carved from the user, without the sponsorship surcharge."
                               }
                             },
-                            "description": "Sponsor settings requested at quote time. Used during submit to distinguish sponsored zero-segment setup-only fills from unsponsored fallback fills."
+                            "description": "Sponsor settings the quote honoured: the request's when a sponsor was resolved for it, absent otherwise — including when the API key's sponsorship scope denies them. Used during submit to distinguish sponsored zero-segment setup-only fills from unsponsored fallback fills."
                           },
                           "executionTokensReceived": {
                             "type": "array",
@@ -4425,6 +4527,41 @@
                                         "amount"
                                       ]
                                     }
+                                  }
+                                },
+                                "required": [
+                                  "tokensOut"
+                                ]
+                              },
+                              "sameChainFill": {
+                                "type": "object",
+                                "properties": {
+                                  "tokensOut": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "object",
+                                      "properties": {
+                                        "address": {
+                                          "type": "string"
+                                        },
+                                        "chainId": {
+                                          "type": "integer",
+                                          "minimum": -9007199254740991,
+                                          "exclusiveMinimum": true,
+                                          "maximum": 9007199254740991
+                                        },
+                                        "amount": {
+                                          "type": "string",
+                                          "format": "uint256"
+                                        }
+                                      },
+                                      "required": [
+                                        "address",
+                                        "chainId",
+                                        "amount"
+                                      ]
+                                    },
+                                    "minItems": 1
                                   }
                                 },
                                 "required": [
@@ -4549,6 +4686,42 @@
                               }
                             },
                             "description": "Accounting facts derived from the selected plan and used for IntentOperation persistence. Excluded from the legacy serverSignature HMAC surface for rolling-deploy compatibility; submit integrity comes from the stored quote session."
+                          },
+                          "requestedDestinationChainId": {
+                            "type": "integer",
+                            "description": "The destination chain the caller addressed. Differs from the chain the fill lands on only for a virtual destination: a HyperCore venue settles on HyperEVM. Excluded from the serverSignature HMAC surface for rolling-deploy compatibility.",
+                            "example": 1337002
+                          },
+                          "hyperCoreSettlementCalls": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "to": {
+                                  "type": "string",
+                                  "description": "Target contract address for execution",
+                                  "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                                },
+                                "value": {
+                                  "type": "string",
+                                  "format": "uint256",
+                                  "description": "Amount of ETH (in wei) sent in the execution",
+                                  "example": "0"
+                                },
+                                "data": {
+                                  "type": "string",
+                                  "pattern": "^0x[a-fA-F0-9]*$",
+                                  "description": "Encoded function call data",
+                                  "example": "0xa9059cbb000000000000000000000000579d5631f76126991c00fb8fe5467fa9d49e5f6a00000000000000000000000000000000000000000000000000000000000f4240"
+                                }
+                              },
+                              "required": [
+                                "to",
+                                "value",
+                                "data"
+                              ]
+                            },
+                            "description": "The caller's own HyperEVM calls on a HyperCore-destination intent, used to tell them apart from the calls the orchestrator composes around them. Empty when the caller sent none. Excluded from the serverSignature HMAC surface for rolling-deploy compatibility; the calls themselves are inside the signed ops."
                           }
                         },
                         "required": [
@@ -5500,6 +5673,11 @@
                                                         ],
                                                         "description": "Eco solver-network delivery"
                                                       },
+                                                      "quoteId": {
+                                                        "type": "string",
+                                                        "pattern": "^quote:[0-9a-f-]{36}$",
+                                                        "description": "Eco v1 quote ID for detailed delivery and refund tracking."
+                                                      },
                                                       "intentHash": {
                                                         "type": "string",
                                                         "pattern": "^0x[a-fA-F0-9]*$",
@@ -5632,6 +5810,13 @@
                                                       "commitmentId": {
                                                         "type": "string",
                                                         "description": "Rhino.fi commitment ID. Use against Rhino.fi's status API to track the destination-chain fill."
+                                                      },
+                                                      "keyVariant": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "user_fee"
+                                                        ],
+                                                        "description": "Rhino.fi API key variant the commitment was quoted under. Rhino.fi answers a status lookup only under that key, so the fill-tracker asks for the same variant."
                                                       }
                                                     },
                                                     "required": [
@@ -5733,94 +5918,6 @@
                                                   }
                                                 ],
                                                 "description": "Bridge-as-fill metadata for cross-chain delivery tracking"
-                                              },
-                                              "ecoBridgeRefund": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "settlementLayer": {
-                                                    "type": "string",
-                                                    "enum": [
-                                                      "ECO"
-                                                    ]
-                                                  },
-                                                  "intentHash": {
-                                                    "type": "string",
-                                                    "pattern": "^0x[a-fA-F0-9]*$"
-                                                  },
-                                                  "ecoPortal": {
-                                                    "type": "string"
-                                                  },
-                                                  "refundParams": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "destination": {
-                                                        "type": "string",
-                                                        "format": "uint256"
-                                                      },
-                                                      "routeHash": {
-                                                        "type": "string",
-                                                        "pattern": "^0x[a-fA-F0-9]*$"
-                                                      },
-                                                      "reward": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "deadline": {
-                                                            "type": "string",
-                                                            "format": "uint256"
-                                                          },
-                                                          "creator": {
-                                                            "type": "string"
-                                                          },
-                                                          "prover": {
-                                                            "type": "string"
-                                                          },
-                                                          "nativeAmount": {
-                                                            "type": "string",
-                                                            "format": "uint256"
-                                                          },
-                                                          "tokens": {
-                                                            "type": "array",
-                                                            "items": {
-                                                              "type": "object",
-                                                              "properties": {
-                                                                "token": {
-                                                                  "type": "string"
-                                                                },
-                                                                "amount": {
-                                                                  "type": "string",
-                                                                  "format": "uint256"
-                                                                }
-                                                              },
-                                                              "required": [
-                                                                "token",
-                                                                "amount"
-                                                              ]
-                                                            }
-                                                          }
-                                                        },
-                                                        "required": [
-                                                          "deadline",
-                                                          "creator",
-                                                          "prover",
-                                                          "nativeAmount",
-                                                          "tokens"
-                                                        ]
-                                                      }
-                                                    },
-                                                    "required": [
-                                                      "destination",
-                                                      "routeHash",
-                                                      "reward"
-                                                    ]
-                                                  }
-                                                },
-                                                "required": [
-                                                  "settlementLayer",
-                                                  "intentHash",
-                                                  "ecoPortal",
-                                                  "refundParams"
-                                                ],
-                                                "description": "Deprecated parse-only metadata retained so pre-RHI-6172 ECO_BRIDGE quotes survive Redis reload and HMAC validation. Never emitted by current quote builders."
                                               },
                                               "bridgeDestinationOps": {
                                                 "type": "boolean",
@@ -5962,6 +6059,28 @@
                                                 },
                                                 "minItems": 1,
                                                 "description": "The actions this leg registers agents for, IN THE ORDER they are sent, serialised. Each is a STRING because msgpack hashes map keys in insertion order and `jsonb` does not preserve it — stored as an object the keys come back sorted, deriving an agent that was never registered. Each carries its forged agent, which is committed on-chain by the registration op: one site forges it, every reader replays it.\n\nOrder is the contract: the poster stops at the first refusal, so a later action never runs against a state an earlier one failed to reach."
+                                              },
+                                              "hyperCoreRegistration": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "actionIndex": {
+                                                    "type": "integer",
+                                                    "minimum": 0
+                                                  },
+                                                  "agent": {
+                                                    "type": "string"
+                                                  },
+                                                  "slot": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                  }
+                                                },
+                                                "required": [
+                                                  "actionIndex",
+                                                  "agent",
+                                                  "slot"
+                                                ],
+                                                "description": "The registration this leg performs: which `hyperCoreActions` entry it is for, the agent it installs and the API-wallet slot it goes in. Names what the registration call the user signs already commits to, so the signing request can disclose it without decoding CoreWriter calldata."
                                               },
                                               "dispatchPrecondition": {
                                                 "type": "string",
@@ -6144,6 +6263,11 @@
                                                         ],
                                                         "description": "Eco solver-network delivery"
                                                       },
+                                                      "quoteId": {
+                                                        "type": "string",
+                                                        "pattern": "^quote:[0-9a-f-]{36}$",
+                                                        "description": "Eco v1 quote ID for detailed delivery and refund tracking."
+                                                      },
                                                       "intentHash": {
                                                         "type": "string",
                                                         "pattern": "^0x[a-fA-F0-9]*$",
@@ -6276,6 +6400,13 @@
                                                       "commitmentId": {
                                                         "type": "string",
                                                         "description": "Rhino.fi commitment ID. Use against Rhino.fi's status API to track the destination-chain fill."
+                                                      },
+                                                      "keyVariant": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "user_fee"
+                                                        ],
+                                                        "description": "Rhino.fi API key variant the commitment was quoted under. Rhino.fi answers a status lookup only under that key, so the fill-tracker asks for the same variant."
                                                       }
                                                     },
                                                     "required": [
@@ -6438,84 +6569,6 @@
                                               "settlementLayer",
                                               "using7579",
                                               "fundingMethod"
-                                            ]
-                                          },
-                                          {
-                                            "type": "object",
-                                            "properties": {
-                                              "settlementLayer": {
-                                                "type": "string",
-                                                "enum": [
-                                                  "RELAY"
-                                                ],
-                                                "description": "Settlement layer for the qualifier",
-                                                "example": "RELAY"
-                                              },
-                                              "using7579": {
-                                                "type": "boolean",
-                                                "description": "True when the originating account is ERC-7579-compatible (smart account). False for EOAs — those settle via MULTICALL execution.",
-                                                "example": false
-                                              },
-                                              "fundingMethod": {
-                                                "type": "string",
-                                                "enum": [
-                                                  "PERMIT2",
-                                                  "NO_FUNDING"
-                                                ],
-                                                "description": "How the relayer pulls the user's funds on the origin chain. `PERMIT2` for EIP-712 Permit2 approvals; `NO_FUNDING` when the account itself executes the transfer (INTENT_EXECUTOR path).",
-                                                "example": "PERMIT2"
-                                              },
-                                              "relayerQuotes": {
-                                                "type": "array",
-                                                "items": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "quoteId": {
-                                                      "type": "string"
-                                                    },
-                                                    "clientId": {
-                                                      "type": "string"
-                                                    },
-                                                    "connectionId": {
-                                                      "type": "string"
-                                                    }
-                                                  },
-                                                  "required": [
-                                                    "quoteId",
-                                                    "clientId",
-                                                    "connectionId"
-                                                  ]
-                                                },
-                                                "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
-                                              },
-                                              "requestId": {
-                                                "type": "string",
-                                                "description": "Relay.link request ID for this route. Surfaces in the relayer-market broadcast — opaque to the client."
-                                              },
-                                              "orderId": {
-                                                "type": "string",
-                                                "description": "Relay v2 order ID used in the deposit contract calldata"
-                                              },
-                                              "subsidizedAmount": {
-                                                "type": "string",
-                                                "description": "Relay settlement layer subsidized amount on the intent (denomination in USDC)"
-                                              },
-                                              "multicallData": {
-                                                "type": "string",
-                                                "description": "ABI-encoded params for IRelayRouterV3.multicall, used for origin swaps via Relay contracts"
-                                              },
-                                              "executionValidationGas": {
-                                                "type": "string",
-                                                "format": "uint256",
-                                                "description": "Gas overhead the relayer must reserve for validating the execution on the origin chain. Used internally for origin gas accounting."
-                                              }
-                                            },
-                                            "required": [
-                                              "settlementLayer",
-                                              "using7579",
-                                              "fundingMethod",
-                                              "requestId",
-                                              "orderId"
                                             ]
                                           },
                                           {
@@ -7321,7 +7374,7 @@
                                     "providerSubsidy": {
                                       "type": "number",
                                       "minimum": 0,
-                                      "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
+                                      "description": "Bridge-provider subsidy Relay advances from a budget Rhinestone funds: charged to the sponsor and surcharged like any coverage, but excluded from relayer repayment. Absent on legacy quotes.",
                                       "example": 0
                                     }
                                   },
@@ -7631,6 +7684,41 @@
                                     "tokensOut"
                                   ]
                                 },
+                                "sameChainFill": {
+                                  "type": "object",
+                                  "properties": {
+                                    "tokensOut": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "object",
+                                        "properties": {
+                                          "address": {
+                                            "type": "string"
+                                          },
+                                          "chainId": {
+                                            "type": "integer",
+                                            "minimum": -9007199254740991,
+                                            "exclusiveMinimum": true,
+                                            "maximum": 9007199254740991
+                                          },
+                                          "amount": {
+                                            "type": "string",
+                                            "format": "uint256"
+                                          }
+                                        },
+                                        "required": [
+                                          "address",
+                                          "chainId",
+                                          "amount"
+                                        ]
+                                      },
+                                      "minItems": 1
+                                    }
+                                  },
+                                  "required": [
+                                    "tokensOut"
+                                  ]
+                                },
                                 "sponsorFee": {
                                   "type": "object",
                                   "properties": {
@@ -7749,6 +7837,42 @@
                                 }
                               },
                               "description": "Accounting facts derived from the selected plan and used for IntentOperation persistence. Excluded from the legacy serverSignature HMAC surface for rolling-deploy compatibility; submit integrity comes from the stored quote session."
+                            },
+                            "requestedDestinationChainId": {
+                              "type": "integer",
+                              "description": "The destination chain the caller addressed. Differs from the chain the fill lands on only for a virtual destination: a HyperCore venue settles on HyperEVM. Excluded from the serverSignature HMAC surface for rolling-deploy compatibility.",
+                              "example": 1337002
+                            },
+                            "hyperCoreSettlementCalls": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "to": {
+                                    "type": "string",
+                                    "description": "Target contract address for execution",
+                                    "example": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+                                  },
+                                  "value": {
+                                    "type": "string",
+                                    "format": "uint256",
+                                    "description": "Amount of ETH (in wei) sent in the execution",
+                                    "example": "0"
+                                  },
+                                  "data": {
+                                    "type": "string",
+                                    "pattern": "^0x[a-fA-F0-9]*$",
+                                    "description": "Encoded function call data",
+                                    "example": "0xa9059cbb000000000000000000000000579d5631f76126991c00fb8fe5467fa9d49e5f6a00000000000000000000000000000000000000000000000000000000000f4240"
+                                  }
+                                },
+                                "required": [
+                                  "to",
+                                  "value",
+                                  "data"
+                                ]
+                              },
+                              "description": "The caller's own HyperEVM calls on a HyperCore-destination intent, used to tell them apart from the calls the orchestrator composes around them. Empty when the caller sent none. Excluded from the serverSignature HMAC surface for rolling-deploy compatibility; the calls themselves are inside the signed ops."
                             }
                           },
                           "required": [
@@ -8111,7 +8235,7 @@
                                 "providerSubsidy": {
                                   "type": "number",
                                   "minimum": 0,
-                                  "description": "Externally settled bridge-provider subsidy, charged to the sponsor but excluded from relayer repayment and surcharge. Absent on legacy quotes.",
+                                  "description": "Bridge-provider subsidy Relay advances from a budget Rhinestone funds: charged to the sponsor and surcharged like any coverage, but excluded from relayer repayment. Absent on legacy quotes.",
                                   "example": 0
                                 }
                               },
@@ -11000,15 +11124,19 @@
                                 "WOKB",
                                 "HYPE",
                                 "WHYPE",
+                                "RON",
+                                "WRON",
                                 "USDG",
                                 "XPL",
                                 "WXPL",
                                 "AVAX",
                                 "WAVAX",
                                 "MockUSD",
+                                "USDC_TEST",
                                 "XLM",
                                 "ensUSDC",
                                 "ensUSDC2",
+                                "ensUSDC3",
                                 "TRX",
                                 "WTRX",
                                 "SOL",
@@ -11052,15 +11180,19 @@
                                   "WOKB",
                                   "HYPE",
                                   "WHYPE",
+                                  "RON",
+                                  "WRON",
                                   "USDG",
                                   "XPL",
                                   "WXPL",
                                   "AVAX",
                                   "WAVAX",
                                   "MockUSD",
+                                  "USDC_TEST",
                                   "XLM",
                                   "ensUSDC",
                                   "ensUSDC2",
+                                  "ensUSDC3",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -11123,15 +11255,19 @@
                                     "WOKB",
                                     "HYPE",
                                     "WHYPE",
+                                    "RON",
+                                    "WRON",
                                     "USDG",
                                     "XPL",
                                     "WXPL",
                                     "AVAX",
                                     "WAVAX",
                                     "MockUSD",
+                                    "USDC_TEST",
                                     "XLM",
                                     "ensUSDC",
                                     "ensUSDC2",
+                                    "ensUSDC3",
                                     "TRX",
                                     "WTRX",
                                     "SOL",
@@ -11175,15 +11311,19 @@
                                       "WOKB",
                                       "HYPE",
                                       "WHYPE",
+                                      "RON",
+                                      "WRON",
                                       "USDG",
                                       "XPL",
                                       "WXPL",
                                       "AVAX",
                                       "WAVAX",
                                       "MockUSD",
+                                      "USDC_TEST",
                                       "XLM",
                                       "ensUSDC",
                                       "ensUSDC2",
+                                      "ensUSDC3",
                                       "TRX",
                                       "WTRX",
                                       "SOL",
