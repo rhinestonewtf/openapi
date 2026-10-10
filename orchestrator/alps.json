@@ -2374,6 +2374,11 @@
                                               },
                                               "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                             },
+                                            "sessionEnableGasUnits": {
+                                              "type": "string",
+                                              "format": "uint256",
+                                              "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                            },
                                             "gasRefund": {
                                               "type": "object",
                                               "properties": {
@@ -3016,6 +3021,11 @@
                                               },
                                               "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                             },
+                                            "sessionEnableGasUnits": {
+                                              "type": "string",
+                                              "format": "uint256",
+                                              "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                            },
                                             "bridgeFill": {
                                               "discriminator": {
                                                 "propertyName": "type"
@@ -3413,6 +3423,11 @@
                                                 ]
                                               },
                                               "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                            },
+                                            "sessionEnableGasUnits": {
+                                              "type": "string",
+                                              "format": "uint256",
+                                              "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                             }
                                           },
                                           "required": [
@@ -3468,6 +3483,11 @@
                                                 ]
                                               },
                                               "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                            },
+                                            "sessionEnableGasUnits": {
+                                              "type": "string",
+                                              "format": "uint256",
+                                              "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                             },
                                             "depositAddress": {
                                               "type": "string",
@@ -3534,6 +3554,11 @@
                                               },
                                               "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                             },
+                                            "sessionEnableGasUnits": {
+                                              "type": "string",
+                                              "format": "uint256",
+                                              "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                            },
                                             "quoteId": {
                                               "type": "string",
                                               "description": "Rhino.fi quote identifier — committed quote that becomes the commitmentId for the on-chain deposit"
@@ -3593,6 +3618,11 @@
                                                 ]
                                               },
                                               "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                            },
+                                            "sessionEnableGasUnits": {
+                                              "type": "string",
+                                              "format": "uint256",
+                                              "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                             },
                                             "sourceDomainId": {
                                               "type": "number",
@@ -5524,6 +5554,11 @@
                                                 },
                                                 "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                               },
+                                              "sessionEnableGasUnits": {
+                                                "type": "string",
+                                                "format": "uint256",
+                                                "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                              },
                                               "gasRefund": {
                                                 "type": "object",
                                                 "properties": {
@@ -6166,6 +6201,11 @@
                                                 },
                                                 "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                               },
+                                              "sessionEnableGasUnits": {
+                                                "type": "string",
+                                                "format": "uint256",
+                                                "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                              },
                                               "bridgeFill": {
                                                 "discriminator": {
                                                   "propertyName": "type"
@@ -6563,6 +6603,11 @@
                                                   ]
                                                 },
                                                 "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                              },
+                                              "sessionEnableGasUnits": {
+                                                "type": "string",
+                                                "format": "uint256",
+                                                "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                               }
                                             },
                                             "required": [
@@ -6618,6 +6663,11 @@
                                                   ]
                                                 },
                                                 "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                              },
+                                              "sessionEnableGasUnits": {
+                                                "type": "string",
+                                                "format": "uint256",
+                                                "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                               },
                                               "depositAddress": {
                                                 "type": "string",
@@ -6684,6 +6734,11 @@
                                                 },
                                                 "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
                                               },
+                                              "sessionEnableGasUnits": {
+                                                "type": "string",
+                                                "format": "uint256",
+                                                "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                              },
                                               "quoteId": {
                                                 "type": "string",
                                                 "description": "Rhino.fi quote identifier — committed quote that becomes the commitmentId for the on-chain deposit"
@@ -6743,6 +6798,11 @@
                                                   ]
                                                 },
                                                 "description": "Relayer quotes this element was priced from (internal; one per quoted segment on the origin chain)."
+                                              },
+                                              "sessionEnableGasUnits": {
+                                                "type": "string",
+                                                "format": "uint256",
+                                                "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                               },
                                               "sourceDomainId": {
                                                 "type": "number",
