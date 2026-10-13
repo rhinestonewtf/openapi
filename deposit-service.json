@@ -4209,6 +4209,24 @@
           "expiresAt"
         ]
       },
+      "ComplianceSessionNotFound": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER_NOT_FOUND"
+            ]
+          }
+        },
+        "required": [
+          "error",
+          "code"
+        ]
+      },
       "ComplianceSessionConflict": {
         "type": "object",
         "properties": {
@@ -4244,6 +4262,10 @@
             "pattern": "^0x[a-fA-F0-9]{40}$",
             "description": "Ethereum address (0x followed by 40 hex characters)",
             "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "resumeOnly": {
+            "type": "boolean",
+            "description": "Read-only session: never creates a customer or binds an account. 404 `CUSTOMER_NOT_FOUND` unless the customer exists and is bound to `smartAccount` (or no account is given). Needs `deposits:read`."
           }
         },
         "required": [
@@ -5964,6 +5986,745 @@
           "bankDetails"
         ],
         "additionalProperties": false
+      },
+      "OfframpOptions": {
+        "type": "object",
+        "properties": {
+          "methods": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PayoutMethod"
+            }
+          }
+        },
+        "required": [
+          "methods"
+        ],
+        "additionalProperties": false
+      },
+      "PayoutMethod": {
+        "type": "object",
+        "properties": {
+          "methodId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Opaque; pass it back to open a session"
+          },
+          "rail": {
+            "type": "string",
+            "enum": [
+              "ach",
+              "wire",
+              "sepa",
+              "swift",
+              "faster_payments",
+              "pix"
+            ]
+          },
+          "accountType": {
+            "type": "string",
+            "enum": [
+              "us",
+              "iban",
+              "swift",
+              "gb",
+              "pix"
+            ],
+            "description": "Which beneficiary details this method needs"
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD"
+          },
+          "country": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO 3166-1 alpha-2 of the receiving bank; null for international",
+            "example": "US"
+          },
+          "limits": {
+            "type": "object",
+            "properties": {
+              "min": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "max": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "min",
+              "max"
+            ]
+          },
+          "etaSeconds": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Typical time to the bank, in seconds"
+          }
+        },
+        "required": [
+          "methodId",
+          "rail",
+          "accountType",
+          "currency",
+          "country",
+          "limits",
+          "etaSeconds"
+        ],
+        "additionalProperties": false
+      },
+      "OfframpSessionCreated": {
+        "type": "object",
+        "properties": {
+          "session": {
+            "$ref": "#/components/schemas/OfframpSession"
+          },
+          "funding": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{40}$",
+                "description": "Ethereum address (0x followed by 40 hex characters)",
+                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+              },
+              "chain": {
+                "type": "string",
+                "description": "CAIP-2"
+              },
+              "token": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{40}$",
+                "description": "Ethereum address (0x followed by 40 hex characters)",
+                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+              },
+              "amount": {
+                "type": "string",
+                "maxLength": 40,
+                "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$",
+                "description": "Decimal token units (USDC), never base units"
+              }
+            },
+            "required": [
+              "address",
+              "chain",
+              "token",
+              "amount"
+            ],
+            "additionalProperties": false
+          },
+          "estimate": {
+            "type": "object",
+            "properties": {
+              "fiatAmount": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "description": "What the bank receives, after every fee"
+              },
+              "currency": {
+                "type": "string"
+              },
+              "totalFee": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "rate": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "fiatAmount",
+              "currency",
+              "totalFee",
+              "rate"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "session",
+          "funding",
+          "estimate"
+        ],
+        "additionalProperties": false
+      },
+      "OfframpSession": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "noah",
+              "swapped"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "processing",
+              "completed",
+              "failed",
+              "refunded"
+            ]
+          },
+          "terminal": {
+            "type": "boolean",
+            "description": "No stage will change again"
+          },
+          "stages": {
+            "type": "object",
+            "properties": {
+              "receipt": {
+                "$ref": "#/components/schemas/OnrampReceiptStage"
+              },
+              "conversion": {
+                "$ref": "#/components/schemas/OnrampConversionStage"
+              },
+              "delivery": {
+                "$ref": "#/components/schemas/OnrampDeliveryStage"
+              },
+              "return": {
+                "$ref": "#/components/schemas/OnrampReturnStage"
+              }
+            },
+            "required": [
+              "receipt",
+              "conversion",
+              "delivery",
+              "return"
+            ],
+            "additionalProperties": false
+          },
+          "rail": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "fiat"
+                    ]
+                  },
+                  "method": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "method"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "exchange"
+                    ]
+                  },
+                  "connection": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "connection"
+                ],
+                "additionalProperties": false
+              }
+            ],
+            "description": "`provider_selected` / `unknown` when the provider did not say"
+          },
+          "fiat": {
+            "type": "object",
+            "properties": {
+              "charged": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "total": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Including fees"
+                  },
+                  "net": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Before fees"
+                  },
+                  "currency": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "total",
+                  "net",
+                  "currency"
+                ],
+                "additionalProperties": false,
+                "description": "What the customer paid, in their own currency"
+              },
+              "eur": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "total": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Including fees"
+                  },
+                  "net": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Before fees"
+                  }
+                },
+                "required": [
+                  "total",
+                  "net"
+                ],
+                "additionalProperties": false,
+                "description": "Comparable across every order"
+              },
+              "usd": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "properties": {
+                  "total": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Including fees"
+                  },
+                  "net": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "Before fees"
+                  }
+                },
+                "required": [
+                  "total",
+                  "net"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "charged",
+              "eur",
+              "usd"
+            ],
+            "additionalProperties": false,
+            "description": "Each figure in a fixed currency; null when the provider did not state it"
+          },
+          "crypto": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "asset": {
+                "type": "string"
+              },
+              "network": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "asset",
+              "network",
+              "amount"
+            ],
+            "additionalProperties": false
+          },
+          "providerStatus": {
+            "type": "string",
+            "description": "The provider’s own status; informational"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the provider says the order began"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "fundingAccount": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Where the withdrawal is sent; it pays the provider once",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Funds arriving after this go back to the source account"
+          }
+        },
+        "required": [
+          "id",
+          "provider",
+          "status",
+          "terminal",
+          "stages",
+          "rail",
+          "fiat",
+          "crypto",
+          "providerStatus",
+          "createdAt",
+          "updatedAt",
+          "fundingAccount",
+          "expiresAt"
+        ],
+        "additionalProperties": false
+      },
+      "OfframpError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "VERIFICATION_REQUIRED",
+              "UNKNOWN_METHOD",
+              "AMOUNT_TOO_SMALL",
+              "INVALID_BENEFICIARY"
+            ]
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "INVALID_BENEFICIARY: our beneficiary paths, e.g. `account.iban`"
+          },
+          "estimate": {
+            "type": "object",
+            "properties": {
+              "totalFee": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "totalFee",
+              "currency"
+            ],
+            "description": "AMOUNT_TOO_SMALL: the fees that exceed the amount"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "CreateOfframpSession": {
+        "type": "object",
+        "properties": {
+          "methodId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "From GET /offramp/options"
+          },
+          "beneficiary": {
+            "$ref": "#/components/schemas/Beneficiary"
+          },
+          "amount": {
+            "type": "string",
+            "maxLength": 40,
+            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$",
+            "description": "Decimal token units (USDC), never base units"
+          },
+          "source": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The account the withdrawal comes from; refunds go back to it",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "refundTo": {
+            "type": "object",
+            "properties": {
+              "chain": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+                "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+                "example": "eip155:8453"
+              },
+              "token": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{40}$",
+                "description": "Ethereum address (0x followed by 40 hex characters)",
+                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+              }
+            },
+            "required": [
+              "chain",
+              "token"
+            ],
+            "additionalProperties": false,
+            "description": "Chain and token refunds are returned as; defaults to `funding`"
+          }
+        },
+        "required": [
+          "methodId",
+          "beneficiary",
+          "amount",
+          "source"
+        ],
+        "additionalProperties": false
+      },
+      "Beneficiary": {
+        "type": "object",
+        "properties": {
+          "holder": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "individual"
+                    ]
+                  },
+                  "firstName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": [
+                  "type",
+                  "firstName",
+                  "lastName"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "business"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "type",
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "address": {
+            "type": "object",
+            "properties": {
+              "line1": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "city": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "state": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "postalCode": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20
+              },
+              "country": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              }
+            },
+            "required": [
+              "line1",
+              "city",
+              "state",
+              "postalCode",
+              "country"
+            ],
+            "additionalProperties": false,
+            "description": "Required by US and SWIFT accounts"
+          },
+          "account": {
+            "oneOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "us"
+                    ]
+                  },
+                  "routingNumber": {
+                    "type": "string",
+                    "pattern": "^\\d{9}$"
+                  },
+                  "accountNumber": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 34
+                  },
+                  "accountType": {
+                    "type": "string",
+                    "enum": [
+                      "checking",
+                      "savings"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "routingNumber",
+                  "accountNumber",
+                  "accountType"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "iban"
+                    ]
+                  },
+                  "iban": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 34
+                  }
+                },
+                "required": [
+                  "type",
+                  "iban"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "swift"
+                    ]
+                  },
+                  "swiftCode": {
+                    "type": "string",
+                    "pattern": "^[A-Z0-9]{8}([A-Z0-9]{3})?$"
+                  },
+                  "accountNumber": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 34
+                  },
+                  "accountType": {
+                    "type": "string",
+                    "enum": [
+                      "checking",
+                      "savings"
+                    ]
+                  }
+                },
+                "required": [
+                  "type",
+                  "swiftCode",
+                  "accountNumber",
+                  "accountType"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 140,
+            "description": "Shown on the bank statement; defaults to \"Withdrawal\""
+          }
+        },
+        "required": [
+          "holder",
+          "account"
+        ],
+        "additionalProperties": false,
+        "description": "The bank account to pay. Passed to the provider only: never stored or logged."
       }
     },
     "parameters": {}
@@ -9819,6 +10580,16 @@
               }
             }
           },
+          "404": {
+            "description": "`resumeOnly`: no customer exists for this id, or it is not bound to the requested account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ComplianceSessionNotFound"
+                }
+              }
+            }
+          },
           "409": {
             "description": "The requested smart account is already bound to another customer in this project, or the customer is already bound to a different account and changing it requires an explicit migration",
             "content": {
@@ -11830,6 +12601,649 @@
           },
           "503": {
             "description": "Onramp is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/options": {
+      "get": {
+        "tags": [
+          "Offramp"
+        ],
+        "summary": "List payout methods",
+        "description": "The ways the customer can be paid out to a bank account. The provider decides them per customer.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{2}$",
+              "description": "Receiving bank country"
+            },
+            "required": false,
+            "description": "Receiving bank country",
+            "name": "country",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "description": "ISO 4217 payout currency"
+            },
+            "required": false,
+            "description": "ISO 4217 payout currency",
+            "name": "currency",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Integrator API key: the project’s orders"
+            },
+            "required": false,
+            "description": "Integrator API key: the project’s orders",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The payout methods",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfframpOptions"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The bearer no longer matches its customer, or an API key was sent: payout rails are per customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payouts are not enabled for this project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The provider refused or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No payout provider is configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/sessions": {
+      "post": {
+        "tags": [
+          "Offramp"
+        ],
+        "summary": "Start a withdrawal to a bank account",
+        "description": "Creates the withdrawal's funding account and the payout with the provider. Send exactly `funding.amount` of `funding.token` on `funding.chain` to `funding.address` before `session.expiresAt`; anything else, and any refund or bank return, goes back to `source`.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Integrator API key: the project’s orders"
+            },
+            "required": false,
+            "description": "Integrator API key: the project’s orders",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateOfframpSession"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The session, where to send the funds, and the estimate",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfframpSessionCreated"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "AMOUNT_TOO_SMALL or INVALID_BENEFICIARY",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfframpError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The bearer no longer matches its customer, or an API key was sent: payout rails are per customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Payouts are not enabled for this project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "VERIFICATION_REQUIRED, or UNKNOWN_METHOD: list the methods again",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfframpError"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The provider refused or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No payout provider is configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/sessions/{id}": {
+      "get": {
+        "tags": [
+          "Offramp"
+        ],
+        "summary": "Get an offramp session",
+        "description": "By the session `id`. A customer bearer reads that customer's sessions; an API key with `deposits:read`, the project's.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Integrator API key: the project’s orders"
+            },
+            "required": false,
+            "description": "Integrator API key: the project’s orders",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfframpSession"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid bearer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The bearer no longer matches its customer, or an API key was sent: payout rails are per customer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such session",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "The provider refused or failed the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "No payout provider is configured",
             "content": {
               "application/json": {
                 "schema": {
