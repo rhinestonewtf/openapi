@@ -10799,7 +10799,7 @@
           "Onramp"
         ],
         "summary": "List onramp providers",
-        "description": "The onramps this project can offer, and the credential each takes. A funding-account provider is listed only once it is provisioned for the organization. Ask `GET /onramp/options` what each one offers.",
+        "description": "The onramps provisioned for this organization, and the credential each takes. Ask `GET /onramp/options` what each one offers.",
         "parameters": [
           {
             "schema": {
@@ -10886,6 +10886,31 @@
           },
           "500": {
             "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Could not resolve organization provisioning",
             "content": {
               "application/json": {
                 "schema": {
