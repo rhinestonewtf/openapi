@@ -1722,8 +1722,77 @@
                                 },
                                 "failureReason": {
                                   "type": "string",
-                                  "description": "Why the operation failed (present only when FAILED)",
+                                  "description": "Why the operation failed (present only when FAILED). `NOT_EXECUTED` means the source transaction did not land and can no longer land: the account’s funds never left, and the caller can safely re-quote and sign again. `failureEvidence` on the source operation carries the chain evidence.",
                                   "example": "BRIDGE_TIMEOUT"
+                                },
+                                "failureEvidence": {
+                                  "type": "object",
+                                  "properties": {
+                                    "vm": {
+                                      "type": "string",
+                                      "enum": [
+                                        "svm"
+                                      ]
+                                    },
+                                    "reason": {
+                                      "type": "string",
+                                      "enum": [
+                                        "COUNTER_UNCONSUMED"
+                                      ],
+                                      "description": "The role's on-chain counter never reached the one the payload signed"
+                                    },
+                                    "swig": {
+                                      "type": "string",
+                                      "minLength": 1,
+                                      "description": "The Swig state account, base58"
+                                    },
+                                    "roleId": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "description": "The Swig role the payload was signed under"
+                                    },
+                                    "signedCounter": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "description": "The replay counter the payload consumes"
+                                    },
+                                    "observedCounter": {
+                                      "type": "integer",
+                                      "minimum": 0,
+                                      "description": "The role's stored counter at `observedSlot`"
+                                    },
+                                    "lastValidSlot": {
+                                      "type": "string",
+                                      "pattern": "^\\d+$",
+                                      "description": "The last slot the payload could have executed in",
+                                      "example": "312000060"
+                                    },
+                                    "observedSlot": {
+                                      "type": "string",
+                                      "pattern": "^\\d+$",
+                                      "description": "The finalized slot the role was read at",
+                                      "example": "312000081"
+                                    },
+                                    "commitment": {
+                                      "type": "string",
+                                      "enum": [
+                                        "finalized"
+                                      ]
+                                    }
+                                  },
+                                  "required": [
+                                    "vm",
+                                    "reason",
+                                    "swig",
+                                    "roleId",
+                                    "signedCounter",
+                                    "observedCounter",
+                                    "lastValidSlot",
+                                    "observedSlot",
+                                    "commitment"
+                                  ],
+                                  "additionalProperties": false,
+                                  "description": "Finalized chain evidence that the source transaction did not land and can no longer land: the cluster is past the payload’s last valid slot and the role never consumed its counter. The account’s funds never left; re-quote and sign again."
                                 },
                                 "debitsAccount": {
                                   "type": "boolean",
