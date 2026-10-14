@@ -6090,40 +6090,6 @@
           "session": {
             "$ref": "#/components/schemas/OfframpSession"
           },
-          "funding": {
-            "type": "object",
-            "properties": {
-              "address": {
-                "type": "string",
-                "pattern": "^0x[a-fA-F0-9]{40}$",
-                "description": "Ethereum address (0x followed by 40 hex characters)",
-                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-              },
-              "chain": {
-                "type": "string",
-                "description": "CAIP-2"
-              },
-              "token": {
-                "type": "string",
-                "pattern": "^0x[a-fA-F0-9]{40}$",
-                "description": "Ethereum address (0x followed by 40 hex characters)",
-                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-              },
-              "amount": {
-                "type": "string",
-                "maxLength": 40,
-                "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$",
-                "description": "Decimal token units (USDC), never base units"
-              }
-            },
-            "required": [
-              "address",
-              "chain",
-              "token",
-              "amount"
-            ],
-            "additionalProperties": false
-          },
           "estimate": {
             "type": "object",
             "properties": {
@@ -6156,12 +6122,12 @@
               "totalFee",
               "rate"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "description": "Priced on the requested amount"
           }
         },
         "required": [
           "session",
-          "funding",
           "estimate"
         ],
         "additionalProperties": false
@@ -6204,7 +6170,7 @@
                 "$ref": "#/components/schemas/OnrampConversionStage"
               },
               "delivery": {
-                "$ref": "#/components/schemas/OnrampDeliveryStage"
+                "$ref": "#/components/schemas/OfframpPayoutStage"
               },
               "return": {
                 "$ref": "#/components/schemas/OnrampReturnStage"
@@ -6275,14 +6241,14 @@
                       "string",
                       "null"
                     ],
-                    "description": "Including fees"
+                    "description": "The sale, fees included; null when not stated"
                   },
                   "net": {
                     "type": [
                       "string",
                       "null"
                     ],
-                    "description": "Before fees"
+                    "description": "What the bank receives, after fees"
                   },
                   "currency": {
                     "type": "string"
@@ -6294,7 +6260,7 @@
                   "currency"
                 ],
                 "additionalProperties": false,
-                "description": "What the customer paid, in their own currency"
+                "description": "The payout, in the currency the bank receives"
               },
               "eur": {
                 "type": [
@@ -6307,22 +6273,21 @@
                       "string",
                       "null"
                     ],
-                    "description": "Including fees"
+                    "description": "The sale, fees included; null when not stated"
                   },
                   "net": {
                     "type": [
                       "string",
                       "null"
                     ],
-                    "description": "Before fees"
+                    "description": "What the bank receives, after fees"
                   }
                 },
                 "required": [
                   "total",
                   "net"
                 ],
-                "additionalProperties": false,
-                "description": "Comparable across every order"
+                "additionalProperties": false
               },
               "usd": {
                 "type": [
@@ -6335,14 +6300,14 @@
                       "string",
                       "null"
                     ],
-                    "description": "Including fees"
+                    "description": "The sale, fees included; null when not stated"
                   },
                   "net": {
                     "type": [
                       "string",
                       "null"
                     ],
-                    "description": "Before fees"
+                    "description": "What the bank receives, after fees"
                   }
                 },
                 "required": [
@@ -6358,7 +6323,7 @@
               "usd"
             ],
             "additionalProperties": false,
-            "description": "Each figure in a fixed currency; null when the provider did not state it"
+            "description": "What the bank receives, after fees; null until the provider states it"
           },
           "crypto": {
             "type": [
@@ -6385,7 +6350,7 @@
           },
           "providerStatus": {
             "type": "string",
-            "description": "The provider’s own status; informational"
+            "description": "The provider’s own status of its latest leg, else ours (`reserved`, `opened`, `refused`, `unknown`); informational"
           },
           "createdAt": {
             "type": "string",
@@ -6396,16 +6361,27 @@
             "type": "string",
             "format": "date-time"
           },
-          "fundingAccount": {
+          "sender": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Where the withdrawal is sent; it pays the provider once",
+            "description": "The address the crypto must come from",
             "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "payment": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OfframpPayment"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null until the provider’s rule exists: while it is being created, or when the rule was refused or its outcome is unknown. Still served after `expiresAt`: the provider may still match the transfer."
           },
           "expiresAt": {
             "type": "string",
             "format": "date-time",
-            "description": "Funds arriving after this go back to the source account"
+            "description": "Send the payment before this"
           }
         },
         "required": [
@@ -6420,10 +6396,203 @@
           "providerStatus",
           "createdAt",
           "updatedAt",
-          "fundingAccount",
+          "sender",
+          "payment",
           "expiresAt"
         ],
         "additionalProperties": false
+      },
+      "OfframpPayoutStage": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "not_started"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "on_hold"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "rfi_open",
+                  "review"
+                ]
+              }
+            },
+            "required": [
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "processing"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "submitted"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false,
+            "description": "The provider sent the payment to the bank"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "completed"
+                ]
+              }
+            },
+            "required": [
+              "status"
+            ],
+            "additionalProperties": false,
+            "description": "The bank accepted the payment"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "failed"
+                ]
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "sub_fee",
+                  "provider_error"
+                ],
+                "description": "`sub_fee`: the fees took the whole amount"
+              }
+            },
+            "required": [
+              "status",
+              "reason"
+            ],
+            "additionalProperties": false
+          }
+        ],
+        "description": "The fiat payout to the bank"
+      },
+      "OfframpPayment": {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/OfframpDirectPayment"
+          }
+        ],
+        "discriminator": {
+          "propertyName": "kind",
+          "mapping": {
+            "direct": "#/components/schemas/OfframpDirectPayment"
+          }
+        },
+        "description": "How to pay the session, by `kind`"
+      },
+      "OfframpDirectPayment": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "direct"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The sender: an EOA, or the smart account executing the transfer",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "chain": {
+            "type": "string",
+            "description": "CAIP-2"
+          },
+          "token": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "Ethereum address (0x followed by 40 hex characters)",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Exact, in base units of `token`: the value of the ERC-20 transfer",
+            "example": "100000000"
+          }
+        },
+        "required": [
+          "kind",
+          "from",
+          "to",
+          "chain",
+          "token",
+          "amount"
+        ],
+        "additionalProperties": false,
+        "description": "Send exactly `amount` of `token` on `chain` from `from` to `to`, as a direct ERC-20 transfer whose sender is `from` (an EOA, or the smart account executing it). A different amount or sender is not matched and stays with the provider until recovery."
       },
       "OfframpError": {
         "type": "object",
@@ -6437,8 +6606,16 @@
               "VERIFICATION_REQUIRED",
               "UNKNOWN_METHOD",
               "AMOUNT_TOO_SMALL",
-              "INVALID_BENEFICIARY"
+              "INVALID_BENEFICIARY",
+              "CROSS_ROUTE_NOT_SUPPORTED",
+              "TOO_MANY_OPEN_WITHDRAWALS",
+              "OUTCOME_UNKNOWN"
             ]
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Set once the session exists, whatever failed after: read it at GET /offramp/sessions/{id}"
           },
           "fields": {
             "type": "array",
@@ -6484,19 +6661,19 @@
           },
           "amount": {
             "type": "string",
-            "maxLength": 40,
-            "pattern": "^(0|[1-9]\\d*)(\\.\\d{1,6})?$",
-            "description": "Decimal token units (USDC), never base units"
+            "pattern": "^\\d+$",
+            "description": "In base units of `source.token`, as its ERC-20 transfer carries them",
+            "example": "100000000"
           },
           "source": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "The account the withdrawal comes from; refunds go back to it",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-          },
-          "refundTo": {
             "type": "object",
             "properties": {
+              "address": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{40}$",
+                "description": "Sends the transfer: an EOA, or the smart account executing it",
+                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+              },
               "chain": {
                 "type": "string",
                 "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
@@ -6511,11 +6688,12 @@
               }
             },
             "required": [
+              "address",
               "chain",
               "token"
             ],
             "additionalProperties": false,
-            "description": "Chain and token refunds are returned as; defaults to `funding`"
+            "description": "Where the crypto comes from"
           }
         },
         "required": [
@@ -12715,8 +12893,33 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Missing or invalid bearer",
+            "description": "Missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -12841,7 +13044,7 @@
             }
           },
           "503": {
-            "description": "No payout provider is configured",
+            "description": "No payout provider is configured, or the customer could not be read; retry",
             "content": {
               "application/json": {
                 "schema": {
@@ -12874,7 +13077,7 @@
           "Offramp"
         ],
         "summary": "Start a withdrawal to a bank account",
-        "description": "Creates the withdrawal's funding account and the payout with the provider. Send exactly `funding.amount` of `funding.token` on `funding.chain` to `funding.address` before `session.expiresAt`; anything else, and any refund or bank return, goes back to `source`.",
+        "description": "Prepares the payout with the provider and opens it for one exact amount from `source.address`: the requested amount, or slightly less (one base unit at a time) when another open withdrawal of the customer from that address already holds it. Then send `session.payment` exactly. The source must hold the token the provider takes, on its chain (`CROSS_ROUTE_NOT_SUPPORTED` otherwise). Once the session exists, every error names it (`sessionId`).",
         "parameters": [
           {
             "schema": {
@@ -12910,7 +13113,7 @@
         },
         "responses": {
           "201": {
-            "description": "The session, where to send the funds, and the estimate",
+            "description": "The session, the payment to send, and the estimate",
             "content": {
               "application/json": {
                 "schema": {
@@ -12920,7 +13123,7 @@
             }
           },
           "400": {
-            "description": "AMOUNT_TOO_SMALL or INVALID_BENEFICIARY",
+            "description": "Invalid request; AMOUNT_TOO_SMALL; or INVALID_BENEFICIARY",
             "content": {
               "application/json": {
                 "schema": {
@@ -12930,7 +13133,7 @@
             }
           },
           "401": {
-            "description": "Missing or invalid bearer",
+            "description": "Missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -12955,26 +13158,11 @@
             }
           },
           "403": {
-            "description": "The bearer no longer matches its customer, or an API key was sent: payout rails are per customer",
+            "description": "The bearer no longer matches its customer, an API key was sent (payout rails are per customer), or the provider refuses this customer",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "VERIFICATION_REQUIRED"
-                      ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/OfframpError"
                 }
               }
             }
@@ -12984,28 +13172,13 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "VERIFICATION_REQUIRED"
-                      ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/OfframpError"
                 }
               }
             }
           },
           "409": {
-            "description": "VERIFICATION_REQUIRED, or UNKNOWN_METHOD: list the methods again",
+            "description": "VERIFICATION_REQUIRED; UNKNOWN_METHOD: list the methods again; CROSS_ROUTE_NOT_SUPPORTED; or TOO_MANY_OPEN_WITHDRAWALS from this address near this amount",
             "content": {
               "application/json": {
                 "schema": {
@@ -13019,72 +13192,27 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "VERIFICATION_REQUIRED"
-                      ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/OfframpError"
                 }
               }
             }
           },
           "502": {
-            "description": "The provider refused or failed the request",
+            "description": "The provider refused or failed the request; or OUTCOME_UNKNOWN: it never confirmed the payout, so the session (`sessionId`) keeps its amount and serves no payment. Send nothing for it; open another session to retry.",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "VERIFICATION_REQUIRED"
-                      ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/OfframpError"
                 }
               }
             }
           },
           "503": {
-            "description": "No payout provider is configured",
+            "description": "Offramp is unavailable: no payout provider is configured, sessions are switched off (`OFFRAMP_SESSIONS_ENABLED`), or the customer or the project’s fee configuration could not be read; retry",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "VERIFICATION_REQUIRED"
-                      ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
+                  "$ref": "#/components/schemas/OfframpError"
                 }
               }
             }
@@ -13142,8 +13270,33 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
           "401": {
-            "description": "Missing or invalid bearer",
+            "description": "Missing or invalid credentials",
             "content": {
               "application/json": {
                 "schema": {
@@ -13168,7 +13321,7 @@
             }
           },
           "403": {
-            "description": "The bearer no longer matches its customer, or an API key was sent: payout rails are per customer",
+            "description": "The bearer no longer matches its customer, or the API key lacks `deposits:read`",
             "content": {
               "application/json": {
                 "schema": {
@@ -13242,33 +13395,8 @@
               }
             }
           },
-          "502": {
-            "description": "The provider refused or failed the request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "error": {
-                      "type": "string"
-                    },
-                    "code": {
-                      "type": "string",
-                      "enum": [
-                        "VERIFICATION_REQUIRED"
-                      ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
-                    }
-                  },
-                  "required": [
-                    "error"
-                  ]
-                }
-              }
-            }
-          },
           "503": {
-            "description": "No payout provider is configured",
+            "description": "The customer could not be read; retry",
             "content": {
               "application/json": {
                 "schema": {
