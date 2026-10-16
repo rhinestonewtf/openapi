@@ -10243,10 +10243,10 @@
             "schema": {
               "type": "string",
               "pattern": "^[A-Za-z0-9._:-]{1,128}$",
-              "description": "Order id, provider order id, checkout reference, or legacy `<account>:<reference>`"
+              "description": "Order id, provider order id, checkout reference, or `<account>:<reference>`"
             },
             "required": true,
-            "description": "Order id, provider order id, checkout reference, or legacy `<account>:<reference>`",
+            "description": "Order id, provider order id, checkout reference, or `<account>:<reference>`",
             "name": "id",
             "in": "path"
           },
