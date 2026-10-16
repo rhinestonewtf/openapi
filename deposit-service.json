@@ -3807,385 +3807,6 @@
           "type"
         ]
       },
-      "SwappedUrlResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean",
-            "enum": [
-              true
-            ]
-          },
-          "url": {
-            "type": "string"
-          },
-          "currencyCode": {
-            "type": "string"
-          },
-          "sandbox": {
-            "type": "boolean"
-          },
-          "externalCustomerId": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "ok",
-          "url",
-          "currencyCode",
-          "sandbox",
-          "externalCustomerId",
-          "expiresAt"
-        ]
-      },
-      "SwappedWidgetUrlRequestBody": {
-        "type": "object",
-        "properties": {
-          "smartAccount": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-          },
-          "email": {
-            "type": "string"
-          },
-          "baseCountry": {
-            "type": "string",
-            "pattern": "^[A-Z]{2}$",
-            "description": "ISO-3166-1 alpha-2 country code",
-            "example": "US"
-          },
-          "baseCurrencyCode": {
-            "type": "string",
-            "pattern": "^[A-Z]{3,4}$",
-            "description": "ISO fiat currency code",
-            "example": "USD"
-          },
-          "baseCurrencyAmount": {
-            "type": "number",
-            "exclusiveMinimum": 0
-          },
-          "locale": {
-            "type": "string"
-          },
-          "method": {
-            "type": "string",
-            "description": "Optional. Preselects a Swapped payment method (a `payment_group`) in the widget — e.g. \"creditcard\", \"apple-pay\", \"bank-transfer\", \"skrill\", \"pix\", \"google-pay\". Any Swapped-supported value is accepted and forwarded as-is; omit it to let Swapped auto-select the best method for the user based on their location and other signals. See Swapped's Get Payment Methods endpoint for the full, per-region list.",
-            "example": "apple-pay"
-          },
-          "methodSelectionSource": {
-            "type": "string",
-            "enum": [
-              "personalized",
-              "fallback",
-              "configured"
-            ],
-            "description": "How the caller obtained `method`. Use `personalized` only for a method rendered from the regional payment-method response; with a trusted `x-user-country`, this opts into strict catalog validation. `fallback`, `configured`, and omission preserve the legacy exact-method pass-through behavior.",
-            "example": "personalized"
-          }
-        },
-        "required": [
-          "smartAccount"
-        ]
-      },
-      "SwappedConnectUrlRequestBody": {
-        "type": "object",
-        "properties": {
-          "smartAccount": {
-            "type": "string",
-            "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-          },
-          "baseCountry": {
-            "type": "string",
-            "pattern": "^[A-Z]{2}$",
-            "description": "ISO-3166-1 alpha-2 country code",
-            "example": "US"
-          },
-          "baseCurrencyCode": {
-            "type": "string",
-            "pattern": "^[A-Z]{3,4}$",
-            "description": "ISO fiat currency code",
-            "example": "USD"
-          },
-          "locale": {
-            "type": "string"
-          },
-          "connection": {
-            "type": "string"
-          },
-          "connections": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            },
-            "minItems": 1,
-            "maxItems": 26,
-            "example": [
-              "coinbase",
-              "kraken"
-            ]
-          },
-          "merchantName": {
-            "type": "string",
-            "maxLength": 64,
-            "description": "Optional. Overrides the merchant name Swapped Connect shows on its confirm screen — both the \"To:\" row and its tooltip (\"Funds will be delivered to your <name> wallet.\"). Omit it to inherit the Rhinestone default. Send it raw; the service URL-encodes it.",
-            "example": "Superform"
-          },
-          "merchantLogoUrl": {
-            "type": "string",
-            "maxLength": 2048,
-            "format": "uri",
-            "description": "Optional. Publicly accessible HTTPS URL of the merchant's logo, shown beside `merchantName` on the Swapped Connect confirm screen. PNG or SVG recommended. Send it raw; the service URL-encodes it.",
-            "example": "https://cdn.example.com/logo.svg"
-          }
-        },
-        "required": [
-          "smartAccount"
-        ]
-      },
-      "SwappedPaymentMethodsResponse": {
-        "type": "object",
-        "properties": {
-          "country": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "pattern": "^[A-Z]{2}$",
-            "description": "ISO-3166-1 alpha-2 country code",
-            "example": "US"
-          },
-          "methods": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "method": {
-                  "type": "string"
-                },
-                "label": {
-                  "type": "string"
-                },
-                "iconUrl": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "iconUrlLight": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "minAmount": {
-                  "type": [
-                    "number",
-                    "null"
-                  ],
-                  "minimum": 0,
-                  "description": "Smallest order, in EUR whatever the customer pays in"
-                },
-                "maxAmount": {
-                  "type": [
-                    "number",
-                    "null"
-                  ],
-                  "minimum": 0,
-                  "description": "Largest order, in EUR whatever the customer pays in"
-                },
-                "currencies": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "minLength": 3,
-                    "maxLength": 3
-                  },
-                  "description": "ISO 4217 fiat currencies the customer can pay this method in, in this country. Empty when Swapped states none",
-                  "example": [
-                    "EUR",
-                    "USD",
-                    "GBP"
-                  ]
-                },
-                "badge": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "enum": [
-                    "Popular"
-                  ]
-                }
-              },
-              "required": [
-                "method",
-                "label",
-                "iconUrl",
-                "iconUrlLight",
-                "minAmount",
-                "maxAmount",
-                "currencies",
-                "badge"
-              ]
-            }
-          },
-          "recommendedMethod": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "country",
-          "methods",
-          "recommendedMethod"
-        ]
-      },
-      "SwappedStatusResponse": {
-        "type": "object",
-        "properties": {
-          "ok": {
-            "type": "boolean"
-          },
-          "reason": {
-            "type": "string"
-          },
-          "orderId": {
-            "type": "string"
-          },
-          "status": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "orderCrypto": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "orderCryptoAmount": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "transactionId": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "receivedAt": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "paidAmountUsd": {
-            "type": [
-              "number",
-              "null"
-            ]
-          },
-          "paidAmountEur": {
-            "type": [
-              "number",
-              "null"
-            ]
-          },
-          "onrampFeeUsd": {
-            "type": [
-              "number",
-              "null"
-            ]
-          },
-          "paymentMethod": {
-            "type": [
-              "string",
-              "null"
-            ]
-          }
-        },
-        "required": [
-          "ok"
-        ]
-      },
-      "SwappedConnectExchangesResponse": {
-        "type": "object",
-        "properties": {
-          "exchanges": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "connection": {
-                  "type": "string"
-                },
-                "name": {
-                  "type": "string"
-                },
-                "logoUrl": {
-                  "type": [
-                    "string",
-                    "null"
-                  ]
-                },
-                "kind": {
-                  "type": "string",
-                  "enum": [
-                    "exchange",
-                    "wallet"
-                  ],
-                  "example": "exchange"
-                },
-                "appHandoff": {
-                  "type": "string",
-                  "enum": [
-                    "none",
-                    "https_link",
-                    "custom_scheme"
-                  ],
-                  "example": "none"
-                }
-              },
-              "required": [
-                "connection",
-                "name",
-                "logoUrl",
-                "kind",
-                "appHandoff"
-              ]
-            }
-          },
-          "fetchedAt": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string"
-          },
-          "stale": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "exchanges",
-          "fetchedAt",
-          "expiresAt",
-          "stale"
-        ]
-      },
       "ComplianceSessionResponse": {
         "type": "object",
         "properties": {
@@ -6008,7 +5629,7 @@
           "methodId": {
             "type": "string",
             "format": "uuid",
-            "description": "Opaque; pass it back to open a session"
+            "description": "Opaque; pass it back to open an order"
           },
           "rail": {
             "type": "string",
@@ -6084,11 +5705,11 @@
         ],
         "additionalProperties": false
       },
-      "OfframpSessionCreated": {
+      "OfframpOrderCreated": {
         "type": "object",
         "properties": {
-          "session": {
-            "$ref": "#/components/schemas/OfframpSession"
+          "order": {
+            "$ref": "#/components/schemas/OfframpOrder"
           },
           "estimate": {
             "type": "object",
@@ -6127,12 +5748,12 @@
           }
         },
         "required": [
-          "session",
+          "order",
           "estimate"
         ],
         "additionalProperties": false
       },
-      "OfframpSession": {
+      "OfframpOrder": {
         "type": "object",
         "properties": {
           "id": {
@@ -6543,7 +6164,7 @@
             "direct": "#/components/schemas/OfframpDirectPayment"
           }
         },
-        "description": "How to pay the session, by `kind`"
+        "description": "How to pay the order, by `kind`"
       },
       "OfframpDirectPayment": {
         "type": "object",
@@ -6612,10 +6233,10 @@
               "OUTCOME_UNKNOWN"
             ]
           },
-          "sessionId": {
+          "orderId": {
             "type": "string",
             "format": "uuid",
-            "description": "Set once the session exists, whatever failed after: read it at GET /offramp/sessions/{id}"
+            "description": "Set once the order exists, whatever failed after: read it at GET /offramp/orders/{id}"
           },
           "fields": {
             "type": "array",
@@ -6648,7 +6269,7 @@
           "error"
         ]
       },
-      "CreateOfframpSession": {
+      "CreateOfframpOrder": {
         "type": "object",
         "properties": {
           "methodId": {
@@ -6903,6 +6524,29 @@
         ],
         "additionalProperties": false,
         "description": "The bank account to pay. Passed to the provider only: never stored or logged."
+      },
+      "OfframpOrderPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OfframpOrder"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ],
+        "additionalProperties": false
       }
     },
     "parameters": {}
@@ -10160,534 +9804,6 @@
         }
       }
     },
-    "/onramp/swapped/widget-url": {
-      "post": {
-        "deprecated": true,
-        "tags": [
-          "Onramp"
-        ],
-        "summary": "Create a fiat funding URL",
-        "description": "Creates a signed Swapped URL for buying crypto with fiat. Deprecated: use `POST /onramp/orders` with `kind: \"fiat\"`.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "API key for authentication",
-              "example": "your-api-key"
-            },
-            "required": true,
-            "description": "API key for authentication",
-            "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "pattern": "^[A-Z]{2}$",
-              "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
-              "example": "PH"
-            },
-            "required": false,
-            "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
-            "name": "x-user-country",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
-              "example": "203.0.113.7"
-            },
-            "required": false,
-            "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
-            "name": "x-client-ip",
-            "in": "header"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SwappedWidgetUrlRequestBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Signed widget URL",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwappedUrlResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required or invalid credential",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "API key lacks the required deposits scope, or the account is not registered to the calling project",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server misconfigured or signing failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Swapped on-ramp is not configured",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/onramp/swapped/connect-url": {
-      "post": {
-        "deprecated": true,
-        "tags": [
-          "Onramp"
-        ],
-        "summary": "Create an exchange funding URL",
-        "description": "Creates a signed Swapped Connect URL for funding from a centralized exchange. Deprecated: use `POST /onramp/orders` with `kind: \"exchange\"`.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "API key for authentication",
-              "example": "your-api-key"
-            },
-            "required": true,
-            "description": "API key for authentication",
-            "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "pattern": "^[A-Z]{2}$",
-              "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
-              "example": "PH"
-            },
-            "required": false,
-            "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
-            "name": "x-user-country",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
-              "example": "203.0.113.7"
-            },
-            "required": false,
-            "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
-            "name": "x-client-ip",
-            "in": "header"
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SwappedConnectUrlRequestBody"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Signed Connect URL",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwappedUrlResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid request, including a `connections` allowlist naming an unrecognized slug, declared without the `connection` selection that narrows the session, or one that excludes the selection",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required or invalid credential",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "API key lacks the required deposits scope, or the account is not registered to the calling project",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Server misconfigured or signing failed",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Swapped on-ramp is not configured, or the organization's fee configuration or exchange deposit address is unavailable; retry",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/onramp/swapped/payment-methods": {
-      "get": {
-        "deprecated": true,
-        "tags": [
-          "Onramp"
-        ],
-        "summary": "List payment methods",
-        "description": "Returns available Swapped payment methods for the user’s country. Deprecated: use `GET /onramp/options` with `kind=fiat`.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "description": "API key for authentication",
-              "example": "your-api-key"
-            },
-            "required": true,
-            "description": "API key for authentication",
-            "name": "x-api-key",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "pattern": "^[A-Z]{2}$",
-              "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
-              "example": "PH"
-            },
-            "required": false,
-            "description": "Trusted edge-resolved ISO country. When present it overrides body.baseCountry and x-client-ip, and enables country-specific payment-method validation.",
-            "name": "x-user-country",
-            "in": "header"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
-              "example": "203.0.113.7"
-            },
-            "required": false,
-            "description": "The end user's IP address as observed by the edge, for edges that can name the IP but cannot resolve a country themselves (no local GeoIP database). Used only when x-user-country is absent, and ignored unless it is a publicly-routable address. Prefer x-user-country when your edge already has a country — for example Cloudflare's cf-ipcountry — since it needs no lookup here.",
-            "name": "x-client-ip",
-            "in": "header"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Localized payment methods or the generic fallback",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwappedPaymentMethodsResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid country header",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required or invalid credential",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "API key lacks required deposits scope",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Swapped on-ramp is not configured",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/onramp/swapped/status/{smartAccount}": {
-      "get": {
-        "deprecated": true,
-        "tags": [
-          "Onramp"
-        ],
-        "summary": "Get funding status",
-        "description": "Returns the latest Swapped order for a smart account. Deprecated: use `GET /onramp/orders` or `GET /onramp/orders/{id}`.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "pattern": "^0x[a-fA-F0-9]{40}$",
-              "description": "Ethereum address (0x followed by 40 hex characters)",
-              "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
-            },
-            "required": true,
-            "description": "Ethereum address (0x followed by 40 hex characters)",
-            "name": "smartAccount",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "API key for authentication",
-              "example": "your-api-key"
-            },
-            "required": true,
-            "description": "API key for authentication",
-            "name": "x-api-key",
-            "in": "header"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Latest order status (or no_order)",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwappedStatusResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Invalid smart account address",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required or invalid credential",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "API key lacks the required deposits scope, or the account is not registered to the calling project",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "Failed to read order status",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Swapped on-ramp is not configured",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/onramp/swapped/connect-exchanges": {
-      "get": {
-        "deprecated": true,
-        "tags": [
-          "Onramp"
-        ],
-        "summary": "List supported exchanges and wallets",
-        "description": "Returns the connections available for funding through Swapped Connect. Defaults to the centralized exchanges; pass `kind=wallet` or `kind=all` for the Web3 wallets, or `connections` to resolve an explicit allowlist. Deprecated: use `GET /onramp/options` with `kind=exchange`.",
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "maxLength": 1024,
-              "example": "coinbase,kraken,phantom_wallet"
-            },
-            "required": false,
-            "name": "connections",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "enum": [
-                "exchange",
-                "wallet",
-                "all"
-              ],
-              "example": "all"
-            },
-            "required": false,
-            "name": "kind",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "API key for authentication",
-              "example": "your-api-key"
-            },
-            "required": true,
-            "description": "API key for authentication",
-            "name": "x-api-key",
-            "in": "header"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Supported connections",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SwappedConnectExchangesResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "The `connections` allowlist named a slug outside the catalogue",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Authentication required or invalid credential",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "API key lacks required deposits scope",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Swapped on-ramp is not configured",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/compliance/sessions": {
       "post": {
         "tags": [
@@ -11121,7 +10237,7 @@
           "Onramp"
         ],
         "summary": "Get an onramp order",
-        "description": "Accepts any id the caller holds: the order `id`, the provider’s order id (e.g. the `orderId` of the legacy `onramp-order` webhook), the `orderId` returned when the checkout was started (when retries share it, the newest order), or the legacy widget-url `externalCustomerId` (`<account>:<reference>`). 404 until the provider first reports the order. A customer bearer reads that customer’s orders and every order on its bound account.",
+        "description": "Accepts any id the caller holds: the order `id`, the provider’s order id (e.g. the `orderId` of the legacy `onramp-order` webhook), the `orderId` returned when the checkout was started (when retries share it, the newest order), or the `externalCustomerId` signed into the checkout (`<account>:<reference>`). 404 until the provider first reports the order. A customer bearer reads that customer’s orders and every order on its bound account.",
         "parameters": [
           {
             "schema": {
@@ -13071,13 +12187,13 @@
         }
       }
     },
-    "/offramp/sessions": {
+    "/offramp/orders": {
       "post": {
         "tags": [
           "Offramp"
         ],
         "summary": "Start a withdrawal to a bank account",
-        "description": "Prepares the payout with the provider and opens it for one exact amount from `source.address`: the requested amount, or slightly less (one base unit at a time) when another open withdrawal of the customer from that address already holds it. Then send `session.payment` exactly. The source must hold the token the provider takes, on its chain (`CROSS_ROUTE_NOT_SUPPORTED` otherwise). Once the session exists, every error names it (`sessionId`).",
+        "description": "Prepares the payout with the provider and opens it for one exact amount from `source.address`: the requested amount, or slightly less (one base unit at a time) when another open withdrawal of the customer from that address already holds it. Then send `order.payment` exactly. The source must hold the token the provider takes, on its chain (`CROSS_ROUTE_NOT_SUPPORTED` otherwise). Once the order exists, every error names it (`orderId`).",
         "parameters": [
           {
             "schema": {
@@ -13106,18 +12222,18 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateOfframpSession"
+                "$ref": "#/components/schemas/CreateOfframpOrder"
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "The session, the payment to send, and the estimate",
+            "description": "The order, the payment to send, and the estimate",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OfframpSessionCreated"
+                  "$ref": "#/components/schemas/OfframpOrderCreated"
                 }
               }
             }
@@ -13198,7 +12314,7 @@
             }
           },
           "502": {
-            "description": "The provider refused or failed the request; or OUTCOME_UNKNOWN: it never confirmed the payout, so the session (`sessionId`) keeps its amount and serves no payment. Send nothing for it; open another session to retry.",
+            "description": "The provider refused or failed the request; or OUTCOME_UNKNOWN: it never confirmed the payout, so the order (`orderId`) keeps its amount and serves no payment. Send nothing for it; open another order to retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -13208,7 +12324,7 @@
             }
           },
           "503": {
-            "description": "Offramp is unavailable: no payout provider is configured, sessions are switched off (`OFFRAMP_SESSIONS_ENABLED`), or the customer or the project’s fee configuration could not be read; retry",
+            "description": "Offramp is unavailable: no payout provider is configured, opening orders is switched off (`OFFRAMP_ENABLED`), or the customer or the project’s fee configuration could not be read; retry",
             "content": {
               "application/json": {
                 "schema": {
@@ -13218,15 +12334,204 @@
             }
           }
         }
-      }
-    },
-    "/offramp/sessions/{id}": {
+      },
       "get": {
         "tags": [
           "Offramp"
         ],
-        "summary": "Get an offramp session",
-        "description": "By the session `id`. A customer bearer reads that customer's sessions; an API key with `deposits:read`, the project's.",
+        "summary": "List offramp orders",
+        "description": "Newest first by when each order was opened. A customer bearer lists that customer's orders; an API key with `deposits:read`, the project's.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "`nextCursor` of the previous page"
+            },
+            "required": false,
+            "description": "`nextCursor` of the previous page",
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Integrator API key: the project’s orders"
+            },
+            "required": false,
+            "description": "Integrator API key: the project’s orders",
+            "name": "x-api-key",
+            "in": "header"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "example": "Bearer eyJhbGciOi..."
+            },
+            "required": false,
+            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "name": "authorization",
+            "in": "header"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of orders",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfframpOrderPage"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The bearer no longer matches its customer, or the API key lacks `deposits:read`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal failure serving the request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The customer could not be read; retry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED"
+                      ],
+                      "description": "The customer must resume hosted verification for this currency, then retry"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/offramp/orders/{id}": {
+      "get": {
+        "tags": [
+          "Offramp"
+        ],
+        "summary": "Get an offramp order",
+        "description": "By the order `id`. A customer bearer reads that customer's orders; an API key with `deposits:read`, the project's.",
         "parameters": [
           {
             "schema": {
@@ -13261,11 +12566,11 @@
         ],
         "responses": {
           "200": {
-            "description": "The session",
+            "description": "The order",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/OfframpSession"
+                  "$ref": "#/components/schemas/OfframpOrder"
                 }
               }
             }
@@ -13346,7 +12651,7 @@
             }
           },
           "404": {
-            "description": "No such session",
+            "description": "No such order",
             "content": {
               "application/json": {
                 "schema": {
