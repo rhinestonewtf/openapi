@@ -9351,6 +9351,14 @@
                                   "destinationDomainId": {
                                     "type": "number",
                                     "description": "Circle CCTP destination domain ID."
+                                  },
+                                  "delivery": {
+                                    "type": "string",
+                                    "enum": [
+                                      "FORWARD",
+                                      "RELAYER"
+                                    ],
+                                    "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                   }
                                 },
                                 "required": [

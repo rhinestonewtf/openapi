@@ -2712,6 +2712,14 @@
                                                     "destinationDomainId": {
                                                       "type": "number",
                                                       "description": "Circle CCTP destination domain ID."
+                                                    },
+                                                    "delivery": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "FORWARD",
+                                                        "RELAYER"
+                                                      ],
+                                                      "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                                     }
                                                   },
                                                   "required": [
@@ -3307,6 +3315,14 @@
                                                     "destinationDomainId": {
                                                       "type": "number",
                                                       "description": "Circle CCTP destination domain ID."
+                                                    },
+                                                    "delivery": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "FORWARD",
+                                                        "RELAYER"
+                                                      ],
+                                                      "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                                     }
                                                   },
                                                   "required": [
@@ -3883,6 +3899,7 @@
                               "RHINO",
                               "CCTP_FAST",
                               "CCTP_CHEAP",
+                              "CCTP_RELAYER",
                               "LZ",
                               "SOLANA_ORIGIN",
                               "SVM_SAME_CHAIN"
@@ -5892,6 +5909,14 @@
                                                       "destinationDomainId": {
                                                         "type": "number",
                                                         "description": "Circle CCTP destination domain ID."
+                                                      },
+                                                      "delivery": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "FORWARD",
+                                                          "RELAYER"
+                                                        ],
+                                                        "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                                       }
                                                     },
                                                     "required": [
@@ -6487,6 +6512,14 @@
                                                       "destinationDomainId": {
                                                         "type": "number",
                                                         "description": "Circle CCTP destination domain ID."
+                                                      },
+                                                      "delivery": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "FORWARD",
+                                                          "RELAYER"
+                                                        ],
+                                                        "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                                       }
                                                     },
                                                     "required": [
@@ -7063,6 +7096,7 @@
                                 "RHINO",
                                 "CCTP_FAST",
                                 "CCTP_CHEAP",
+                                "CCTP_RELAYER",
                                 "LZ",
                                 "SOLANA_ORIGIN",
                                 "SVM_SAME_CHAIN"
