@@ -153,6 +153,11 @@
                           "txPath": {
                             "type": "string",
                             "example": "/tx/"
+                          },
+                          "query": {
+                            "type": "string",
+                            "example": "cluster=devnet",
+                            "description": "Optional query content with no leading ?. Append ?${query} verbatim after the linked value; absent means no query suffix."
                           }
                         },
                         "required": [
@@ -161,7 +166,7 @@
                           "txPath"
                         ],
                         "nullable": true,
-                        "description": "Block explorer, or null for a chain that has none. Lets a client link a transaction on a chain it was never compiled against, instead of bundling a per-chain URL table."
+                        "description": "Block explorer, or null for a chain that has none. Compose a link as ${url}${addressPath}${value} or ${url}${txPath}${value}, then append ?${query} verbatim when present. Absent query means no suffix; null explorer means render plain text instead of a link."
                       },
                       "settlement": {
                         "type": "object",
@@ -628,6 +633,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -1051,6 +1057,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -1361,6 +1368,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -1671,6 +1679,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -4298,6 +4307,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -4608,6 +4618,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -4918,6 +4929,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -5228,6 +5240,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -5700,6 +5713,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -6010,6 +6024,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -6320,6 +6335,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -7055,6 +7071,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -7365,6 +7382,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -7675,6 +7693,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -8036,6 +8055,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -8346,6 +8366,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -8656,6 +8677,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -8966,6 +8988,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -9276,6 +9299,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -9586,6 +9610,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -9896,6 +9921,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -10496,6 +10522,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -10806,6 +10833,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -11170,6 +11198,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -14990,6 +15019,14 @@
                                           "destinationDomainId": {
                                             "type": "number",
                                             "description": "Circle CCTP destination domain ID."
+                                          },
+                                          "delivery": {
+                                            "type": "string",
+                                            "enum": [
+                                              "FORWARD",
+                                              "RELAYER"
+                                            ],
+                                            "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                           }
                                         },
                                         "required": [
@@ -18743,6 +18780,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -19053,6 +19091,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -19363,6 +19402,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -19673,6 +19713,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -19983,6 +20024,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -20293,6 +20335,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -20603,6 +20646,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -20913,6 +20957,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -21687,6 +21732,7 @@
                               "ensUSDC",
                               "ensUSDC2",
                               "ensUSDC3",
+                              "ensUSDC4",
                               "TRX",
                               "WTRX",
                               "SOL",
@@ -21827,6 +21873,7 @@
                                   "ensUSDC",
                                   "ensUSDC2",
                                   "ensUSDC3",
+                                  "ensUSDC4",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -22159,6 +22206,7 @@
                                   "ensUSDC",
                                   "ensUSDC2",
                                   "ensUSDC3",
+                                  "ensUSDC4",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -22498,6 +22546,7 @@
                                   "ensUSDC",
                                   "ensUSDC2",
                                   "ensUSDC3",
+                                  "ensUSDC4",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -22597,6 +22646,7 @@
                                   "ensUSDC",
                                   "ensUSDC2",
                                   "ensUSDC3",
+                                  "ensUSDC4",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -22696,6 +22746,7 @@
                                   "ensUSDC",
                                   "ensUSDC2",
                                   "ensUSDC3",
+                                  "ensUSDC4",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -24481,6 +24532,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -24791,6 +24843,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -25101,6 +25154,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -25411,6 +25465,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -25721,6 +25776,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -26031,6 +26087,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -26073,7 +26130,7 @@
             }
           },
           "503": {
-            "description": "Quoting is paused",
+            "description": "Quoting is paused (`SERVICE_PAUSED`), or a dependency the estimate requires is temporarily unavailable (`DEPENDENCY_UNAVAILABLE`, retryable; `details[0].context` names the `dependency` and planner `code`)",
             "content": {
               "application/json": {
                 "schema": {
@@ -26341,6 +26398,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -26651,6 +26709,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -27068,11 +27127,15 @@
                     },
                     "pendingUsd": {
                       "type": "number"
+                    },
+                    "unavailableUsd": {
+                      "type": "number"
                     }
                   },
                   "required": [
                     "withdrawableUsd",
-                    "pendingUsd"
+                    "pendingUsd",
+                    "unavailableUsd"
                   ]
                 }
               }
@@ -27347,6 +27410,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -27657,6 +27721,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -27967,6 +28032,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -28018,7 +28084,7 @@
           }
         ],
         "summary": "Get App-Fee Balances",
-        "description": "The authenticated project's app-fee balance as USD totals valued at collection time. `pendingUsd` is the payout value permanently reserved by signed withdrawals whose target-chain FILL has not completed, including failed or expired payouts.",
+        "description": "The authenticated project's app-fee balance as USD totals valued at collection time. `pendingUsd` is the payout value permanently reserved by signed withdrawals whose target-chain FILL has not completed, including failed or expired payouts. `unavailableUsd` is earned fees that cannot be withdrawn yet because payouts are not enabled for the chain they were collected on, net of the current cut like `withdrawableUsd`.",
         "tags": [
           "App Fees"
         ]
@@ -28373,6 +28439,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -28683,6 +28750,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -28993,6 +29061,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -29303,6 +29372,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -29666,6 +29736,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -29976,6 +30047,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -30286,6 +30358,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -30596,6 +30669,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -31040,6 +31114,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -31350,6 +31425,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -31660,6 +31736,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -31970,6 +32047,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -32391,6 +32469,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -32701,6 +32780,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -33011,6 +33091,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -33321,6 +33402,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
@@ -33631,6 +33713,7 @@
                             "EXTERNAL_SERVICE_TIMEOUT",
                             "RELAYER_MARKET_UNAVAILABLE",
                             "SERVICE_PAUSED",
+                            "DEPENDENCY_UNAVAILABLE",
                             "INTERNAL_ERROR"
                           ],
                           "description": "Machine-readable error code"
