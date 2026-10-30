@@ -18,6 +18,18 @@
         "bearerFormat": "JWT",
         "description": "Required 15-minute customer-scoped browser session from POST /compliance/sessions. Application keys are not accepted."
       },
+      "tenantApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "Integrator API key for tenant API requests."
+      },
+      "internalProjectBearer": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "Project-scoped platform bearer for tenant API requests. This API does not issue platform tokens."
+      },
       "analyticsIngestBearer": {
         "type": "http",
         "scheme": "bearer",
@@ -47,7 +59,7 @@
           },
           "code": {
             "type": "string",
-            "description": "Deposit error code (e.g. `TOKEN-3`) when the refusal is one a deposit would also receive."
+            "description": "Machine-readable refusal code: a deposit error code (e.g. `TOKEN-3`) when the refusal is one a deposit would also receive, or a route-specific code (e.g. `WEBHOOK_ENROLLMENT_UNAVAILABLE`, `REGISTRATION_BUSY`, `REGISTRATION_IN_PROGRESS`, `USER_OWNED_ACCOUNTS_NOT_ENABLED`, `QUOTE_UNAVAILABLE`)."
           },
           "details": {
             "type": "array",
@@ -772,6 +784,11 @@
                 },
                 "txPath": {
                   "type": "string"
+                },
+                "query": {
+                  "type": "string",
+                  "description": "URL query content without a leading question mark; preserve spelling and percent-encoded bytes without normalization.",
+                  "example": "cluster=devnet"
                 }
               },
               "required": [
@@ -779,7 +796,7 @@
                 "addressPath",
                 "txPath"
               ],
-              "description": "Block explorer, or null for a chain that has none (render plain text instead of a link). `url` has no trailing slash and the paths carry their own, so a link is `${url}${addressPath}${value}`. The paths vary — Tronscan routes under a fragment and calls a transaction `transaction`, not `tx`.",
+              "description": "Block explorer, or null (render plain text). `url` has no trailing slash; paths include their own. Compose links as `url + addressPath + value` or `url + txPath + value`, appending `?` + query only when present. Preserve path spelling and linked-value case. Fragment routes carry no query: Tronscan uses `/#/address/` and `/#/transaction/`.",
               "example": {
                 "url": "https://etherscan.io",
                 "addressPath": "/address/",
@@ -1735,6 +1752,8 @@
               "SIGNATURE_INVALID",
               "VERIFICATION_UNAVAILABLE",
               "REFUND_RECONCILIATION_REQUIRED",
+              "SETTLEMENT_UNRESOLVED",
+              "REFUND_UNAVAILABLE",
               "REFUND_FAILED"
             ]
           }
@@ -1939,6 +1958,150 @@
           },
           "retryable": {
             "type": "boolean"
+          },
+          "refundAttributions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "submissionKey": {
+                  "type": "string"
+                },
+                "intentId": {
+                  "type": "string"
+                },
+                "state": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "references": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "chain": {
+                        "type": "string"
+                      },
+                      "txHash": {
+                        "type": "string"
+                      },
+                      "vm": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "chain",
+                      "txHash"
+                    ]
+                  }
+                },
+                "credit": {
+                  "type": "object",
+                  "properties": {
+                    "chain": {
+                      "type": "string"
+                    },
+                    "txHash": {
+                      "type": "string"
+                    },
+                    "account": {
+                      "type": "string"
+                    },
+                    "token": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "chain",
+                    "txHash",
+                    "account",
+                    "token",
+                    "amount"
+                  ]
+                },
+                "successorDepositId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "submissionKey",
+                "intentId",
+                "state",
+                "reason"
+              ]
+            }
+          },
+          "refundOf": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "depositId": {
+                  "type": "string"
+                },
+                "submissionKey": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "depositId",
+                "submissionKey"
+              ]
+            }
+          },
+          "delivery": {
+            "type": "object",
+            "properties": {
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "delivered",
+                  "returned",
+                  "failed",
+                  "unresolved"
+                ]
+              },
+              "depositId": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "chain": {
+                "type": "string"
+              },
+              "token": {
+                "type": "string"
+              },
+              "recipient": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "string"
+              },
+              "txHash": {
+                "type": "string"
+              },
+              "completedAt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "outcome",
+              "depositId"
+            ]
           },
           "isSpam": {
             "type": "boolean"
@@ -4048,6 +4211,72 @@
         ],
         "additionalProperties": false
       },
+      "ProviderError": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string"
+          },
+          "status": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The provider’s HTTP status; null when it answered outside its contract"
+          },
+          "type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The provider’s error category, e.g. `InvalidMessage`"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "The provider’s request path, e.g. `Form.BankDetails.AccountNumber`; null when it names no field we send"
+                },
+                "reason": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "description": "e.g. `SchemaValidation`, `NotSupported`; null when unrecognised"
+                }
+              },
+              "required": [
+                "path",
+                "reason"
+              ],
+              "additionalProperties": false
+            },
+            "description": "Request fields the provider refused"
+          },
+          "reference": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The provider’s id for this failure: quote it to its support"
+          }
+        },
+        "required": [
+          "provider",
+          "status",
+          "type",
+          "fields",
+          "reference"
+        ],
+        "additionalProperties": false,
+        "description": "PROVIDER_REJECTED and PROVIDER_FORBIDDEN: what the provider refused"
+      },
       "ComplianceVerificationRequestBody": {
         "type": "object",
         "properties": {
@@ -5277,7 +5506,10 @@
                       "type": [
                         "string",
                         "null"
-                      ]
+                      ],
+                      "format": "uri",
+                      "description": "HTTPS image URL supplied by Swapped Connect. Prefers the dark icon, then the light icon, then logo variants. Null when Swapped supplies no usable image or its metadata is unavailable. Image format and URL lifetime are provider-controlled.",
+                      "example": "https://d25djvj7a3w11u.cloudfront.net/coinbase-icon.svg"
                     },
                     "kind": {
                       "type": "string",
@@ -5971,7 +6203,7 @@
           },
           "providerStatus": {
             "type": "string",
-            "description": "The provider’s own status of its latest leg, else ours (`reserved`, `opened`, `refused`, `unknown`); informational"
+            "description": "The provider’s own status of its latest leg, else ours (`reserved`, `opened`, `refused`, `unknown`, `expired`); informational"
           },
           "createdAt": {
             "type": "string",
@@ -5985,7 +6217,7 @@
           "sender": {
             "type": "string",
             "pattern": "^0x[a-fA-F0-9]{40}$",
-            "description": "The address the crypto must come from",
+            "description": "The address the provider takes the crypto from: `source.address`, or the withdrawal account it pays into",
             "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
           },
           "payment": {
@@ -5997,7 +6229,7 @@
                 "type": "null"
               }
             ],
-            "description": "Null until the provider’s rule exists: while it is being created, or when the rule was refused or its outcome is unknown. Still served after `expiresAt`: the provider may still match the transfer."
+            "description": "Null until the provider’s rule exists: while it is being created, or when the rule was refused or its outcome is unknown; through a withdrawal account, also until its funding is configured. A `direct` payment is still served after `expiresAt`, until the order expires 30 minutes later and reads `failed` (`expired`), not terminal: the provider may still match a late transfer. A `withdrawal_account` payment is null again once a transfer can no longer fund the order: one already did, the order moved past `pending`, or 30 minutes passed after `expiresAt`."
           },
           "expiresAt": {
             "type": "string",
@@ -6156,15 +6388,19 @@
         "oneOf": [
           {
             "$ref": "#/components/schemas/OfframpDirectPayment"
+          },
+          {
+            "$ref": "#/components/schemas/OfframpWithdrawalAccountPayment"
           }
         ],
         "discriminator": {
           "propertyName": "kind",
           "mapping": {
-            "direct": "#/components/schemas/OfframpDirectPayment"
+            "direct": "#/components/schemas/OfframpDirectPayment",
+            "withdrawal_account": "#/components/schemas/OfframpWithdrawalAccountPayment"
           }
         },
-        "description": "How to pay the order, by `kind`"
+        "description": "How to pay the order, by `kind`: `direct` from a source on the provider’s chain and token, `withdrawal_account` from any other"
       },
       "OfframpDirectPayment": {
         "type": "object",
@@ -6215,6 +6451,55 @@
         "additionalProperties": false,
         "description": "Send exactly `amount` of `token` on `chain` from `from` to `to`, as a direct ERC-20 transfer whose sender is `from` (an EOA, or the smart account executing it). A different amount or sender is not matched and stays with the provider until recovery."
       },
+      "OfframpWithdrawalAccountPayment": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "withdrawal_account"
+            ]
+          },
+          "from": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "`source.address`: an EOA, or the smart account executing the transfer",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "to": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "The customer’s withdrawal account",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "chain": {
+            "type": "string",
+            "description": "CAIP-2: `source.chain`"
+          },
+          "token": {
+            "type": "string",
+            "pattern": "^0x[a-fA-F0-9]{40}$",
+            "description": "`source.token`",
+            "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+          },
+          "amount": {
+            "type": "string",
+            "pattern": "^\\d+$",
+            "description": "Exact, in base units of `token`: the value of the transfer. Quoted to deliver the order’s amount of the provider’s token on the cheapest route, plus a margin for the fees the customer pays (or, for another asset, 1% for its price); may be a few base units higher when another open withdrawal from this source holds it",
+            "example": "100000000"
+          }
+        },
+        "required": [
+          "kind",
+          "from",
+          "to",
+          "chain",
+          "token",
+          "amount"
+        ],
+        "additionalProperties": false,
+        "description": "Send exactly `amount` of `token` on `chain` from `from` to `to`, the customer’s withdrawal account, after the order opens and before `expiresAt`; we pay the provider from it, and what the payment does not spend stays there for an operator. A different amount or sender, or a transfer mined more than 30 minutes after `expiresAt`, is not matched: it stays on the account until an operator refunds it."
+      },
       "OfframpError": {
         "type": "object",
         "properties": {
@@ -6225,13 +6510,22 @@
             "type": "string",
             "enum": [
               "VERIFICATION_REQUIRED",
+              "PROVIDER_UNAVAILABLE",
+              "PROVIDER_REJECTED",
+              "PROVIDER_FORBIDDEN",
               "UNKNOWN_METHOD",
               "AMOUNT_TOO_SMALL",
               "INVALID_BENEFICIARY",
-              "CROSS_ROUTE_NOT_SUPPORTED",
+              "SOURCE_NOT_SUPPORTED",
+              "NO_ROUTE",
+              "QUOTE_UNAVAILABLE",
               "TOO_MANY_OPEN_WITHDRAWALS",
-              "OUTCOME_UNKNOWN"
+              "OUTCOME_UNKNOWN",
+              "FUNDING_NOT_CONFIGURED"
             ]
+          },
+          "providerError": {
+            "$ref": "#/components/schemas/ProviderError"
           },
           "orderId": {
             "type": "string",
@@ -6283,7 +6577,7 @@
           "amount": {
             "type": "string",
             "pattern": "^\\d+$",
-            "description": "In base units of `source.token`, as its ERC-20 transfer carries them",
+            "description": "In base units of the token the provider takes: what the payout is priced on and the provider receives, exactly. From `source.token` itself, the ERC-20 transfer’s value; from any other source, `order.payment.amount` is quoted from it",
             "example": "100000000"
           },
           "source": {
@@ -6640,11 +6934,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Project API key used to resolve analytics attribution",
+              "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
-            "description": "Project API key used to resolve analytics attribution",
+            "required": false,
+            "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
           }
@@ -6669,8 +6963,36 @@
                 }
               }
             }
+          },
+          "403": {
+            "description": "The authenticated project is not permitted or is not billable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/assets": {
@@ -6706,10 +7028,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Billable project API key"
+              "description": "API key for authentication",
+              "example": "your-api-key"
             },
-            "required": true,
-            "description": "Billable project API key",
+            "required": false,
+            "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
           }
@@ -6742,6 +7065,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Organization is not billable",
             "content": {
@@ -6761,8 +7094,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/chains": {
@@ -6855,7 +7206,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -6933,7 +7284,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       },
       "get": {
         "tags": [
@@ -6948,7 +7307,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -6984,8 +7343,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/register": {
@@ -7002,7 +7379,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -7050,6 +7427,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "API key lacks required deposits scope, the organization can't be billed, or user-owned accounts are not enabled for the organization (`USER_OWNED_ACCOUNTS_NOT_ENABLED`; use `POST /register-managed`)",
             "content": {
@@ -7070,8 +7457,26 @@
               }
             }
           },
+          "429": {
+            "description": "Retryable refusal; retry after the Retry-After delay. Registration is idempotent, so a retry reuses whatever was already stored. `WEBHOOK_ENROLLMENT_UNAVAILABLE`: no webhook provider could enroll the deposit address. `REGISTRATION_BUSY`: too many registrations are in flight; the request waited briefly for a slot and none freed. `REGISTRATION_IN_PROGRESS`: another request is registering the same account or salt.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
-            "description": "Failed to register with Alchemy",
+            "description": "Internal error",
             "content": {
               "application/json": {
                 "schema": {
@@ -7081,7 +7486,7 @@
             }
           },
           "503": {
-            "description": "Temporarily unavailable; nothing was stored. Retry after the number of seconds in the Retry-After header.",
+            "description": "The session scope could not be verified; nothing was stored. Retry after the number of seconds in the Retry-After header.",
             "headers": {
               "Retry-After": {
                 "description": "Seconds to wait before retrying the registration",
@@ -7098,7 +7503,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/account/{address}/deposit-addresses": {
@@ -7127,7 +7540,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -7166,6 +7579,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Unauthorized - API key does not belong to the client that registered the account, or the organization can't be billed",
             "content": {
@@ -7196,8 +7619,26 @@
               }
             }
           },
+          "429": {
+            "description": "Retryable refusal; retry after the Retry-After delay. Registration is idempotent, so a retry reuses whatever was already stored. `WEBHOOK_ENROLLMENT_UNAVAILABLE`: no webhook provider could enroll the deposit address. `REGISTRATION_BUSY`: too many registrations are in flight; the request waited briefly for a slot and none freed. `REGISTRATION_IN_PROGRESS`: another request is registering the same account or salt.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
-            "description": "Failed to backfill deposit addresses",
+            "description": "Internal error",
             "content": {
               "application/json": {
                 "schema": {
@@ -7207,7 +7648,7 @@
             }
           },
           "503": {
-            "description": "Registration is busy; retry shortly",
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
             "content": {
               "application/json": {
                 "schema": {
@@ -7216,7 +7657,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/account/{address}/session": {
@@ -7245,7 +7694,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -7293,8 +7742,36 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Unauthorized - API key does not belong to the client that registered the account",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Retryable refusal; nothing was stored. Retry after the Retry-After delay. `REGISTRATION_BUSY`: too many registrations are in flight; the request waited briefly for a slot and none freed. `REGISTRATION_IN_PROGRESS`: another request is registering the same account or salt.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -7313,7 +7790,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/account/{address}/token-accounts": {
@@ -7357,7 +7842,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -7444,8 +7929,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits/{id}/retry": {
@@ -7474,7 +7977,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -7554,7 +8057,25 @@
             }
           },
           "409": {
-            "description": "HyperCore leg 1 already completed (Core funds swept to HyperEVM) — a leg-2 refund/fill concern, not a leg-1 retry",
+            "description": "HyperCore leg 1 already completed (Core funds swept to HyperEVM) — a leg-2 refund/fill concern, not a leg-1 retry; or an earlier EVM intent of this deposit may still be settling or already moved its funds (reconcile instead)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Settlement evidence is temporarily unreadable; retry later (see Retry-After)",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -7563,7 +8084,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits/{id}/refund": {
@@ -7592,7 +8121,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -7659,7 +8188,7 @@
             }
           },
           "409": {
-            "description": "A Solana deposit may still be settling on-chain; refund refused until reconciled",
+            "description": "An earlier Solana or EVM submission of this deposit may still be settling or already moved its funds; refund refused until reconciled",
             "content": {
               "application/json": {
                 "schema": {
@@ -7679,7 +8208,15 @@
             }
           },
           "503": {
-            "description": "Settlement evidence for a Solana deposit is unavailable; retry later",
+            "description": "Settlement evidence for a Solana or EVM deposit is unavailable; retry later (see Retry-After)",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -7688,7 +8225,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits/recover": {
@@ -7705,7 +8250,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -7762,7 +8307,7 @@
             }
           },
           "409": {
-            "description": "The refund may have been submitted and is held for reconciliation (REFUND_RECONCILIATION_REQUIRED)",
+            "description": "The refund may have been submitted and is held for reconciliation (REFUND_RECONCILIATION_REQUIRED), or an earlier bridge intent of this deposit may still be settling or already moved its funds (SETTLEMENT_UNRESOLVED); reconcile instead of re-signing",
             "content": {
               "application/json": {
                 "schema": {
@@ -7792,7 +8337,15 @@
             }
           },
           "503": {
-            "description": "Smart-account signature verification is temporarily unavailable (VERIFICATION_UNAVAILABLE)",
+            "description": "Smart-account signature verification is temporarily unavailable (VERIFICATION_UNAVAILABLE), or settlement evidence is unreadable (REFUND_UNAVAILABLE); retry the same signature (see Retry-After)",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -7801,7 +8354,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits": {
@@ -7810,7 +8371,7 @@
           "Utilities"
         ],
         "summary": "List deposits",
-        "description": "Returns deposits for the authenticated project, newest first.",
+        "description": "Returns deposits for the authenticated project, newest first. Filters narrow the list on the server before pagination: different parameters combine with AND, values within one parameter with OR, and an exclusion (`excludeStatus`, `excludeChain`, `excludeAsset`, `excludeSender`) wins over a matching inclusion.",
         "parameters": [
           {
             "schema": {
@@ -7847,37 +8408,184 @@
           },
           {
             "schema": {
-              "type": "string",
-              "enum": [
-                "pending",
-                "processing",
-                "completed",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "processing",
+                  "completed",
+                  "failed",
+                  "rejected",
+                  "ignored",
+                  "expecting_refund",
+                  "refunded",
+                  "delayed",
+                  "reconciliation_required"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Include only deposits in these statuses. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+              "example": [
                 "failed",
-                "rejected",
-                "ignored",
-                "expecting_refund",
-                "refunded",
-                "delayed",
-                "reconciliation_required"
-              ],
-              "description": "Filter by deposit status",
-              "example": "failed"
+                "rejected"
+              ]
             },
             "required": false,
-            "description": "Filter by deposit status",
+            "description": "Include only deposits in these statuses. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
             "name": "status",
             "in": "query"
           },
           {
             "schema": {
-              "type": "string",
-              "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
-              "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
-              "example": "eip155:8453"
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "processing",
+                  "completed",
+                  "failed",
+                  "rejected",
+                  "ignored",
+                  "expecting_refund",
+                  "refunded",
+                  "delayed",
+                  "reconciliation_required"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Exclude deposits in these statuses. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+              "example": [
+                "failed",
+                "rejected"
+              ]
             },
             "required": false,
-            "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+            "description": "Exclude deposits in these statuses. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+            "name": "excludeStatus",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+                "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+                "example": "eip155:8453"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Include only deposits from these source chains. Canonical CAIP-2 source chain ids (e.g. \"eip155:8453\"). The two HyperCore origin spellings (`hypercore:mainnet`, `hypercore:spot`) match as one chain. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+              "example": [
+                "eip155:8453",
+                "eip155:9745"
+              ]
+            },
+            "required": false,
+            "description": "Include only deposits from these source chains. Canonical CAIP-2 source chain ids (e.g. \"eip155:8453\"). The two HyperCore origin spellings (`hypercore:mainnet`, `hypercore:spot`) match as one chain. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
             "name": "chain",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+:[a-zA-Z0-9]+$",
+                "description": "CAIP-2 chain identifier (e.g. \"eip155:8453\")",
+                "example": "eip155:8453"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Exclude deposits from these source chains. Canonical CAIP-2 source chain ids (e.g. \"eip155:8453\"). The two HyperCore origin spellings (`hypercore:mainnet`, `hypercore:spot`) match as one chain. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+              "example": [
+                "eip155:8453",
+                "eip155:9745"
+              ]
+            },
+            "required": false,
+            "description": "Exclude deposits from these source chains. Canonical CAIP-2 source chain ids (e.g. \"eip155:8453\"). The two HyperCore origin spellings (`hypercore:mainnet`, `hypercore:spot`) match as one chain. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+            "name": "excludeChain",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Include only deposits of these source assets. Source assets as `<CAIP-2 chain>:<token>`, using the `chain` and `token` a list row reports (the token address, or the chain's native-asset identifier: the zero address on EVM and for TRX, `11111111111111111111111111111111` on Solana). Symbols are never matched. Hex tokens (EVM, HyperCore, the TRX sentinel) match case-insensitively; base58 tokens (Solana, Tron) match exactly. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+              "example": [
+                "eip155:8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+              ]
+            },
+            "required": false,
+            "description": "Include only deposits of these source assets. Source assets as `<CAIP-2 chain>:<token>`, using the `chain` and `token` a list row reports (the token address, or the chain's native-asset identifier: the zero address on EVM and for TRX, `11111111111111111111111111111111` on Solana). Symbols are never matched. Hex tokens (EVM, HyperCore, the TRX sentinel) match case-insensitively; base58 tokens (Solana, Tron) match exactly. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+            "name": "asset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Exclude deposits of these source assets. Source assets as `<CAIP-2 chain>:<token>`, using the `chain` and `token` a list row reports (the token address, or the chain's native-asset identifier: the zero address on EVM and for TRX, `11111111111111111111111111111111` on Solana). Symbols are never matched. Hex tokens (EVM, HyperCore, the TRX sentinel) match case-insensitively; base58 tokens (Solana, Tron) match exactly. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+              "example": [
+                "eip155:8453:0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
+              ]
+            },
+            "required": false,
+            "description": "Exclude deposits of these source assets. Source assets as `<CAIP-2 chain>:<token>`, using the `chain` and `token` a list row reports (the token address, or the chain's native-asset identifier: the zero address on EVM and for TRX, `11111111111111111111111111111111` on Solana). Symbols are never matched. Hex tokens (EVM, HyperCore, the TRX sentinel) match case-insensitively; base58 tokens (Solana, Tron) match exactly. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+            "name": "excludeAsset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Address on any supported chain (EVM, Solana, Tron, or Stellar)",
+                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Include only deposits from these senders. Recorded transfer senders, matched on any chain. Never the deposit address, account or recipient. EVM addresses match case-insensitively; base58 addresses match exactly. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+              "example": [
+                "0x742d35cc6634c0532925a3b844bc9e7595f5be91"
+              ]
+            },
+            "required": false,
+            "description": "Include only deposits from these senders. Recorded transfer senders, matched on any chain. Never the deposit address, account or recipient. EVM addresses match case-insensitively; base58 addresses match exactly. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+            "name": "sender",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "description": "Address on any supported chain (EVM, Solana, Tron, or Stellar)",
+                "example": "0x742d35Cc6634C0532925a3b844Bc9e7595f5bE91"
+              },
+              "minItems": 1,
+              "maxItems": 20,
+              "description": "Exclude deposits from these senders. Recorded transfer senders, matched on any chain. Never the deposit address, account or recipient. EVM addresses match case-insensitively; base58 addresses match exactly. A deposit with an unknown or different sender stays visible. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+              "example": [
+                "0x742d35cc6634c0532925a3b844bc9e7595f5be91"
+              ]
+            },
+            "required": false,
+            "description": "Exclude deposits from these senders. Recorded transfer senders, matched on any chain. Never the deposit address, account or recipient. EVM addresses match case-insensitively; base58 addresses match exactly. A deposit with an unknown or different sender stays visible. Repeat the parameter or comma-separate values, at most 20. Values within one parameter combine with OR, parameters combine with AND, and an exclusion wins over a matching inclusion. Applied before pagination; spam visibility is still governed by `includeSpam`.",
+            "name": "excludeSender",
             "in": "query"
           },
           {
@@ -7934,7 +8642,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -7980,8 +8688,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits/{id}": {
@@ -8010,7 +8736,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8066,8 +8792,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits/{id}/quotes": {
@@ -8096,7 +8840,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8115,6 +8859,16 @@
           },
           "400": {
             "description": "Invalid deposit id or API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8142,8 +8896,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/quotes/preview": {
@@ -8160,7 +8932,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8227,7 +8999,35 @@
             }
           },
           "422": {
-            "description": "Route cannot be priced (the account's output-token rules map the source token to nothing, no available routes, no session to build a binding quote with on a route only the binding quote can price, or exact-out asked of such a route). A quote does not mean a deposit would be accepted: the client whitelist, session coverage and token policy are applied when the deposit arrives.",
+            "description": "Route cannot be priced (the account's output-token rules map the source token to nothing, no available routes, no session to build a binding quote with on a route only the binding quote can price, or exact-out asked of such a route). A quote does not mean a deposit would be accepted: the client whitelist, session coverage and token policy are applied when the deposit arrives. Only ever a refusal, never an outage: a dependency failure answers 503.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "`QUOTE_UNAVAILABLE`: a dependency needed to price the route is unavailable; retry after the Retry-After delay. Never a route refusal.",
+            "headers": {
+              "Retry-After": {
+                "description": "Seconds to wait before retrying",
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            },
             "content": {
               "application/json": {
                 "schema": {
@@ -8236,7 +9036,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits/permit/prepare": {
@@ -8253,7 +9061,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8328,8 +9136,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits/permit": {
@@ -8346,7 +9172,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8431,8 +9257,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/deposits/stats": {
@@ -8465,7 +9309,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8511,8 +9355,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/register-managed": {
@@ -8529,7 +9391,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8577,6 +9439,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "API key lacks required deposits scope, or the organization can't be billed",
             "content": {
@@ -8597,21 +9469,11 @@
               }
             }
           },
-          "500": {
-            "description": "Failed to register with webhook providers",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Webhook provider enrollment is rate limited; retry after the number of seconds in the Retry-After header",
+          "429": {
+            "description": "Retryable refusal; retry after the Retry-After delay. Registration is idempotent, so a retry reuses whatever was already stored. `WEBHOOK_ENROLLMENT_UNAVAILABLE`: no webhook provider could enroll the deposit address. `REGISTRATION_BUSY`: too many registrations are in flight; the request waited briefly for a slot and none freed. `REGISTRATION_IN_PROGRESS`: another request is registering the same account or salt.",
             "headers": {
               "Retry-After": {
-                "description": "Seconds to wait before retrying the registration",
+                "description": "Seconds to wait before retrying",
                 "schema": {
                   "type": "integer"
                 }
@@ -8624,8 +9486,36 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Internal error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/setup-account": {
@@ -8642,7 +9532,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8682,6 +9572,16 @@
           },
           "400": {
             "description": "Invalid request or unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
             "content": {
               "application/json": {
                 "schema": {
@@ -8730,7 +9630,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/portfolio/{address}": {
@@ -8769,7 +9677,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8808,6 +9716,26 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated project is not permitted or is not billable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Client configuration could not be read",
             "content": {
@@ -8827,8 +9755,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/positions/{address}": {
@@ -8857,7 +9803,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8896,6 +9842,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "API key lacks the required deposits scope",
             "content": {
@@ -8916,7 +9872,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/positions/{address}/unwind": {
@@ -8945,7 +9909,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -8993,6 +9957,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "API key lacks the required deposits scope, or the account belongs to another project",
             "content": {
@@ -9002,8 +9976,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/portfolio/solana/{address}": {
@@ -9031,7 +10023,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9070,6 +10062,26 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated project is not permitted or is not billable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Client configuration could not be read",
             "content": {
@@ -9089,8 +10101,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/liquidity": {
@@ -9165,7 +10195,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9204,6 +10234,26 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated project is not permitted or is not billable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "502": {
             "description": "Invalid liquidity response from orchestrator",
             "content": {
@@ -9213,8 +10263,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/prices": {
@@ -9255,7 +10323,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9293,8 +10361,46 @@
                 }
               }
             }
+          },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The authenticated project is not permitted or is not billable.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/qr/tokens": {
@@ -9311,7 +10417,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9347,8 +10453,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/safe/withdraw": {
@@ -9365,7 +10489,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9413,6 +10537,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "API key lacks required deposits scope",
             "content": {
@@ -9432,8 +10566,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/polymarket/withdraw": {
@@ -9450,7 +10602,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9498,6 +10650,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "API key lacks required deposits scope",
             "content": {
@@ -9528,7 +10690,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/webhooks/events": {
@@ -9592,7 +10762,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9631,6 +10801,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "API key lacks required deposits scope",
             "content": {
@@ -9640,8 +10820,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/webhooks/events/{id}/resend": {
@@ -9667,7 +10865,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9706,6 +10904,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "Event does not belong to caller's client",
             "content": {
@@ -9725,8 +10933,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/webhooks/test": {
@@ -9743,7 +10969,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9791,6 +11017,16 @@
               }
             }
           },
+          "401": {
+            "description": "Authentication required or the presented credential is invalid.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "403": {
             "description": "API key lacks required deposits scope",
             "content": {
@@ -9800,8 +11036,26 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/compliance/sessions": {
@@ -9818,7 +11072,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -9914,7 +11168,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/compliance/status": {
@@ -10035,11 +11297,32 @@
             }
           },
           "403": {
-            "description": "Session does not match the resolved customer, or the provider refused verification for this customer",
+            "description": "Session does not match the resolved customer, or PROVIDER_FORBIDDEN: the provider refuses verification for this customer",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
+                      ],
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -10065,11 +11348,32 @@
             }
           },
           "502": {
-            "description": "The verification provider rejected or failed the request",
+            "description": "PROVIDER_UNAVAILABLE: the verification provider did not answer; or PROVIDER_REJECTED: it refused the request (`providerError`)",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string"
+                    },
+                    "code": {
+                      "type": "string",
+                      "enum": [
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
+                      ],
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
                 }
               }
             }
@@ -10108,11 +11412,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -10141,9 +11445,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10166,9 +11476,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10191,9 +11507,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10216,9 +11538,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10228,7 +11556,18 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          },
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     },
     "/onramp/orders/{id}": {
@@ -10243,10 +11582,10 @@
             "schema": {
               "type": "string",
               "pattern": "^[A-Za-z0-9._:-]{1,128}$",
-              "description": "Order id, provider order id, checkout reference, or legacy `<account>:<reference>`"
+              "description": "Order id, provider order id, checkout reference, or `<account>:<reference>`"
             },
             "required": true,
-            "description": "Order id, provider order id, checkout reference, or legacy `<account>:<reference>`",
+            "description": "Order id, provider order id, checkout reference, or `<account>:<reference>`",
             "name": "id",
             "in": "path"
           },
@@ -10263,11 +11602,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -10296,9 +11635,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10321,9 +11666,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10346,9 +11697,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10371,9 +11728,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10382,8 +11745,29 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          },
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     },
     "/onramp/orders": {
@@ -10455,11 +11839,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -10488,9 +11872,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10513,9 +11903,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10538,9 +11934,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10549,8 +11951,29 @@
                 }
               }
             }
+          },
+          "503": {
+            "description": "Tenant billing verification is temporarily unavailable; retry after 5 seconds.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          },
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       },
       "post": {
         "tags": [
@@ -10565,7 +11988,7 @@
               "description": "API key for authentication",
               "example": "your-api-key"
             },
-            "required": true,
+            "required": false,
             "description": "API key for authentication",
             "name": "x-api-key",
             "in": "header"
@@ -10628,9 +12051,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10653,9 +12082,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10678,9 +12113,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10703,9 +12144,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10728,9 +12175,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10740,7 +12193,15 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          }
+        ]
       }
     },
     "/onramp/options": {
@@ -10853,11 +12314,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -10886,9 +12347,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10911,9 +12378,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10936,9 +12409,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10961,9 +12440,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10986,9 +12471,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -10999,7 +12490,7 @@
             }
           },
           "502": {
-            "description": "The provider failed the request",
+            "description": "PROVIDER_UNAVAILABLE: the provider did not answer; or PROVIDER_REJECTED: it refused the request (`providerError`)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11011,9 +12502,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11036,9 +12533,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11048,7 +12551,18 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          },
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     },
     "/onramp/accounts": {
@@ -11072,11 +12586,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -11115,9 +12629,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11140,9 +12660,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11153,7 +12679,7 @@
             }
           },
           "403": {
-            "description": "Not a customer bearer, the bearer no longer matches its customer, or the provider refused the customer",
+            "description": "Not a customer bearer, the bearer no longer matches its customer, or PROVIDER_FORBIDDEN: the provider refuses the customer",
             "content": {
               "application/json": {
                 "schema": {
@@ -11165,9 +12691,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11190,9 +12722,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11203,7 +12741,7 @@
             }
           },
           "409": {
-            "description": "No bound smart account, the project is not configured for deposits, its whitelist or session coverage rejects the delivery route, or `VERIFICATION_REQUIRED`: the customer must resume verification for this currency",
+            "description": "No bound smart account, the project is not configured for deposits, its whitelist or session coverage rejects the delivery route, the bound account is an offramp account, or `VERIFICATION_REQUIRED`: the customer must resume verification for this currency",
             "content": {
               "application/json": {
                 "schema": {
@@ -11215,9 +12753,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11240,9 +12784,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11253,7 +12803,7 @@
             }
           },
           "502": {
-            "description": "The provider failed the request",
+            "description": "PROVIDER_UNAVAILABLE: the provider did not answer; or PROVIDER_REJECTED: it refused the request (`providerError`)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11265,9 +12815,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11290,9 +12846,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11302,7 +12864,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       },
       "get": {
         "tags": [
@@ -11343,11 +12910,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -11376,9 +12943,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11389,7 +12962,7 @@
             }
           },
           "403": {
-            "description": "Not a customer bearer, the bearer no longer matches its customer, or the provider refused the customer",
+            "description": "Not a customer bearer, the bearer no longer matches its customer, or PROVIDER_FORBIDDEN: the provider refuses the customer",
             "content": {
               "application/json": {
                 "schema": {
@@ -11401,9 +12974,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11426,9 +13005,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11451,9 +13036,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11464,7 +13055,7 @@
             }
           },
           "502": {
-            "description": "The provider failed the request",
+            "description": "PROVIDER_UNAVAILABLE: the provider did not answer; or PROVIDER_REJECTED: it refused the request (`providerError`)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11476,9 +13067,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11501,9 +13098,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11513,7 +13116,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     },
     "/onramp/accounts/{id}": {
@@ -11545,11 +13153,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -11578,9 +13186,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11591,7 +13205,7 @@
             }
           },
           "403": {
-            "description": "Not a customer bearer, the bearer no longer matches its customer, or the provider refused the customer",
+            "description": "Not a customer bearer, the bearer no longer matches its customer, or PROVIDER_FORBIDDEN: the provider refuses the customer",
             "content": {
               "application/json": {
                 "schema": {
@@ -11603,9 +13217,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11628,9 +13248,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11653,9 +13279,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11666,7 +13298,7 @@
             }
           },
           "502": {
-            "description": "The provider failed the request",
+            "description": "PROVIDER_UNAVAILABLE: the provider did not answer; or PROVIDER_REJECTED: it refused the request (`providerError`)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11678,9 +13310,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11703,9 +13341,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11715,7 +13359,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     },
     "/onramp/accounts/{id}/details": {
@@ -11748,11 +13397,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -11781,9 +13430,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11794,7 +13449,7 @@
             }
           },
           "403": {
-            "description": "Not a customer bearer, the bearer no longer matches its customer, or the provider refused the customer",
+            "description": "Not a customer bearer, the bearer no longer matches its customer, or PROVIDER_FORBIDDEN: the provider refuses the customer",
             "content": {
               "application/json": {
                 "schema": {
@@ -11806,9 +13461,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11831,9 +13492,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11844,7 +13511,7 @@
             }
           },
           "409": {
-            "description": "The account predates detail capture and has not been backfilled",
+            "description": "Bank instructions are unavailable for this account",
             "content": {
               "application/json": {
                 "schema": {
@@ -11856,9 +13523,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11881,9 +13554,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11894,7 +13573,7 @@
             }
           },
           "502": {
-            "description": "The provider failed the request",
+            "description": "PROVIDER_UNAVAILABLE: the provider did not answer; or PROVIDER_REJECTED: it refused the request (`providerError`)",
             "content": {
               "application/json": {
                 "schema": {
@@ -11906,9 +13585,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11931,9 +13616,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -11943,7 +13634,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     },
     "/offramp/options": {
@@ -11989,11 +13685,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -12022,9 +13718,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12047,9 +13749,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12072,9 +13780,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12097,9 +13811,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12122,9 +13842,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12135,7 +13861,7 @@
             }
           },
           "502": {
-            "description": "The provider refused or failed the request",
+            "description": "PROVIDER_UNAVAILABLE: the provider did not answer; or PROVIDER_REJECTED: it refused the request (`providerError`)",
             "content": {
               "application/json": {
                 "schema": {
@@ -12147,9 +13873,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12172,9 +13904,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12184,7 +13922,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     },
     "/offramp/orders": {
@@ -12193,7 +13936,7 @@
           "Offramp"
         ],
         "summary": "Start a withdrawal to a bank account",
-        "description": "Prepares the payout with the provider and opens it for one exact amount from `source.address`: the requested amount, or slightly less (one base unit at a time) when another open withdrawal of the customer from that address already holds it. Then send `order.payment` exactly. The source must hold the token the provider takes, on its chain (`CROSS_ROUTE_NOT_SUPPORTED` otherwise). Once the order exists, every error names it (`orderId`).",
+        "description": "Prepares the payout with the provider and opens it for one exact amount: the requested amount, or slightly less (one base unit at a time) when another open withdrawal holds it. Then send `order.payment` exactly. A source holding the token the provider takes, on its chain, pays the provider directly; any other source on a chain that takes deposits pays into the customer’s withdrawal account an amount quoted to deliver it (`SOURCE_NOT_SUPPORTED`, `NO_ROUTE` or `QUOTE_UNAVAILABLE` otherwise, holding nothing). Once the order exists, every error names it (`orderId`).",
         "parameters": [
           {
             "schema": {
@@ -12208,11 +13951,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -12261,9 +14004,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12274,7 +14023,7 @@
             }
           },
           "403": {
-            "description": "The bearer no longer matches its customer, an API key was sent (payout rails are per customer), or the provider refuses this customer",
+            "description": "The bearer no longer matches its customer, an API key was sent (payout rails are per customer), or PROVIDER_FORBIDDEN: the provider refuses this customer",
             "content": {
               "application/json": {
                 "schema": {
@@ -12294,7 +14043,7 @@
             }
           },
           "409": {
-            "description": "VERIFICATION_REQUIRED; UNKNOWN_METHOD: list the methods again; CROSS_ROUTE_NOT_SUPPORTED; or TOO_MANY_OPEN_WITHDRAWALS from this address near this amount",
+            "description": "VERIFICATION_REQUIRED; UNKNOWN_METHOD: list the methods again; SOURCE_NOT_SUPPORTED; NO_ROUTE: nothing converts this source into the provider’s token for this amount; or TOO_MANY_OPEN_WITHDRAWALS from this address near this amount",
             "content": {
               "application/json": {
                 "schema": {
@@ -12304,7 +14053,7 @@
             }
           },
           "500": {
-            "description": "Internal failure serving the request",
+            "description": "Internal failure serving the request; or FUNDING_NOT_CONFIGURED: the order (`orderId`) holds its amount but serves no payment. Send nothing for it; open another to retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12314,7 +14063,7 @@
             }
           },
           "502": {
-            "description": "The provider refused or failed the request; or OUTCOME_UNKNOWN: it never confirmed the payout, so the order (`orderId`) keeps its amount and serves no payment. Send nothing for it; open another order to retry.",
+            "description": "PROVIDER_UNAVAILABLE: the provider did not answer; PROVIDER_REJECTED: it refused the request (`providerError`); or OUTCOME_UNKNOWN: it never confirmed the payout, so the order (`orderId`) keeps its amount and serves no payment. Send nothing for it; open another order to retry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -12324,7 +14073,7 @@
             }
           },
           "503": {
-            "description": "Offramp is unavailable: no payout provider is configured, opening orders is switched off (`OFFRAMP_ENABLED`), or the customer or the project’s fee configuration could not be read; retry",
+            "description": "Offramp is unavailable: no payout provider is configured, QUOTE_UNAVAILABLE (the amount to send could not be quoted), the customer’s withdrawal account could not be set up (`Retry-After`), or the customer or the project’s fee configuration could not be read; retry",
             "content": {
               "application/json": {
                 "schema": {
@@ -12333,7 +14082,12 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       },
       "get": {
         "tags": [
@@ -12377,11 +14131,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -12410,9 +14164,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12435,9 +14195,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12460,9 +14226,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12485,9 +14257,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12510,9 +14288,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12522,7 +14306,18 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          },
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     },
     "/offramp/orders/{id}": {
@@ -12555,11 +14350,11 @@
           {
             "schema": {
               "type": "string",
-              "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+              "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
               "example": "Bearer eyJhbGciOi..."
             },
             "required": false,
-            "description": "Customer bearer from `POST /compliance/sessions`: that customer’s orders, and every order on its bound account",
+            "description": "Customer bearer from `POST /compliance/sessions`, or a project-scoped platform bearer where the route permits tenant access",
             "name": "authorization",
             "in": "header"
           }
@@ -12588,9 +14383,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12613,9 +14414,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12638,9 +14445,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12663,9 +14476,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12688,9 +14507,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12713,9 +14538,15 @@
                     "code": {
                       "type": "string",
                       "enum": [
-                        "VERIFICATION_REQUIRED"
+                        "VERIFICATION_REQUIRED",
+                        "PROVIDER_UNAVAILABLE",
+                        "PROVIDER_REJECTED",
+                        "PROVIDER_FORBIDDEN"
                       ],
-                      "description": "The customer must resume hosted verification for this currency, then retry"
+                      "description": "VERIFICATION_REQUIRED: the customer must resume hosted verification for this currency, then retry. PROVIDER_UNAVAILABLE (502): the provider did not answer; retry. PROVIDER_REJECTED (502): the provider refused the request; `providerError` says what, and retrying it unchanged fails again. PROVIDER_FORBIDDEN (403): the provider will not serve this customer"
+                    },
+                    "providerError": {
+                      "$ref": "#/components/schemas/ProviderError"
                     }
                   },
                   "required": [
@@ -12725,7 +14556,18 @@
               }
             }
           }
-        }
+        },
+        "security": [
+          {
+            "tenantApiKey": []
+          },
+          {
+            "internalProjectBearer": []
+          },
+          {
+            "complianceSessionBearer": []
+          }
+        ]
       }
     }
   },
