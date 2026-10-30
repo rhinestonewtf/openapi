@@ -153,6 +153,11 @@
                           "txPath": {
                             "type": "string",
                             "example": "/tx/"
+                          },
+                          "query": {
+                            "type": "string",
+                            "example": "cluster=devnet",
+                            "description": "Optional query content with no leading ?. Append ?${query} verbatim after the linked value; absent means no query suffix."
                           }
                         },
                         "required": [
@@ -161,7 +166,7 @@
                           "txPath"
                         ],
                         "nullable": true,
-                        "description": "Block explorer, or null for a chain that has none. Lets a client link a transaction on a chain it was never compiled against, instead of bundling a per-chain URL table."
+                        "description": "Block explorer, or null for a chain that has none. Compose a link as ${url}${addressPath}${value} or ${url}${txPath}${value}, then append ?${query} verbatim when present. Absent query means no suffix; null explorer means render plain text instead of a link."
                       },
                       "settlement": {
                         "type": "object",
@@ -2379,6 +2384,13 @@
                                               "format": "uint256",
                                               "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                             },
+                                            "permitTokens": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
+                                            },
                                             "gasRefund": {
                                               "type": "object",
                                               "properties": {
@@ -2712,6 +2724,14 @@
                                                     "destinationDomainId": {
                                                       "type": "number",
                                                       "description": "Circle CCTP destination domain ID."
+                                                    },
+                                                    "delivery": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "FORWARD",
+                                                        "RELAYER"
+                                                      ],
+                                                      "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                                     }
                                                   },
                                                   "required": [
@@ -3026,6 +3046,13 @@
                                               "format": "uint256",
                                               "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                             },
+                                            "permitTokens": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
+                                            },
                                             "bridgeFill": {
                                               "discriminator": {
                                                 "propertyName": "type"
@@ -3307,6 +3334,14 @@
                                                     "destinationDomainId": {
                                                       "type": "number",
                                                       "description": "Circle CCTP destination domain ID."
+                                                    },
+                                                    "delivery": {
+                                                      "type": "string",
+                                                      "enum": [
+                                                        "FORWARD",
+                                                        "RELAYER"
+                                                      ],
+                                                      "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                                     }
                                                   },
                                                   "required": [
@@ -3428,6 +3463,13 @@
                                               "type": "string",
                                               "format": "uint256",
                                               "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                            },
+                                            "permitTokens": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
                                             }
                                           },
                                           "required": [
@@ -3488,6 +3530,13 @@
                                               "type": "string",
                                               "format": "uint256",
                                               "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                            },
+                                            "permitTokens": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
                                             },
                                             "depositAddress": {
                                               "type": "string",
@@ -3559,6 +3608,13 @@
                                               "format": "uint256",
                                               "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                             },
+                                            "permitTokens": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
+                                            },
                                             "quoteId": {
                                               "type": "string",
                                               "description": "Rhino.fi quote identifier — committed quote that becomes the commitmentId for the on-chain deposit"
@@ -3623,6 +3679,13 @@
                                               "type": "string",
                                               "format": "uint256",
                                               "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                            },
+                                            "permitTokens": {
+                                              "type": "array",
+                                              "items": {
+                                                "type": "string"
+                                              },
+                                              "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
                                             },
                                             "sourceDomainId": {
                                               "type": "number",
@@ -3883,6 +3946,8 @@
                               "RHINO",
                               "CCTP_FAST",
                               "CCTP_CHEAP",
+                              "CCTP_RLR_FAST",
+                              "CCTP_RLR_CHEAP",
                               "LZ",
                               "SOLANA_ORIGIN",
                               "SVM_SAME_CHAIN"
@@ -4621,6 +4686,10 @@
                                     "type": "string",
                                     "format": "uint256"
                                   },
+                                  "deferredChildMicroUsd": {
+                                    "type": "string",
+                                    "format": "uint256"
+                                  },
                                   "plannedSwapValueMicroUsd": {
                                     "type": "string",
                                     "format": "uint256"
@@ -4859,6 +4928,17 @@
                           ]
                         },
                         "description": "List of 7702 authorizations signed by EOA matching recipient account (if present)"
+                      },
+                      "permitSignatures": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string",
+                            "pattern": "^0x[a-fA-F0-9]*$"
+                          }
+                        },
+                        "description": "Signatures over the `permit` typed data a route's `tokenRequirements` offered, keyed by chain id then token address. Each replaces that token's Permit2 approve transaction."
                       },
                       "destinationSignature": {
                         "type": "string",
@@ -5559,6 +5639,13 @@
                                                 "format": "uint256",
                                                 "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                               },
+                                              "permitTokens": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                },
+                                                "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
+                                              },
                                               "gasRefund": {
                                                 "type": "object",
                                                 "properties": {
@@ -5892,6 +5979,14 @@
                                                       "destinationDomainId": {
                                                         "type": "number",
                                                         "description": "Circle CCTP destination domain ID."
+                                                      },
+                                                      "delivery": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "FORWARD",
+                                                          "RELAYER"
+                                                        ],
+                                                        "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                                       }
                                                     },
                                                     "required": [
@@ -6206,6 +6301,13 @@
                                                 "format": "uint256",
                                                 "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                               },
+                                              "permitTokens": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                },
+                                                "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
+                                              },
                                               "bridgeFill": {
                                                 "discriminator": {
                                                   "propertyName": "type"
@@ -6487,6 +6589,14 @@
                                                       "destinationDomainId": {
                                                         "type": "number",
                                                         "description": "Circle CCTP destination domain ID."
+                                                      },
+                                                      "delivery": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                          "FORWARD",
+                                                          "RELAYER"
+                                                        ],
+                                                        "description": "Who submits the destination mint. Absent or 'FORWARD': Circle's Forwarding Service. 'RELAYER': the Rhinestone relayer."
                                                       }
                                                     },
                                                     "required": [
@@ -6608,6 +6718,13 @@
                                                 "type": "string",
                                                 "format": "uint256",
                                                 "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                              },
+                                              "permitTokens": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                },
+                                                "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
                                               }
                                             },
                                             "required": [
@@ -6668,6 +6785,13 @@
                                                 "type": "string",
                                                 "format": "uint256",
                                                 "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                              },
+                                              "permitTokens": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                },
+                                                "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
                                               },
                                               "depositAddress": {
                                                 "type": "string",
@@ -6739,6 +6863,13 @@
                                                 "format": "uint256",
                                                 "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
                                               },
+                                              "permitTokens": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                },
+                                                "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
+                                              },
                                               "quoteId": {
                                                 "type": "string",
                                                 "description": "Rhino.fi quote identifier — committed quote that becomes the commitmentId for the on-chain deposit"
@@ -6803,6 +6934,13 @@
                                                 "type": "string",
                                                 "format": "uint256",
                                                 "description": "Gas priced for the SmartSession enable this element's signature performs (internal). Absent when the quote priced none."
+                                              },
+                                              "permitTokens": {
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "string"
+                                                },
+                                                "description": "Tokens whose ERC-2612 permit this element runs (internal). A submitted permit for any other token is ignored."
                                               },
                                               "sourceDomainId": {
                                                 "type": "number",
@@ -7063,6 +7201,8 @@
                                 "RHINO",
                                 "CCTP_FAST",
                                 "CCTP_CHEAP",
+                                "CCTP_RLR_FAST",
+                                "CCTP_RLR_CHEAP",
                                 "LZ",
                                 "SOLANA_ORIGIN",
                                 "SVM_SAME_CHAIN"
@@ -7802,6 +7942,10 @@
                                       "type": "string",
                                       "format": "uint256"
                                     },
+                                    "deferredChildMicroUsd": {
+                                      "type": "string",
+                                      "format": "uint256"
+                                    },
                                     "plannedSwapValueMicroUsd": {
                                       "type": "string",
                                       "format": "uint256"
@@ -8039,6 +8183,17 @@
                             ]
                           },
                           "description": "List of 7702 authorizations signed by EOA matching recipient account (if present)"
+                        },
+                        "permitSignatures": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "additionalProperties": {
+                              "type": "string",
+                              "pattern": "^0x[a-fA-F0-9]*$"
+                            }
+                          },
+                          "description": "Signatures over the `permit` typed data a route's `tokenRequirements` offered, keyed by chain id then token address. Each replaces that token's Permit2 approve transaction."
                         }
                       },
                       "required": [
@@ -8795,6 +8950,71 @@
                                 "spender": {
                                   "type": "string",
                                   "description": "Always the canonical Permit2 contract on this chain. The EOA approves Permit2; the settlement contract pulls funds via Permit2 at claim time."
+                                },
+                                "permit": {
+                                  "type": "object",
+                                  "properties": {
+                                    "domain": {
+                                      "type": "object",
+                                      "properties": {
+                                        "name": {
+                                          "type": "string"
+                                        },
+                                        "version": {
+                                          "type": "string"
+                                        },
+                                        "chainId": {
+                                          "type": "number"
+                                        },
+                                        "verifyingContract": {
+                                          "type": "string"
+                                        },
+                                        "salt": {
+                                          "type": "string"
+                                        }
+                                      },
+                                      "description": "EIP-712 domain separator fields"
+                                    },
+                                    "types": {
+                                      "type": "object",
+                                      "additionalProperties": {
+                                        "type": "array",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "name": {
+                                              "type": "string"
+                                            },
+                                            "type": {
+                                              "type": "string"
+                                            }
+                                          },
+                                          "required": [
+                                            "name",
+                                            "type"
+                                          ]
+                                        }
+                                      },
+                                      "description": "EIP-712 type definitions keyed by type name"
+                                    },
+                                    "primaryType": {
+                                      "type": "string",
+                                      "description": "Name of the top-level type to sign",
+                                      "example": "PermitBatchWitnessTransferFrom"
+                                    },
+                                    "message": {
+                                      "type": "object",
+                                      "additionalProperties": {},
+                                      "description": "Message values keyed by field name. uint256 fields are encoded as decimal strings on the wire and re-coerced to bigint client-side before signing."
+                                    }
+                                  },
+                                  "required": [
+                                    "domain",
+                                    "types",
+                                    "primaryType",
+                                    "message"
+                                  ],
+                                  "description": "ERC-2612 `permit` granting `spender` an unlimited allowance. Signing it and submitting the signature in `signatures.permits` (`permitSignatures` on the older wire) replaces the approve transaction. Present only where the token supports it."
                                 }
                               },
                               "required": [
@@ -11197,6 +11417,7 @@
                                 "ensUSDC",
                                 "ensUSDC2",
                                 "ensUSDC3",
+                                "ensUSDC4",
                                 "TRX",
                                 "WTRX",
                                 "SOL",
@@ -11253,6 +11474,7 @@
                                   "ensUSDC",
                                   "ensUSDC2",
                                   "ensUSDC3",
+                                  "ensUSDC4",
                                   "TRX",
                                   "WTRX",
                                   "SOL",
@@ -11328,6 +11550,7 @@
                                     "ensUSDC",
                                     "ensUSDC2",
                                     "ensUSDC3",
+                                    "ensUSDC4",
                                     "TRX",
                                     "WTRX",
                                     "SOL",
@@ -11384,6 +11607,7 @@
                                       "ensUSDC",
                                       "ensUSDC2",
                                       "ensUSDC3",
+                                      "ensUSDC4",
                                       "TRX",
                                       "WTRX",
                                       "SOL",
