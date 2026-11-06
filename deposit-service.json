@@ -8027,7 +8027,7 @@
             }
           },
           "400": {
-            "description": "Deposit not in a retryable state, a Tron deposit, settlement-layer override given for a non-EVM deposit, or the Solana deposit has no output-token route",
+            "description": "Deposit not in a retryable state, a Tron deposit without an execution leg, settlement-layer override given for a non-EVM deposit or a deposit with an execution leg, or the Solana deposit has no output-token route",
             "content": {
               "application/json": {
                 "schema": {
