@@ -2485,7 +2485,7 @@
                                                 "type": "object",
                                                 "properties": {
                                                   "token": {
-                                                    "description": "ERC20 token the relayer sends to the user before execution",
+                                                    "description": "ERC20 token the relayer sends before execution",
                                                     "type": "string"
                                                   },
                                                   "amount": {
@@ -3509,6 +3509,33 @@
                                               "discriminator": {
                                                 "propertyName": "type"
                                               }
+                                            },
+                                            "erc20Prefund": {
+                                              "description": "ERC20 token amounts the relayer sends to MulticallHandler before the EOA bridge leg's ops run, e.g. a sponsored bridge fee.",
+                                              "type": "array",
+                                              "items": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "token": {
+                                                    "description": "ERC20 token the relayer sends before execution",
+                                                    "type": "string"
+                                                  },
+                                                  "amount": {
+                                                    "type": "string",
+                                                    "format": "uint256",
+                                                    "description": "ERC20 token amount in smallest units"
+                                                  }
+                                                },
+                                                "required": [
+                                                  "token",
+                                                  "amount"
+                                                ]
+                                              }
+                                            },
+                                            "prefundAmount": {
+                                              "description": "Native token amount the relayer sends to MulticallHandler before the EOA bridge leg's ops run, e.g. a LayerZero messaging fee. In wei.",
+                                              "type": "string",
+                                              "format": "uint256"
                                             }
                                           },
                                           "required": [
@@ -4145,7 +4172,7 @@
                                 "type": "string"
                               },
                               "accountType": {
-                                "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation.",
+                                "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation. When the originating account omits it, an address with no code on any chain in scope, no `setupOps`, and `delegations` that do not cover every chain in scope is treated as an `EOA`, and any other address as a smart account.",
                                 "type": "string",
                                 "enum": [
                                   "smartAccount",
@@ -4282,7 +4309,7 @@
                                 "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
                               },
                               "accountType": {
-                                "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation.",
+                                "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation. When the originating account omits it, an address with no code on any chain in scope, no `setupOps`, and `delegations` that do not cover every chain in scope is treated as an `EOA`, and any other address as a smart account.",
                                 "type": "string",
                                 "enum": [
                                   "smartAccount",
@@ -5856,7 +5883,7 @@
                                                   "type": "object",
                                                   "properties": {
                                                     "token": {
-                                                      "description": "ERC20 token the relayer sends to the user before execution",
+                                                      "description": "ERC20 token the relayer sends before execution",
                                                       "type": "string"
                                                     },
                                                     "amount": {
@@ -6880,6 +6907,33 @@
                                                 "discriminator": {
                                                   "propertyName": "type"
                                                 }
+                                              },
+                                              "erc20Prefund": {
+                                                "description": "ERC20 token amounts the relayer sends to MulticallHandler before the EOA bridge leg's ops run, e.g. a sponsored bridge fee.",
+                                                "type": "array",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "token": {
+                                                      "description": "ERC20 token the relayer sends before execution",
+                                                      "type": "string"
+                                                    },
+                                                    "amount": {
+                                                      "type": "string",
+                                                      "format": "uint256",
+                                                      "description": "ERC20 token amount in smallest units"
+                                                    }
+                                                  },
+                                                  "required": [
+                                                    "token",
+                                                    "amount"
+                                                  ]
+                                                }
+                                              },
+                                              "prefundAmount": {
+                                                "description": "Native token amount the relayer sends to MulticallHandler before the EOA bridge leg's ops run, e.g. a LayerZero messaging fee. In wei.",
+                                                "type": "string",
+                                                "format": "uint256"
                                               }
                                             },
                                             "required": [
@@ -7516,7 +7570,7 @@
                                   "type": "string"
                                 },
                                 "accountType": {
-                                  "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation.",
+                                  "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation. When the originating account omits it, an address with no code on any chain in scope, no `setupOps`, and `delegations` that do not cover every chain in scope is treated as an `EOA`, and any other address as a smart account.",
                                   "type": "string",
                                   "enum": [
                                     "smartAccount",
@@ -7653,7 +7707,7 @@
                                   "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
                                 },
                                 "accountType": {
-                                  "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation.",
+                                  "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation. When the originating account omits it, an address with no code on any chain in scope, no `setupOps`, and `delegations` that do not cover every chain in scope is treated as an `EOA`, and any other address as a smart account.",
                                   "type": "string",
                                   "enum": [
                                     "smartAccount",
@@ -9486,7 +9540,7 @@
                         "type": "string"
                       },
                       "accountType": {
-                        "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation.",
+                        "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation. When the originating account omits it, an address with no code on any chain in scope, no `setupOps`, and `delegations` that do not cover every chain in scope is treated as an `EOA`, and any other address as a smart account.",
                         "type": "string",
                         "enum": [
                           "smartAccount",
@@ -9707,7 +9761,7 @@
                         "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
                       },
                       "accountType": {
-                        "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation.",
+                        "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation. When the originating account omits it, an address with no code on any chain in scope, no `setupOps`, and `delegations` that do not cover every chain in scope is treated as an `EOA`, and any other address as a smart account.",
                         "type": "string",
                         "enum": [
                           "smartAccount",

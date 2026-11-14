@@ -10580,7 +10580,7 @@
                         "type": "string"
                       },
                       "accountType": {
-                        "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation.",
+                        "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation. When the originating account omits it, an address with no code on any chain in scope, no `setupOps`, and `delegations` that do not cover every chain in scope is treated as an `EOA`, and any other address as a smart account.",
                         "type": "string",
                         "enum": [
                           "smartAccount",
@@ -10801,7 +10801,7 @@
                         "example": "0x579d5631f76126991c00fb8fe5467fa9d49e5f6a"
                       },
                       "accountType": {
-                        "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation.",
+                        "description": "Account type. Blanc clients should use `ERC7579`; the legacy `smartAccount` value is equivalent and accepted for alps wire compatibility, and gets rewritten to `ERC7579` by the `alpsAccountType` versioning change before Zod validation. When the originating account omits it, an address with no code on any chain in scope, no `setupOps`, and `delegations` that do not cover every chain in scope is treated as an `EOA`, and any other address as a smart account.",
                         "type": "string",
                         "enum": [
                           "smartAccount",
