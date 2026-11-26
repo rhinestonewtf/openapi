@@ -3075,6 +3075,11 @@
                                                 "chainIndex",
                                                 "otherChains"
                                               ]
+                                            },
+                                            "expires": {
+                                              "description": "Unix-seconds expiry the IntentExecutor enforces on-chain. Present only when this leg is signed as `SingleChainOpsExp`.",
+                                              "type": "string",
+                                              "format": "uint256"
                                             }
                                           },
                                           "required": [
@@ -4845,6 +4850,10 @@
                                     "type": "string",
                                     "format": "uint256"
                                   },
+                                  "relayFeeMicroUsd": {
+                                    "type": "string",
+                                    "format": "uint256"
+                                  },
                                   "deferredChildMicroUsd": {
                                     "type": "string",
                                     "format": "uint256"
@@ -6491,6 +6500,11 @@
                                                   "chainIndex",
                                                   "otherChains"
                                                 ]
+                                              },
+                                              "expires": {
+                                                "description": "Unix-seconds expiry the IntentExecutor enforces on-chain. Present only when this leg is signed as `SingleChainOpsExp`.",
+                                                "type": "string",
+                                                "format": "uint256"
                                               }
                                             },
                                             "required": [
@@ -8259,6 +8273,10 @@
                                       "format": "uint256"
                                     },
                                     "plannedFillGasPrincipalMicroUsd": {
+                                      "type": "string",
+                                      "format": "uint256"
+                                    },
+                                    "relayFeeMicroUsd": {
                                       "type": "string",
                                       "format": "uint256"
                                     },
