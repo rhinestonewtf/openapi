@@ -869,6 +869,29 @@
               ],
               "description": "What can be DEPOSITED from this chain — the identity a deposit whitelist is matched on, and the units its `minAmount`/`maxAmount` are in. Meaningful only when `deposit` is true; `\"all\"` means any token on the chain. Equal to `supportedTokens` everywhere except HyperCore, where a deposit is identified by its Core spot token id at `weiDecimals` and a delivery by the token's HyperEVM ERC20 at 6 — configure a whitelist from THIS field, never from `supportedTokens`."
             },
+            "suggestedTokens": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "symbol": {
+                    "type": "string"
+                  },
+                  "address": {
+                    "type": "string"
+                  },
+                  "decimals": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "symbol",
+                  "address",
+                  "decimals"
+                ]
+              },
+              "description": "The chain's common deposit tokens, to offer as a picker when configuring a deposit whitelist. A suggestion, never a restriction: where `depositTokens` is `\"all\"` any token is still accepted, so keep accepting a typed address. In the same identity and units as `depositTokens`. `[]` where no deposit can arrive."
+            },
             "publicRpcUrl": {
               "type": "string",
               "description": "The chain's PUBLIC, unauthenticated JSON-RPC endpoint. Build a viem `Chain` with `defineChain` from it — a browser client can derive every other argument from this entry but not this one, which is what makes a chain it was never compiled against usable. Deliberately not the rpc-proxy URL: this is served to a browser holding no credential. Absent for a chain that publishes none — treat that chain as display-only rather than as an error.",
@@ -890,7 +913,8 @@
             "nativeToken",
             "explorer",
             "supportedTokens",
-            "depositTokens"
+            "depositTokens",
+            "suggestedTokens"
           ]
         }
       },
@@ -2444,7 +2468,7 @@
           },
           "sourceToken": {
             "type": "string",
-            "description": "Source token: a 0x address on an EVM source chain, or a base58 SPL mint on Solana.",
+            "description": "Source token: a 20-byte 0x address on EVM, a base58 SPL mint on Solana, or a 16-byte Core spot tokenId on HyperCore. HyperCore amounts use Core wei (8 decimals for USDC/USDT0), not HyperEVM ERC20 units.",
             "example": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913"
           },
           "direction": {
@@ -2454,7 +2478,7 @@
               "exactOut"
             ],
             "default": "exactIn",
-            "description": "`exactIn` fixes the deposited `amount` and quotes what is delivered; `exactOut` fixes the delivered `amountOut` and quotes the deposit that produces it. Defaults to `exactIn`.",
+            "description": "`exactIn` fixes the deposited `amount` and quotes what is delivered; `exactOut` fixes the delivered `amountOut` and quotes the deposit that produces it. Defaults to `exactIn`. HyperCore sources support only `exactIn`.",
             "example": "exactIn"
           },
           "amount": {
@@ -8027,7 +8051,7 @@
             }
           },
           "400": {
-            "description": "Deposit not in a retryable state, a Tron deposit, settlement-layer override given for a non-EVM deposit, or the Solana deposit has no output-token route",
+            "description": "Deposit not in a retryable state, a Tron deposit without an execution leg, settlement-layer override given for a non-EVM deposit or a deposit with an execution leg, or the Solana deposit has no output-token route",
             "content": {
               "application/json": {
                 "schema": {
